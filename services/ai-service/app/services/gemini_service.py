@@ -1,5 +1,6 @@
 import asyncio
 import os
+from collections.abc import Iterator
 from functools import lru_cache
 from pathlib import Path
 from typing import TypeVar
@@ -56,10 +57,49 @@ def _generate_structured_content(
     return parsed_response
 
 
+def stream_generate_content(prompt: str, instruction_file: str) -> Iterator[str]:
+    config = types.GenerateContentConfig(
+        system_instruction=_load_instruction(instruction_file),
+    )
+
+    if hasattr(client.models, "generate_content_stream"):
+        stream = client.models.generate_content_stream(
+            model=MODEL_NAME,
+            contents=prompt,
+            config=config,
+        )
+    else:
+        stream = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=prompt,
+            config=config,
+            stream=True,
+        )
+
+    def _raw_chunk_iterator() -> Iterator[str]:
+        for chunk in stream:
+            chunk_text = getattr(chunk, "text", None)
+            if not isinstance(chunk_text, str):
+                continue
+
+            if not chunk_text:
+                continue
+
+            yield chunk_text
+
+    return _raw_chunk_iterator()
+
+
 def _format_router_input(request: RouterRequest) -> str:
+    recipe_context = (
+        f"recipe_context:\n{request.recipe_context}\n"
+        if request.recipe_context
+        else ""
+    )
     return (
         f"page_context: {request.page_context}\n"
-        f"message: {request.message}"
+        f"{recipe_context}"
+        f"prompt: {request.prompt}"
     )
 
 
@@ -85,37 +125,37 @@ async def classify_intent(request: RouterRequest) -> RouterResponse:
     return _enforce_context_intent_policy(request, response)
 
 
-async def generate_recipe(message: str) -> RecipeSchema:
+async def generate_recipe(prompt: str) -> RecipeSchema:
     return await asyncio.to_thread(
         _generate_structured_content,
-        message,
+        prompt,
         "recipe_creator.md",
         RecipeSchema,
     )
 
 
-async def generate_assistant_response(message: str) -> AssistantResponse:
+async def generate_assistant_response(prompt: str) -> AssistantResponse:
     return await asyncio.to_thread(
         _generate_structured_content,
-        message,
+        prompt,
         "assistant_specialist.md",
         AssistantResponse,
     )
 
 
-async def generate_health_audit(message: str) -> HealthAuditResponse:
+async def generate_health_audit(prompt: str) -> HealthAuditResponse:
     return await asyncio.to_thread(
         _generate_structured_content,
-        message,
+        prompt,
         "health_specialist.md",
         HealthAuditResponse,
     )
 
 
-async def parse_search_filters(message: str) -> SearchFiltersResponse:
+async def parse_search_filters(prompt: str) -> SearchFiltersResponse:
     return await asyncio.to_thread(
         _generate_structured_content,
-        message,
+        prompt,
         "search_specialist.md",
         SearchFiltersResponse,
     )

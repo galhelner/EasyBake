@@ -1,13 +1,22 @@
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import AliasChoices, BaseModel, Field, field_validator
 
 
 class RouterRequest(BaseModel):
-    message: str = Field(..., min_length=1, description="User message to classify")
+    prompt: str = Field(
+        ...,
+        min_length=1,
+        validation_alias=AliasChoices("prompt", "message"),
+        description="User prompt to classify",
+    )
     page_context: Literal["home", "recipe_detail"] = Field(
         ...,
         description="Normalized UI context. Allowed values: home, recipe_detail",
+    )
+    recipe_context: str | None = Field(
+        default=None,
+        description="Optional formatted recipe context when the user is on a recipe detail page",
     )
 
     @field_validator("page_context", mode="before")
@@ -36,7 +45,16 @@ class RouterResponse(BaseModel):
 
 
 class MessageRequest(BaseModel):
-    message: str = Field(..., min_length=1, description="User message to send to a specialist")
+    prompt: str = Field(
+        ...,
+        min_length=1,
+        validation_alias=AliasChoices("prompt", "message"),
+        description="User prompt to send to a specialist",
+    )
+    recipe_context: str | None = Field(
+        default=None,
+        description="Optional formatted recipe context when the user is on a recipe detail page",
+    )
 
 
 class AssistantResponse(BaseModel):
