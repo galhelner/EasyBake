@@ -40,7 +40,7 @@ interface FlushableResponse extends Response {
 interface RecipeContextPayload {
   id: string;
   title: string;
-  instructions: string;
+  instructions: string[];
   ingredients: Array<{
     ingredient: {
       name: string;
@@ -55,12 +55,16 @@ const buildRecipeContext = (recipe: RecipeContextPayload): string => {
     ? recipe.ingredients.map(({ ingredient }) => `- ${ingredient.name}`).join('\n')
     : '- No ingredients listed';
 
+  const instructions = recipe.instructions.length
+    ? recipe.instructions.map((step, index) => `${index + 1}. ${step}`).join('\n')
+    : '- No instruction steps listed';
+
   return [
     `Recipe title: ${recipe.title}`,
     'Ingredients:',
     ingredients,
     'Instructions:',
-    recipe.instructions,
+    instructions,
   ].join('\n');
 };
 

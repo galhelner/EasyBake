@@ -1,17 +1,74 @@
-import { Request, Response } from 'express';
+import { unlink } from 'fs/promises';
+import { Response } from 'express';
 import { z } from 'zod';
 import prisma from '../services/prismaClient';
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
+import { DEFAULT_RECIPE_IMAGE_URL, uploadImage } from '../services/storageService';
 
 const ingredientSchema = z.object({
   name: z.string().min(1),
 });
 
+const parseIngredients = (value: unknown): unknown => {
+  if (value === undefined || value === null || value === '') {
+    return [];
+  }
+
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value
+        .split(',')
+        .map((name) => name.trim())
+        .filter(Boolean)
+        .map((name) => ({ name }));
+    }
+  }
+
+  return value;
+};
+
+const parseInstructionSteps = (value: unknown): unknown => {
+  if (value === undefined || value === null || value === '') {
+    return [];
+  }
+
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) {
+        return parsed;
+      }
+    } catch {
+      // Fall through to newline splitting.
+    }
+
+    return value
+      .split(/\r?\n/)
+      .map((step) => step.trim())
+      .filter(Boolean);
+  }
+
+  return value;
+};
+
 const createRecipeSchema = z.object({
   title: z.string().min(1),
-  instructions: z.string().min(1),
-  healthScore: z.number().int().min(0).max(100),
-  ingredients: z.array(ingredientSchema).default([]),
+  instructions: z.preprocess(
+    parseInstructionSteps,
+    z.array(z.string().min(1)).min(1),
+  ),
+  healthScore: z.coerce.number().int().min(0).max(100),
+  ingredients: z.preprocess(parseIngredients, z.array(ingredientSchema).default([])),
 });
 
 export interface IngredientDTO {
@@ -21,8 +78,9 @@ export interface IngredientDTO {
 export interface RecipeDTO {
   id: string;
   title: string;
-  instructions: string;
+  instructions: string[];
   healthScore: number;
+  imageUrl: string;
   authorId: string;
   ingredients: IngredientDTO[];
 }
@@ -30,14 +88,30 @@ export interface RecipeDTO {
 const mapRecipeToDTO = (recipe: any): RecipeDTO => ({
   id: recipe.id,
   title: recipe.title,
-  instructions: recipe.instructions,
+  instructions: Array.isArray(recipe.instructions) ? recipe.instructions : [],
   healthScore: recipe.healthScore,
+  imageUrl: recipe.imageUrl ?? DEFAULT_RECIPE_IMAGE_URL,
   authorId: recipe.authorId,
   ingredients:
     recipe.ingredients?.map((ri: any) => ({
       name: ri.ingredient.name,
     })) ?? [],
 });
+
+const cleanupTempUpload = async (file?: Express.Multer.File): Promise<void> => {
+  if (!file?.path) {
+    return;
+  }
+
+  try {
+    await unlink(file.path);
+  } catch (error: any) {
+    if (error?.code !== 'ENOENT') {
+      // eslint-disable-next-line no-console
+      console.warn('Failed to clean temporary uploaded file', error);
+    }
+  }
+};
 
 export const createRecipe = async (
   req: AuthenticatedRequest,
@@ -57,33 +131,37 @@ export const createRecipe = async (
     }
 
     const { title, instructions, healthScore, ingredients } = parsed.data;
+    const imageUrl = req.file ? await uploadImage(req.file) : DEFAULT_RECIPE_IMAGE_URL;
 
     const ingredientNames = ingredients.map((i) => i.name.toLowerCase().trim());
 
-    const createdRecipe = await prisma.recipe.create({
-      data: {
-        title,
-        instructions,
-        healthScore,
-        author: {
-          connectOrCreate: {
-            where: { authId: req.user.id },
-            create: {
-              authId: req.user.id,
-            },
+    const createData: any = {
+      title,
+      instructions,
+      healthScore,
+      author: {
+        connectOrCreate: {
+          where: { authId: req.user.id },
+          create: {
+            authId: req.user.id,
           },
         },
-        ingredients: {
-          create: ingredientNames.map((name) => ({
-            ingredient: {
-              connectOrCreate: {
-                where: { name },
-                create: { name },
-              },
-            },
-          })),
-        },
       },
+      ingredients: {
+        create: ingredientNames.map((name) => ({
+          ingredient: {
+            connectOrCreate: {
+              where: { name },
+              create: { name },
+            },
+          },
+        })),
+      },
+      imageUrl,
+    };
+
+    const createdRecipe = await prisma.recipe.create({
+      data: createData,
       include: {
         ingredients: {
           include: {
@@ -98,6 +176,8 @@ export const createRecipe = async (
     // eslint-disable-next-line no-console
     console.error('Error creating recipe', error);
     res.status(500).json({ error: 'Failed to create recipe' });
+  } finally {
+    await cleanupTempUpload(req.file);
   }
 };
 

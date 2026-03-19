@@ -17,8 +17,9 @@ model User {
 model Recipe {
   id           String             @id @default(uuid())
   title        String
-  instructions String
+  instructions String[]
   healthScore  Int
+  imageUrl     String?            @default("https://cdmkszvzdkromgqzexec.supabase.co/storage/v1/object/public/recipe-images/default-recipe.jpg")
   authorId     String
   author       User               @relation(fields: [authorId], references: [id])
   ingredients  RecipeIngredient[]
