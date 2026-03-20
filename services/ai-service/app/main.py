@@ -1,17 +1,31 @@
 import os
 import sys
+from contextlib import asynccontextmanager
+from collections.abc import AsyncIterator
 from pathlib import Path
 
+from dotenv import load_dotenv
 import uvicorn
 from fastapi import FastAPI
+
+# Load environment variables from .env file before any imports that depend on them
+load_dotenv()
 
 if __package__ in {None, ""}:
     sys.path.append(str(Path(__file__).resolve().parents[1]))
     from app.api.endpoints import router as ai_router
+    from app.services.gemini_service import MODEL_NAME
 else:
     from app.api.endpoints import router as ai_router
+    from app.services.gemini_service import MODEL_NAME
 
-app = FastAPI(title="EasyBake AI Service")
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    print(f"EasyBake AI Service model: {MODEL_NAME}")
+    yield
+
+
+app = FastAPI(title="EasyBake AI Service", lifespan=lifespan)
 
 app.include_router(ai_router, prefix="/api")
 

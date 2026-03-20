@@ -18,7 +18,7 @@ from app.schemas.router import (
     SearchFiltersResponse,
 )
 
-MODEL_NAME = "gemini-2.5-flash"
+MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 INSTRUCTIONS_DIR = Path(__file__).resolve().parents[1] / "instructions"
 
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
