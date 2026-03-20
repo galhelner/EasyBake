@@ -237,6 +237,92 @@ const writeSseDelta = (res: FlushableResponse, content: string): void => {
   res.flush?.();
 };
 
+/**
+ * Forward already SSE-formatted stream from upstream.
+ * This handles the new structured format where Python sends: data: {"delta": "...", "type": "text"}\n\n
+ */
+const forwardStructuredSseStream = (
+  req: AuthenticatedRequest,
+  res: FlushableResponse,
+  upstreamStream: Readable,
+  onAbort: () => void,
+): void => {
+  let streamClosed = false;
+  let buffer = '';
+
+  const closeStream = (): void => {
+    if (streamClosed) {
+      return;
+    }
+
+    streamClosed = true;
+    if (!res.writableEnded) {
+      res.end();
+    }
+  };
+
+  req.on('close', () => {
+    onAbort();
+    if (!upstreamStream.destroyed) {
+      upstreamStream.destroy();
+    }
+    closeStream();
+  });
+
+  upstreamStream.on('data', (chunk: Buffer | string) => {
+    try {
+      const chunkText = chunk.toString();
+      if (!chunkText) {
+        return;
+      }
+
+      // Accumulate chunks until we have complete SSE lines
+      buffer += chunkText;
+
+      // Process complete lines (ending with \n\n for SSE)
+      let lineEndIndex = buffer.indexOf('\n\n');
+      while (lineEndIndex !== -1) {
+        const sseLine = buffer.substring(0, lineEndIndex + 2);
+        // Forward the SSE line as-is (already properly formatted from upstream)
+        res.write(sseLine);
+        res.flush?.();
+
+        buffer = buffer.substring(lineEndIndex + 2);
+        lineEndIndex = buffer.indexOf('\n\n');
+      }
+    } catch (streamParseError) {
+      // eslint-disable-next-line no-console
+      console.error('AI structured stream parse failed', streamParseError);
+      onAbort();
+      closeStream();
+    }
+  });
+
+  upstreamStream.on('end', () => {
+    // Flush any remaining buffer content
+    if (buffer.trim()) {
+      res.write(buffer);
+    }
+    // eslint-disable-next-line no-console
+    console.log('AI stream completed');
+    closeStream();
+  });
+
+  upstreamStream.on('error', (streamError: Error) => {
+    // eslint-disable-next-line no-console
+    console.error('AI upstream stream failed', streamError);
+    onAbort();
+
+    if (!res.writableEnded) {
+      // Send error as SSE formatted JSON
+      const errorObj = JSON.stringify({ type: 'error', message: 'AI stream interrupted. Please try again.' });
+      res.write(`data: ${errorObj}\n\n`);
+    }
+
+    closeStream();
+  });
+};
+
 const forwardSseStream = (
   req: AuthenticatedRequest,
   res: FlushableResponse,
@@ -405,7 +491,8 @@ export const streamChat = async (
       });
       streamingResponse.flushHeaders();
 
-      forwardSseStream(req, streamingResponse, upstreamStream, () => {
+      // Use the new structured SSE handler since Python now sends properly formatted SSE
+      forwardStructuredSseStream(req, streamingResponse, upstreamStream, () => {
         upstreamAbortController.abort();
       });
     } catch (error) {
