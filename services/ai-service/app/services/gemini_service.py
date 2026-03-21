@@ -19,6 +19,7 @@ from app.schemas.router import (
 )
 
 MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+EMBEDDING_DIM = int(os.getenv("GEMINI_EMBEDDING_DIM", "768"))
 INSTRUCTIONS_DIR = Path(__file__).resolve().parents[1] / "instructions"
 
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
@@ -55,6 +56,50 @@ def _generate_structured_content(
         raise ValueError("Gemini returned an unparseable structured response")
 
     return parsed_response
+
+
+def _extract_embedding_values(response: object) -> list[float]:
+    embeddings = getattr(response, "embeddings", None)
+    if embeddings:
+        first_embedding = embeddings[0]
+        values = getattr(first_embedding, "values", None)
+        if values is not None:
+            return [float(value) for value in values]
+
+    embedding = getattr(response, "embedding", None)
+    if embedding is not None:
+        values = getattr(embedding, "values", None)
+        if values is not None:
+            return [float(value) for value in values]
+
+    raise ValueError("Gemini returned an unexpected embedding response")
+
+
+def _generate_embedding_sync(text: str) -> list[float]:
+    try:
+        response = client.models.embed_content(
+            model="gemini-embedding-001",
+            contents=text,
+            config=types.EmbedContentConfig(output_dimensionality=EMBEDDING_DIM),
+        )
+    except TypeError:
+        # Backward compatibility for older SDK variants that do not expose embed config.
+        response = client.models.embed_content(
+            model="gemini-embedding-001",
+            contents=text,
+        )
+
+    values = _extract_embedding_values(response)
+
+    if len(values) == EMBEDDING_DIM:
+        return values
+
+    if len(values) > EMBEDDING_DIM:
+        return values[:EMBEDDING_DIM]
+
+    raise ValueError(
+        f"Gemini returned {len(values)} embedding dimensions, expected at least {EMBEDDING_DIM}"
+    )
 
 
 def stream_generate_content(prompt: str, instruction_file: str) -> Iterator[str]:
@@ -159,3 +204,7 @@ async def parse_search_filters(prompt: str) -> SearchFiltersResponse:
         "search_specialist.md",
         SearchFiltersResponse,
     )
+
+
+async def generate_embedding(text: str) -> list[float]:
+    return await asyncio.to_thread(_generate_embedding_sync, text)

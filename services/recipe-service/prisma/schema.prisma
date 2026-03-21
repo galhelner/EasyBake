@@ -1,9 +1,11 @@
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
   provider = "postgresql"
+  extensions = [pgvector]
 }
 
 model User {
@@ -19,6 +21,7 @@ model Recipe {
   title        String
   instructions String[]
   healthScore  Int
+  embedding    Unsupported("vector(768)")?
   imageUrl     String?            @default("https://cdmkszvzdkromgqzexec.supabase.co/storage/v1/object/public/recipe-images/default-recipe.jpg")
   authorId     String
   author       User               @relation(fields: [authorId], references: [id])

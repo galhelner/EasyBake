@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { authMiddleware } from '../middleware/authMiddleware';
-import { createRecipe, getRecipeById, getRecipes } from '../controllers/recipe.controller';
+import { createRecipe, getRecipeById, getRecipes, searchRecipes } from '../controllers/recipe.controller';
 
 const router = Router();
 const upload = multer({
@@ -14,6 +14,7 @@ const upload = multer({
 router.use(authMiddleware);
 
 router.post('/', upload.single('image'), createRecipe);
+router.post('/search', searchRecipes);
 router.get('/', getRecipes);
 router.get('/:id', getRecipeById);
 

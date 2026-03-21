@@ -76,3 +76,11 @@ class SearchFiltersResponse(BaseModel):
     max_time_minutes: int | None = Field(default=None, ge=1, description="Maximum cook time if specified")
     meal_type: str | None = Field(default=None, description="Meal type such as breakfast, lunch, dinner, or dessert")
     cuisine: str | None = Field(default=None, description="Cuisine preference if present")
+
+
+class EmbeddingRequest(BaseModel):
+    text: str = Field(..., min_length=1, description="Text to convert into an embedding vector")
+
+
+class EmbeddingResponse(BaseModel):
+    embedding: list[float] = Field(..., description="Embedding vector from gemini-embedding-001")

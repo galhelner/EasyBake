@@ -12,9 +12,12 @@ from app.schemas.router import (
     SearchFiltersResponse,
     AssistantResponse,
     HealthAuditResponse,
+    EmbeddingRequest,
+    EmbeddingResponse,
 )
 from app.services.gemini_service import (
     classify_intent,
+    generate_embedding,
     generate_recipe,
     parse_search_filters,
     stream_generate_content,
@@ -217,5 +220,14 @@ async def search_specialist_endpoint(payload: MessageRequest):
         return await parse_search_filters(
             _build_specialist_prompt(payload.prompt, payload.recipe_context)
         )
+    except Exception as e:
+        raise _http_exception_from_error(e)
+
+
+@router.post("/embeddings", response_model=EmbeddingResponse)
+async def embeddings_endpoint(payload: EmbeddingRequest):
+    try:
+        embedding = await generate_embedding(payload.text)
+        return EmbeddingResponse(embedding=embedding)
     except Exception as e:
         raise _http_exception_from_error(e)

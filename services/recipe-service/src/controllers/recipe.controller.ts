@@ -1,9 +1,45 @@
 import { unlink } from 'fs/promises';
 import { Response } from 'express';
+import axios from 'axios';
+import { resolve } from 'path';
 import { z } from 'zod';
 import prisma from '../services/prismaClient';
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
 import { DEFAULT_RECIPE_IMAGE_URL, uploadImage } from '../services/storageService';
+
+const AI_SERVICE_BASE_URL = (process.env.AI_SERVICE_URL ?? 'http://127.0.0.1:8000/api').replace(/\/$/, '');
+const SEARCH_MAX_DISTANCE = Number(process.env.SEARCH_MAX_DISTANCE ?? '0.5');
+
+interface EmbeddingApiResponse {
+  embedding: number[];
+}
+
+const toVectorLiteral = (embedding: number[]): string =>
+  `[${embedding.map((value) => Number(value).toString()).join(',')}]`;
+
+const buildRecipeEmbeddingText = (title: string, ingredientNames: string[], instructions: string[]): string =>
+  `Title: ${title}\nIngredients: ${ingredientNames.join(', ')}\nInstructions: ${instructions.join(' ')}`;
+
+const generateEmbedding = async (text: string): Promise<number[]> => {
+  const response = await axios.post<EmbeddingApiResponse>(`${AI_SERVICE_BASE_URL}/embeddings`, { text });
+  const embedding = response.data?.embedding;
+
+  if (!Array.isArray(embedding) || embedding.length === 0) {
+    throw new Error('AI service returned an invalid embedding payload');
+  }
+
+  return embedding;
+};
+
+const saveRecipeEmbedding = async (recipeId: string, embedding: number[]): Promise<void> => {
+  const vector = toVectorLiteral(embedding);
+
+  await prisma.$executeRaw`
+    UPDATE "Recipe"
+    SET "embedding" = CAST(${vector} AS vector)
+    WHERE "id" = ${recipeId}
+  `;
+};
 
 const ingredientSchema = z.object({
   name: z.string().min(1),
@@ -71,6 +107,10 @@ const createRecipeSchema = z.object({
   ingredients: z.preprocess(parseIngredients, z.array(ingredientSchema).default([])),
 });
 
+const semanticSearchSchema = z.object({
+  query: z.string().min(1),
+});
+
 export interface IngredientDTO {
   name: string;
 }
@@ -103,12 +143,19 @@ const cleanupTempUpload = async (file?: Express.Multer.File): Promise<void> => {
     return;
   }
 
+  const absolutePath = resolve(file.path);
+
   try {
-    await unlink(file.path);
+    await unlink(absolutePath);
+    // eslint-disable-next-line no-console
+    console.log(`Cleaned up temporary file: ${absolutePath}`);
   } catch (error: any) {
     if (error?.code !== 'ENOENT') {
       // eslint-disable-next-line no-console
-      console.warn('Failed to clean temporary uploaded file', error);
+      console.warn(`Failed to clean temporary file at ${absolutePath}:`, error.message);
+    } else {
+      // eslint-disable-next-line no-console
+      console.warn(`Temporary file not found at ${absolutePath} (may have been deleted already)`);
     }
   }
 };
@@ -171,6 +218,15 @@ export const createRecipe = async (
       },
     });
 
+    try {
+      const embeddingText = buildRecipeEmbeddingText(title, ingredientNames, instructions);
+      const embedding = await generateEmbedding(embeddingText);
+      await saveRecipeEmbedding(createdRecipe.id, embedding);
+    } catch (embeddingError) {
+      // eslint-disable-next-line no-console
+      console.warn('Recipe created but embedding generation failed', embeddingError);
+    }
+
     res.status(201).json(mapRecipeToDTO(createdRecipe));
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -178,6 +234,85 @@ export const createRecipe = async (
     res.status(500).json({ error: 'Failed to create recipe' });
   } finally {
     await cleanupTempUpload(req.file);
+  }
+};
+
+export const searchRecipes = async (
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    if (!req.user?.id) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const parsed = semanticSearchSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation error', details: parsed.error.flatten() });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { authId: req.user.id },
+      select: { id: true },
+    });
+
+    if (!user) {
+      res.json([]);
+      return;
+    }
+
+    const embedding = await generateEmbedding(parsed.data.query);
+    const vector = toVectorLiteral(embedding);
+
+    const searchResults = await prisma.$queryRaw<Array<{ id: string; distance: number }>>`
+      SELECT "id", ("embedding" <=> CAST(${vector} AS vector)) AS "distance"
+      FROM "Recipe"
+      WHERE "embedding" IS NOT NULL
+        AND "authorId" = ${user.id}
+        AND ("embedding" <=> CAST(${vector} AS vector)) <= ${SEARCH_MAX_DISTANCE}
+      ORDER BY "embedding" <=> CAST(${vector} AS vector)
+      LIMIT 5
+    `;
+
+    // Temporary debug line:
+    console.log('QUERY:', parsed.data.query);
+    console.log('RESULTS FOUND:', searchResults.map(r => ({ id: r.id, dist: r.distance })));
+
+    const recipeIds = searchResults.map((result) => result.id);
+
+    if (recipeIds.length === 0) {
+      res.json([]);
+      return;
+    }
+
+    const recipes = await prisma.recipe.findMany({
+      where: {
+        id: {
+          in: recipeIds,
+        },
+      },
+      include: {
+        ingredients: {
+          include: {
+            ingredient: true,
+          },
+        },
+      },
+    });
+
+    const recipeById = new Map(recipes.map((recipe) => [recipe.id, recipe]));
+    const orderedRecipes = recipeIds
+      .map((id) => recipeById.get(id))
+      .filter((recipe): recipe is NonNullable<typeof recipe> => Boolean(recipe));
+
+    res.json(orderedRecipes.map(mapRecipeToDTO));
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error searching recipes semantically', error);
+    res.status(500).json({ error: 'Failed to search recipes' });
   }
 };
 
