@@ -13,6 +13,7 @@ from app.core.logger import get_logger
 from app.schemas.recipe import RecipeSchema
 from app.schemas.router import (
     AssistantResponse,
+    HealthScoreResponse,
     HealthAuditResponse,
     RouterRequest,
     RouterResponse,
@@ -170,7 +171,6 @@ def _enforce_context_intent_policy(
 
 
 async def classify_intent(request: RouterRequest) -> RouterResponse:
-    logger.info(f"Gemini Prompt: {_truncate_prompt(request.prompt)}")
     response = await asyncio.to_thread(
         _generate_structured_content,
         _format_router_input(request),
@@ -181,17 +181,19 @@ async def classify_intent(request: RouterRequest) -> RouterResponse:
 
 
 async def generate_recipe(prompt: str) -> RecipeSchema:
-    logger.info(f"Gemini Prompt: {_truncate_prompt(prompt)}")
-    return await asyncio.to_thread(
+    recipe = await asyncio.to_thread(
         _generate_structured_content,
         prompt,
         "recipe_creator.md",
         RecipeSchema,
     )
+    ingredient_names = [ingredient.name for ingredient in recipe.ingredients]
+    score = await calculate_health_score(recipe.title, ingredient_names, recipe.instructions)
+    recipe.healthScore = score
+    return recipe
 
 
 async def generate_assistant_response(prompt: str) -> AssistantResponse:
-    logger.info(f"Gemini Prompt: {_truncate_prompt(prompt)}")
     return await asyncio.to_thread(
         _generate_structured_content,
         prompt,
@@ -201,7 +203,6 @@ async def generate_assistant_response(prompt: str) -> AssistantResponse:
 
 
 async def generate_health_audit(prompt: str) -> HealthAuditResponse:
-    logger.info(f"Gemini Prompt: {_truncate_prompt(prompt)}")
     return await asyncio.to_thread(
         _generate_structured_content,
         prompt,
@@ -211,7 +212,6 @@ async def generate_health_audit(prompt: str) -> HealthAuditResponse:
 
 
 async def parse_search_filters(prompt: str) -> SearchFiltersResponse:
-    logger.info(f"Gemini Prompt: {_truncate_prompt(prompt)}")
     return await asyncio.to_thread(
         _generate_structured_content,
         prompt,
@@ -221,7 +221,53 @@ async def parse_search_filters(prompt: str) -> SearchFiltersResponse:
 
 
 async def generate_embedding(text: str) -> list[float]:
-    logger.info(f"Gemini Prompt: {_truncate_prompt(text)}")
     embedding = await asyncio.to_thread(_generate_embedding_sync, text)
     logger.info("Embedding generation successful.")
     return embedding
+
+
+def _calculate_health_score_sync(
+    title: str,
+    ingredients: list[str],
+    instructions: list[str],
+) -> int:
+    response = client.models.generate_content(
+        model=MODEL_NAME,
+        contents=(
+            f"Title: {title}\n"
+            f"Ingredients: {', '.join(ingredients)}\n"
+            f"Instructions: {' '.join(instructions)}"
+        ),
+        config=types.GenerateContentConfig(
+            system_instruction=(
+                "Analyze the nutritional balance of the provided recipe. "
+                "Return a single integer between 0-100. "
+                "High protein/fiber/veg = high score. "
+                "High sugar/trans-fat/processed = low score."
+            ),
+            response_mime_type="application/json",
+            response_schema=HealthScoreResponse,
+        ),
+    )
+
+    parsed_response = response.parsed
+    if parsed_response is None:
+        raise ValueError("Gemini returned an unparseable health score response")
+
+    score = int(parsed_response.health_score)
+    return max(0, min(100, score))
+
+
+async def calculate_health_score(
+    title: str,
+    ingredients: list[str],
+    instructions: list[str],
+) -> int:
+    score = await asyncio.to_thread(
+        _calculate_health_score_sync,
+        title,
+        ingredients,
+        instructions,
+    )
+    logger.info(f"Calculated Health Score for {title}: {score}")
+    return score

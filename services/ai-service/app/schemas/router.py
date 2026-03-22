@@ -84,3 +84,13 @@ class EmbeddingRequest(BaseModel):
 
 class EmbeddingResponse(BaseModel):
     embedding: list[float] = Field(..., description="Embedding vector from gemini-embedding-001")
+
+
+class HealthScoreRequest(BaseModel):
+    title: str = Field(..., min_length=1, description="Recipe title")
+    ingredients: list[str] = Field(default_factory=list, description="List of ingredient names")
+    instructions: list[str] = Field(default_factory=list, description="Recipe instructions")
+
+
+class HealthScoreResponse(BaseModel):
+    health_score: int = Field(..., ge=0, le=100, description="Calculated recipe health score")

@@ -15,6 +15,10 @@ interface EmbeddingApiResponse {
   embedding: number[];
 }
 
+interface HealthScoreApiResponse {
+  health_score: number;
+}
+
 const toVectorLiteral = (embedding: number[]): string =>
   `[${embedding.map((value) => Number(value).toString()).join(',')}]`;
 
@@ -31,6 +35,37 @@ const generateEmbedding = async (text: string): Promise<number[]> => {
   }
 
   return embedding;
+};
+
+const requestAiHealthScore = async (
+  title: string,
+  ingredients: string[],
+  instructions: string[],
+): Promise<number> => {
+  logger.info(`Requesting AI health score for: ${title}`);
+
+  try {
+    const response = await axios.post<HealthScoreApiResponse>(
+      `${AI_SERVICE_BASE_URL}/analyze-health-score`,
+      {
+        title,
+        ingredients,
+        instructions,
+      },
+    );
+
+    const score = response.data?.health_score;
+    if (typeof score !== 'number' || Number.isNaN(score)) {
+      throw new Error('AI service returned an invalid health score payload');
+    }
+
+    return Math.max(0, Math.min(100, Math.round(score)));
+  } catch (error: any) {
+    logger.warn(
+      `AI health score unavailable for \"${title}\". Falling back to default score 50. Reason: ${error?.message ?? 'Unknown error'}`,
+    );
+    return 50;
+  }
 };
 
 const saveRecipeEmbedding = async (recipeId: string, embedding: number[]): Promise<void> => {
@@ -105,9 +140,8 @@ const createRecipeSchema = z.object({
     parseInstructionSteps,
     z.array(z.string().min(1)).min(1),
   ),
-  healthScore: z.coerce.number().int().min(0).max(100),
   ingredients: z.preprocess(parseIngredients, z.array(ingredientSchema).default([])),
-});
+}).strict();
 
 const semanticSearchSchema = z.object({
   query: z.string().min(1),
@@ -180,10 +214,11 @@ export const createRecipe = async (
       return;
     }
 
-    const { title, instructions, healthScore, ingredients } = parsed.data;
+    const { title, instructions, ingredients } = parsed.data;
     const imageUrl = req.file ? await uploadImage(req.file) : DEFAULT_RECIPE_IMAGE_URL;
 
     const ingredientNames = ingredients.map((i) => i.name.toLowerCase().trim());
+    const healthScore = await requestAiHealthScore(title, ingredientNames, instructions);
 
     const createData: any = {
       title,

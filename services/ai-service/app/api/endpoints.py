@@ -15,8 +15,11 @@ from app.schemas.router import (
     HealthAuditResponse,
     EmbeddingRequest,
     EmbeddingResponse,
+    HealthScoreRequest,
+    HealthScoreResponse,
 )
 from app.services.gemini_service import (
+    calculate_health_score,
     classify_intent,
     generate_embedding,
     generate_recipe,
@@ -238,5 +241,19 @@ async def embeddings_endpoint(payload: EmbeddingRequest):
         embedding = await generate_embedding(payload.text)
         logger.info("Embedding generation successful.")
         return EmbeddingResponse(embedding=embedding)
+    except Exception as e:
+        raise _http_exception_from_error(e)
+
+
+@router.post("/analyze-health-score", response_model=HealthScoreResponse)
+async def analyze_health_score_endpoint(payload: HealthScoreRequest):
+    logger.info("Received request for: /api/analyze-health-score")
+    try:
+        score = await calculate_health_score(
+            payload.title,
+            payload.ingredients,
+            payload.instructions,
+        )
+        return HealthScoreResponse(health_score=score)
     except Exception as e:
         raise _http_exception_from_error(e)
