@@ -6,6 +6,7 @@ import { z } from 'zod';
 import prisma from '../services/prismaClient';
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
 import { DEFAULT_RECIPE_IMAGE_URL, uploadImage } from '../services/storageService';
+import logger from '../services/logger';
 
 const AI_SERVICE_BASE_URL = (process.env.AI_SERVICE_URL ?? 'http://127.0.0.1:8000/api').replace(/\/$/, '');
 const SEARCH_MAX_DISTANCE = Number(process.env.SEARCH_MAX_DISTANCE ?? '0.5');
@@ -21,6 +22,7 @@ const buildRecipeEmbeddingText = (title: string, ingredientNames: string[], inst
   `Title: ${title}\nIngredients: ${ingredientNames.join(', ')}\nInstructions: ${instructions.join(' ')}`;
 
 const generateEmbedding = async (text: string): Promise<number[]> => {
+  logger.info('Calling AI Service for: generate embedding');
   const response = await axios.post<EmbeddingApiResponse>(`${AI_SERVICE_BASE_URL}/embeddings`, { text });
   const embedding = response.data?.embedding;
 
@@ -147,8 +149,7 @@ const cleanupTempUpload = async (file?: Express.Multer.File): Promise<void> => {
 
   try {
     await unlink(absolutePath);
-    // eslint-disable-next-line no-console
-    console.log(`Cleaned up temporary file: ${absolutePath}`);
+    logger.info(`Cleaned up temporary file: ${absolutePath}`);
   } catch (error: any) {
     if (error?.code !== 'ENOENT') {
       // eslint-disable-next-line no-console
@@ -165,6 +166,8 @@ export const createRecipe = async (
   res: Response,
 ): Promise<void> => {
   try {
+    logger.info(`Incoming request: ${req.method} ${req.originalUrl}`);
+
     if (!req.user?.id) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
@@ -242,6 +245,8 @@ export const searchRecipes = async (
   res: Response,
 ): Promise<void> => {
   try {
+    logger.info(`Incoming request: ${req.method} ${req.originalUrl}`);
+
     if (!req.user?.id) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
@@ -277,9 +282,7 @@ export const searchRecipes = async (
       LIMIT 5
     `;
 
-    // Temporary debug line:
-    console.log('QUERY:', parsed.data.query);
-    console.log('RESULTS FOUND:', searchResults.map(r => ({ id: r.id, dist: r.distance })));
+    logger.info(`Calling AI Service for: semantic search embedding for query \"${parsed.data.query}\"`);
 
     const recipeIds = searchResults.map((result) => result.id);
 
@@ -321,6 +324,8 @@ export const getRecipes = async (
   res: Response,
 ): Promise<void> => {
   try {
+    logger.info(`Incoming request: ${req.method} ${req.originalUrl}`);
+
     if (!req.user?.id) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
@@ -361,6 +366,8 @@ export const getRecipeById = async (
   res: Response,
 ): Promise<void> => {
   try {
+    logger.info(`Incoming request: ${req.method} ${req.originalUrl}`);
+
     if (!req.user?.id) {
       res.status(401).json({ error: 'Unauthorized' });
       return;

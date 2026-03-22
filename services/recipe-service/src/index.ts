@@ -7,6 +7,7 @@ import { resolve } from 'path';
 import authRouter from './routes/auth.routes';
 import chatRouter from './routes/chat.routes';
 import recipeRouter from './routes/recipe.routes';
+import logger from './services/logger';
 
 const app: Application = express();
 const port = process.env.PORT || 4000;
@@ -15,13 +16,11 @@ app.use(json());
 app.use((req, res, next) => {
   const startedAt = Date.now();
 
-  // eslint-disable-next-line no-console
-  console.log(`Incoming ${req.method} ${req.originalUrl}`);
+  logger.info(`Incoming request: ${req.method} ${req.originalUrl}`);
 
   res.on('finish', () => {
     const durationMs = Date.now() - startedAt;
-    // eslint-disable-next-line no-console
-    console.log(`Completed ${req.method} ${req.originalUrl} ${res.statusCode} in ${durationMs}ms`);
+    logger.info(`Completed ${req.method} ${req.originalUrl} ${res.statusCode} in ${durationMs}ms`);
   });
 
   next();
@@ -39,8 +38,7 @@ const cleanupTmpFolder = async (): Promise<void> => {
   const tmpPath = resolve('tmp');
   try {
     await rm(tmpPath, { recursive: true, force: true });
-    // eslint-disable-next-line no-console
-    console.log(`Cleaned up temporary folder: ${tmpPath}`);
+    logger.info(`Cleaned up temporary folder: ${tmpPath}`);
   } catch (error) {
     // eslint-disable-next-line no-console
     console.warn(`Failed to clean up temporary folder: ${error}`);
@@ -48,15 +46,13 @@ const cleanupTmpFolder = async (): Promise<void> => {
 };
 
 const handleShutdown = async (signal: string): Promise<void> => {
-  // eslint-disable-next-line no-console
-  console.log(`Received ${signal}, shutting down gracefully...`);
+  logger.info(`Received ${signal}, shutting down gracefully...`);
   await cleanupTmpFolder();
   process.exit(0);
 };
 
 const server = app.listen(port, () => {
-  // eslint-disable-next-line no-console
-  console.log(`Recipe service listening on port ${port}`);
+  logger.info(`Recipe service listening on port ${port}`);
 });
 
 process.on('SIGTERM', () => handleShutdown('SIGTERM'));

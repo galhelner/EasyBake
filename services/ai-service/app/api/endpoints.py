@@ -4,6 +4,7 @@ from collections.abc import Iterator
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
+from app.core.logger import get_logger
 from app.schemas.recipe import RecipeSchema
 from app.schemas.router import (
     MessageRequest,
@@ -24,6 +25,7 @@ from app.services.gemini_service import (
 )
 
 router = APIRouter()
+logger = get_logger()
 
 SSE_HEADERS = {
     "Cache-Control": "no-cache",
@@ -172,6 +174,7 @@ def _build_specialist_prompt(prompt: str, recipe_context: str | None) -> str:
 
 @router.post("/route", response_model=RouterResponse)
 async def classify_intent_endpoint(payload: RouterRequest):
+    logger.info("Received request for: /api/route")
     try:
         return await classify_intent(payload)
     except Exception as e:
@@ -180,6 +183,7 @@ async def classify_intent_endpoint(payload: RouterRequest):
 
 @router.post("/generate-recipe", response_model=RecipeSchema)
 async def generate_recipe_endpoint(payload: MessageRequest):
+    logger.info("Received request for: /api/generate-recipe")
     try:
         return await generate_recipe(
             _build_specialist_prompt(payload.prompt, payload.recipe_context)
@@ -190,6 +194,7 @@ async def generate_recipe_endpoint(payload: MessageRequest):
 
 @router.post("/stream-assistant")
 async def stream_assistant_endpoint(payload: MessageRequest):
+    logger.info("Received request for: /api/stream-assistant")
     try:
         raw_stream = stream_generate_content(
             _build_specialist_prompt(payload.prompt, payload.recipe_context),
@@ -203,6 +208,7 @@ async def stream_assistant_endpoint(payload: MessageRequest):
 
 @router.post("/stream-health")
 async def stream_health_endpoint(payload: MessageRequest):
+    logger.info("Received request for: /api/stream-health")
     try:
         raw_stream = stream_generate_content(
             _build_specialist_prompt(payload.prompt, payload.recipe_context),
@@ -216,6 +222,7 @@ async def stream_health_endpoint(payload: MessageRequest):
 
 @router.post("/search-specialist", response_model=SearchFiltersResponse)
 async def search_specialist_endpoint(payload: MessageRequest):
+    logger.info("Received request for: /api/search-specialist")
     try:
         return await parse_search_filters(
             _build_specialist_prompt(payload.prompt, payload.recipe_context)
@@ -226,8 +233,10 @@ async def search_specialist_endpoint(payload: MessageRequest):
 
 @router.post("/embeddings", response_model=EmbeddingResponse)
 async def embeddings_endpoint(payload: EmbeddingRequest):
+    logger.info("Received request for: /api/embeddings")
     try:
         embedding = await generate_embedding(payload.text)
+        logger.info("Embedding generation successful.")
         return EmbeddingResponse(embedding=embedding)
     except Exception as e:
         raise _http_exception_from_error(e)

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import prisma from '../services/prismaClient';
 import { getSupabaseClient } from '../services/supabaseClient';
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
+import logger from '../services/logger';
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -52,8 +53,7 @@ export const register = async (req: AuthenticatedRequest, res: Response): Promis
       refresh_token: data.session?.refresh_token ?? null,
     });
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error('Register error', err);
+    logger.error(`Register error: ${err instanceof Error ? err.message : String(err)}`);
     res.status(500).json({ error: 'Failed to register' });
   }
 };
@@ -96,8 +96,7 @@ export const login = async (req: AuthenticatedRequest, res: Response): Promise<v
       user: data.user ? { id: data.user.id, email: data.user.email } : null,
     });
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error('Login error', err);
+    logger.error(`Login error: ${err instanceof Error ? err.message : String(err)}`);
     res.status(500).json({ error: 'Failed to login' });
   }
 };

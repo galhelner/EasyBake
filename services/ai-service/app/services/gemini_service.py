@@ -9,6 +9,7 @@ from google import genai
 from google.genai import types
 from pydantic import BaseModel
 
+from app.core.logger import get_logger
 from app.schemas.recipe import RecipeSchema
 from app.schemas.router import (
     AssistantResponse,
@@ -21,6 +22,7 @@ from app.schemas.router import (
 MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 EMBEDDING_DIM = int(os.getenv("GEMINI_EMBEDDING_DIM", "768"))
 INSTRUCTIONS_DIR = Path(__file__).resolve().parents[1] / "instructions"
+logger = get_logger()
 
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
@@ -148,6 +150,13 @@ def _format_router_input(request: RouterRequest) -> str:
     )
 
 
+def _truncate_prompt(prompt: str, max_chars: int = 180) -> str:
+    normalized = " ".join(prompt.split())
+    if len(normalized) <= max_chars:
+        return normalized
+    return f"{normalized[:max_chars]}..."
+
+
 def _enforce_context_intent_policy(
     request: RouterRequest,
     response: RouterResponse,
@@ -161,6 +170,7 @@ def _enforce_context_intent_policy(
 
 
 async def classify_intent(request: RouterRequest) -> RouterResponse:
+    logger.info(f"Gemini Prompt: {_truncate_prompt(request.prompt)}")
     response = await asyncio.to_thread(
         _generate_structured_content,
         _format_router_input(request),
@@ -171,6 +181,7 @@ async def classify_intent(request: RouterRequest) -> RouterResponse:
 
 
 async def generate_recipe(prompt: str) -> RecipeSchema:
+    logger.info(f"Gemini Prompt: {_truncate_prompt(prompt)}")
     return await asyncio.to_thread(
         _generate_structured_content,
         prompt,
@@ -180,6 +191,7 @@ async def generate_recipe(prompt: str) -> RecipeSchema:
 
 
 async def generate_assistant_response(prompt: str) -> AssistantResponse:
+    logger.info(f"Gemini Prompt: {_truncate_prompt(prompt)}")
     return await asyncio.to_thread(
         _generate_structured_content,
         prompt,
@@ -189,6 +201,7 @@ async def generate_assistant_response(prompt: str) -> AssistantResponse:
 
 
 async def generate_health_audit(prompt: str) -> HealthAuditResponse:
+    logger.info(f"Gemini Prompt: {_truncate_prompt(prompt)}")
     return await asyncio.to_thread(
         _generate_structured_content,
         prompt,
@@ -198,6 +211,7 @@ async def generate_health_audit(prompt: str) -> HealthAuditResponse:
 
 
 async def parse_search_filters(prompt: str) -> SearchFiltersResponse:
+    logger.info(f"Gemini Prompt: {_truncate_prompt(prompt)}")
     return await asyncio.to_thread(
         _generate_structured_content,
         prompt,
@@ -207,4 +221,7 @@ async def parse_search_filters(prompt: str) -> SearchFiltersResponse:
 
 
 async def generate_embedding(text: str) -> list[float]:
-    return await asyncio.to_thread(_generate_embedding_sync, text)
+    logger.info(f"Gemini Prompt: {_truncate_prompt(text)}")
+    embedding = await asyncio.to_thread(_generate_embedding_sync, text)
+    logger.info("Embedding generation successful.")
+    return embedding

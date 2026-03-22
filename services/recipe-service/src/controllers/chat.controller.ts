@@ -4,6 +4,7 @@ import { Readable } from 'stream';
 import { z } from 'zod';
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
 import prisma from '../services/prismaClient';
+import logger from '../services/logger';
 
 const chatRequestSchema = z
   .object({
@@ -203,12 +204,9 @@ const getUserFacingAxiosErrorMessage = (error: unknown): string => {
 };
 
 const logAxiosFailure = (label: string, error: unknown): void => {
-  // eslint-disable-next-line no-console
-  console.error(label, {
-    status: getAxiosStatusCode(error),
-    retryAfter: getAxiosRetryAfter(error),
-    detail: getAxiosErrorMessage(error),
-  });
+  logger.error(
+    `${label} | status=${getAxiosStatusCode(error)} | retryAfter=${getAxiosRetryAfter(error) ?? 'none'} | detail=${getAxiosErrorMessage(error)}`,
+  );
 };
 
 const sendInitFailureJson = (
@@ -303,8 +301,7 @@ const forwardStructuredSseStream = (
     if (buffer.trim()) {
       res.write(buffer);
     }
-    // eslint-disable-next-line no-console
-    console.log('AI stream completed');
+    logger.info('AI stream completed');
     closeStream();
   });
 
@@ -367,8 +364,7 @@ const forwardSseStream = (
   });
 
   upstreamStream.on('end', () => {
-    // eslint-disable-next-line no-console
-    console.log('AI stream completed');
+    logger.info('AI stream completed');
     closeStream();
   });
 
@@ -389,6 +385,8 @@ export const streamChat = async (
   req: AuthenticatedRequest,
   res: Response,
 ): Promise<void> => {
+  logger.info(`Incoming request: ${req.method} ${req.originalUrl}`);
+
   const parsed = chatRequestSchema.safeParse(req.body);
 
   if (!parsed.success) {
@@ -417,8 +415,7 @@ export const streamChat = async (
 
   let routedIntent: RouterResponsePayload;
   try {
-    // eslint-disable-next-line no-console
-    console.log('AI route request', { page_context, hasRecipeContext: Boolean(recipeContext) });
+    logger.info('Calling AI Service for: intent routing');
     const routeResponse = await axios.post<RouterResponsePayload>(
       `${AI_SERVICE_BASE_URL}/api/route`,
       { prompt, page_context, recipe_context: recipeContext },
@@ -431,8 +428,7 @@ export const streamChat = async (
     );
 
     routedIntent = routeResponse.data;
-    // eslint-disable-next-line no-console
-    console.log('AI route response', routedIntent);
+    logger.info(`Intent detected: ${routedIntent.intent}`);
   } catch (error) {
     logAxiosFailure('AI router request failed', error);
 
@@ -453,8 +449,7 @@ export const streamChat = async (
     const upstreamAbortController = new AbortController();
     const initializeGeminiStream = async (): Promise<Readable | null> => {
       try {
-        // eslint-disable-next-line no-console
-        console.log('AI stream request', { intent: routedIntent.intent, endpoint });
+        logger.info(`Calling AI Service for: ${endpoint}`);
         const upstreamResponse = await axios.post(
           `${AI_SERVICE_BASE_URL}${endpoint}`,
           { prompt, recipe_context: recipeContext },
@@ -517,8 +512,7 @@ export const streamChat = async (
       return;
     case 'CREATE_RECIPE': {
       try {
-        // eslint-disable-next-line no-console
-        console.log('AI recipe generation request', { hasRecipeContext: Boolean(recipeContext) });
+        logger.info('Calling AI Service for: generate recipe');
         const recipeResponse = await axios.post(
           `${AI_SERVICE_BASE_URL}/api/generate-recipe`,
           { prompt, recipe_context: recipeContext },
@@ -547,8 +541,7 @@ export const streamChat = async (
     }
     case 'SEARCH_RECIPES': {
       try {
-        // eslint-disable-next-line no-console
-        console.log('AI search-specialist request');
+        logger.info('Calling AI Service for: search specialist');
         const searchResponse = await axios.post(
           `${AI_SERVICE_BASE_URL}/api/search-specialist`,
           { prompt, recipe_context: recipeContext },

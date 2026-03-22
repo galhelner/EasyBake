@@ -13,3 +13,4 @@ coverage
 *.tsbuildinfo
 dev
 tmp
+logs
