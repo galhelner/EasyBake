@@ -11,6 +11,8 @@ datasource db {
 model User {
   id        String   @id @default(uuid())
   authId    String   @unique
+  email     String?
+  fullName  String?
   recipes   Recipe[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

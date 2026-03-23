@@ -8,6 +8,7 @@ import logger from '../services/logger';
 const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
+  fullName: z.string().min(2).max(50),
 });
 
 const loginSchema = z.object({
@@ -22,7 +23,7 @@ export const register = async (req: AuthenticatedRequest, res: Response): Promis
     return;
   }
 
-  const { email, password } = parsed.data;
+  const { email, password, fullName } = parsed.data;
 
   try {
     const supabase = getSupabaseClient();
@@ -40,15 +41,22 @@ export const register = async (req: AuthenticatedRequest, res: Response): Promis
       return;
     }
 
+    // Update Supabase user display name
+    await supabase.auth.updateUser({
+      data: { display_name: fullName },
+    });
+
     await prisma.user.upsert({
       where: { authId: supabaseUser.id },
       update: {},
-      create: { authId: supabaseUser.id },
+      create: { authId: supabaseUser.id, email, fullName },
     });
+
+    logger.info(`New user registered: ${fullName} (${email})`);
 
     // Session may be null when email confirmation is required.
     res.status(201).json({
-      user: { id: supabaseUser.id, email: supabaseUser.email },
+      user: { id: supabaseUser.id, email: supabaseUser.email, fullName },
       access_token: data.session?.access_token ?? null,
       refresh_token: data.session?.refresh_token ?? null,
     });
@@ -82,18 +90,19 @@ export const login = async (req: AuthenticatedRequest, res: Response): Promise<v
     }
 
     const supabaseUserId = data.user?.id;
+    let user = null;
     if (supabaseUserId) {
-      await prisma.user.upsert({
+      user = await prisma.user.upsert({
         where: { authId: supabaseUserId },
         update: {},
-        create: { authId: supabaseUserId },
+        create: { authId: supabaseUserId, email: data.user?.email ?? undefined },
       });
     }
 
     res.status(200).json({
       access_token: data.session.access_token,
       refresh_token: data.session.refresh_token,
-      user: data.user ? { id: data.user.id, email: data.user.email } : null,
+      user: user ? { id: user.id, email: user.email, fullName: user.fullName } : null,
     });
   } catch (err) {
     logger.error(`Login error: ${err instanceof Error ? err.message : String(err)}`);
