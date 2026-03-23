@@ -30,8 +30,13 @@ class AuthService {
     );
   }
 
-  Future<AuthState> register({required String email, required String password}) async {
+  Future<AuthState> register({
+    required String fullName,
+    required String email,
+    required String password,
+  }) async {
     final response = await _dio.post('/auth/register', data: {
+      'fullName': fullName,
       'email': email,
       'password': password,
     });

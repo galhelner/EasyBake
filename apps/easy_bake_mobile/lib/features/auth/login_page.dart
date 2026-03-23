@@ -51,9 +51,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       final authService = ref.read(authServiceProvider);
       final authState = _isRegister
           ? await authService.register(
+              fullName: _nameController.text.trim(),
               email: _emailController.text.trim(),
               password: _passwordController.text.trim(),
-              // Note: Ensure your authService.register accepts fullName if you've updated it!
             )
           : await authService.login(
               email: _emailController.text.trim(),
