@@ -8,11 +8,19 @@ import authRouter from './routes/auth.routes';
 import chatRouter from './routes/chat.routes';
 import recipeRouter from './routes/recipe.routes';
 import logger from './services/logger';
+import cors from 'cors';
 
 const app: Application = express();
 const port = process.env.PORT || 4000;
 
+app.use(cors({
+  origin: '*', // Allows all origins (fine for development)
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(json());
+
 app.use((req, res, next) => {
   const startedAt = Date.now();
 
@@ -51,7 +59,7 @@ const handleShutdown = async (signal: string): Promise<void> => {
   process.exit(0);
 };
 
-const server = app.listen(port, () => {
+const server = app.listen(Number(port), "0.0.0.0", () => {
   logger.info(`Recipe service listening on port ${port}`);
 });
 

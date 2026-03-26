@@ -11,7 +11,7 @@ import '../../features/auth/auth_state.dart';
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(BaseOptions(
     // Switches IP automatically based on device.
-    baseUrl: Platform.isAndroid ? 'http://10.0.2.2:4000' : 'http://localhost:4000',
+    baseUrl: Platform.isAndroid ? 'http://10.231.1.139:4000' : 'http://localhost:4000',
     connectTimeout: const Duration(seconds: 10),
     receiveTimeout: const Duration(seconds: 15),
   ));

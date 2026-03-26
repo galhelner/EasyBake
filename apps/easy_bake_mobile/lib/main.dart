@@ -5,8 +5,18 @@ import 'features/auth/auth_state.dart';
 import 'features/auth/login_page.dart';
 import 'features/recipes/recipe_list_page.dart';
 
-void main() {
-  runApp(const ProviderScope(child: MyApp()));
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final container = ProviderContainer();
+  await container.read(authNotifierProvider.notifier).restoreFromStorage();
+
+  runApp(
+    UncontrolledProviderScope(
+      container: container,
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends ConsumerWidget {

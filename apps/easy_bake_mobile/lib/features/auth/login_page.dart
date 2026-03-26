@@ -174,7 +174,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           
                           // --- Logo Section ---
                           SizedBox(
-                            height: isSmallScreen ? 100 : 150,
+                            height: _isRegister 
+                              ? (isSmallScreen ? 70 : 100)
+                              : (isSmallScreen ? 100 : 150),
                             child: Image.asset(_kLogoAssetPath, fit: BoxFit.contain),
                           ),
                           
