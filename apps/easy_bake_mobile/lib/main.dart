@@ -1,9 +1,9 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'features/auth/auth_state.dart';
-import 'features/auth/login_page.dart';
-import 'features/recipes/recipe_list_page.dart';
+import 'features/auth/presentation/pages/login_page.dart';
+import 'features/auth/presentation/providers/auth_notifier.dart';
+import 'features/recipes/presentation/pages/recipe_list_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,12 +11,7 @@ Future<void> main() async {
   final container = ProviderContainer();
   await container.read(authNotifierProvider.notifier).restoreFromStorage();
 
-  runApp(
-    UncontrolledProviderScope(
-      container: container,
-      child: const MyApp(),
-    ),
-  );
+  runApp(UncontrolledProviderScope(container: container, child: const MyApp()));
 }
 
 class MyApp extends ConsumerWidget {

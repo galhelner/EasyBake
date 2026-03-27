@@ -1,19 +1,22 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/network/api_client.dart';
-import 'auth_state.dart';
+import '../../../../core/network/api_client.dart';
+import '../../domain/models/auth_state.dart';
 
-class AuthService {
+class AuthApiService {
   final Dio _dio;
 
-  AuthService(this._dio);
+  AuthApiService(this._dio);
 
-  Future<AuthState> login({required String email, required String password}) async {
-    final response = await _dio.post('/auth/login', data: {
-      'email': email,
-      'password': password,
-    });
+  Future<AuthState> login({
+    required String email,
+    required String password,
+  }) async {
+    final response = await _dio.post(
+      '/auth/login',
+      data: {'email': email, 'password': password},
+    );
 
     final json = response.data as Map<String, dynamic>;
     final accessToken = json['access_token'] as String?;
@@ -35,11 +38,10 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    final response = await _dio.post('/auth/register', data: {
-      'fullName': fullName,
-      'email': email,
-      'password': password,
-    });
+    final response = await _dio.post(
+      '/auth/register',
+      data: {'fullName': fullName, 'email': email, 'password': password},
+    );
 
     final json = response.data as Map<String, dynamic>;
     final accessToken = json['access_token'] as String?;
@@ -57,6 +59,6 @@ class AuthService {
   }
 }
 
-final authServiceProvider = Provider<AuthService>((ref) {
-  return AuthService(ref.read(dioProvider));
+final authApiServiceProvider = Provider<AuthApiService>((ref) {
+  return AuthApiService(ref.read(dioProvider));
 });

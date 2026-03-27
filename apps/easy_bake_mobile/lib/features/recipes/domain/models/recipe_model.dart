@@ -1,4 +1,4 @@
-﻿class RecipeModel {
+class RecipeModel {
   final String? id;
   final String title;
   final List<String> ingredients;
@@ -17,7 +17,6 @@
     this.authorId,
   });
 
-  /// Convert from the recipe-service response.
   factory RecipeModel.fromJson(Map<String, dynamic> json) {
     final instructionsValue = json['instructions'];
     final instructionsList = _parseInstructions(instructionsValue);
@@ -30,9 +29,8 @@
       title: json['title'] as String? ?? 'New Recipe',
       ingredients: ingredientsList,
       instructions: instructionsList,
-      healthScore: (json['healthScore'] as int?) ??
-          (json['health_score'] as int?) ??
-          5,
+      healthScore:
+          (json['healthScore'] as int?) ?? (json['health_score'] as int?) ?? 5,
       imageUrl: json['imageUrl'] as String?,
       authorId: json['authorId'] as String?,
     );
@@ -76,7 +74,6 @@
         .toList();
   }
 
-  /// A JSON payload suitable for the recipe-service "create recipe" endpoint.
   Map<String, dynamic> toCreateJson() {
     return {
       'title': title,
