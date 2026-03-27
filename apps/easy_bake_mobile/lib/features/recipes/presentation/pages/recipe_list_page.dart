@@ -70,13 +70,6 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
             context,
           ).push(MaterialPageRoute(builder: (_) => const RecipeCreatePage()));
         },
-        onAiCreate: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => const RecipeCreatePage(useAi: true),
-            ),
-          );
-        },
       ),
     );
   }

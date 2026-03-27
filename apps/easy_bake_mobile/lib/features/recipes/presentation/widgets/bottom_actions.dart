@@ -2,13 +2,9 @@ import 'package:flutter/material.dart';
 
 class BottomActions extends StatelessWidget {
   final VoidCallback onCreate;
-  final VoidCallback onAiCreate;
+  final VoidCallback? onAiCreate;
 
-  const BottomActions({
-    super.key,
-    required this.onCreate,
-    required this.onAiCreate,
-  });
+  const BottomActions({super.key, required this.onCreate, this.onAiCreate});
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +34,7 @@ class BottomActions extends StatelessWidget {
               ),
               child: InkWell(
                 customBorder: const CircleBorder(),
-                onTap: onAiCreate,
+                onTap: onAiCreate ?? () {},
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [

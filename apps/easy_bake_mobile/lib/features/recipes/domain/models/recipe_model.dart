@@ -77,8 +77,7 @@ class RecipeModel {
   Map<String, dynamic> toCreateJson() {
     return {
       'title': title,
-      'instructions': instructions.join('\n'),
-      'healthScore': healthScore,
+      'instructions': instructions,
       'ingredients': ingredients.map((name) => {'name': name}).toList(),
     };
   }

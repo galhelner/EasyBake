@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:convert';
+import 'dart:io';
 
 import '../../../../core/network/api_client.dart';
 import '../../domain/models/recipe_model.dart';
@@ -23,7 +25,42 @@ class RecipeService {
   }
 
   Future<RecipeModel> createRecipe(RecipeModel recipe) async {
-    final response = await _dio.post('/recipes', data: recipe.toCreateJson());
+    final createData = recipe.toCreateJson();
+    final response = await _dio.post('/recipes', data: createData);
+    return RecipeModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<RecipeModel> createRecipeWithOptionalImage(
+    RecipeModel recipe, {
+    String? imageFilePath,
+  }) async {
+    if (imageFilePath == null || imageFilePath.isEmpty) {
+      return createRecipe(recipe);
+    }
+
+    final imageFile = File(imageFilePath);
+    if (!await imageFile.exists()) {
+      return createRecipe(recipe);
+    }
+
+    final createData = recipe.toCreateJson();
+    final instructions = (createData['instructions'] as List<dynamic>?) ?? [];
+    final ingredients = (createData['ingredients'] as List<dynamic>?) ?? [];
+    final fileName = imageFile.path.split(RegExp(r'[\\/]')).last;
+
+    final formData = FormData.fromMap({
+      'title': createData['title'],
+      // Backend preprocessors accept JSON strings in multipart fields.
+      'instructions': jsonEncode(instructions),
+      'ingredients': jsonEncode(ingredients),
+      'image': await MultipartFile.fromFile(imageFile.path, filename: fileName),
+    });
+
+    final response = await _dio.post(
+      '/recipes',
+      data: formData,
+      options: Options(contentType: 'multipart/form-data'),
+    );
     return RecipeModel.fromJson(response.data as Map<String, dynamic>);
   }
 }
