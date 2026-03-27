@@ -16,6 +16,7 @@ final dioProvider = Provider<Dio>((ref) {
           ? 'http://10.231.1.139:4000'
           : 'http://localhost:4000',
       connectTimeout: const Duration(seconds: 10),
+      sendTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 15),
     ),
   );

@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 class LoadErrorSliver extends StatelessWidget {
   final String error;
+  final VoidCallback? onRetry;
 
-  const LoadErrorSliver({super.key, required this.error});
+  const LoadErrorSliver({super.key, required this.error, this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +32,14 @@ class LoadErrorSliver extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
+              if (onRetry != null) ...[
+                const SizedBox(height: 14),
+                ElevatedButton.icon(
+                  onPressed: onRetry,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Try again'),
+                ),
+              ],
             ],
           ),
         ),

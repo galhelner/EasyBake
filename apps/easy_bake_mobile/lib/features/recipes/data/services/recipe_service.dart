@@ -11,8 +11,8 @@ class RecipeService {
 
   RecipeService(this._dio);
 
-  Future<List<RecipeModel>> fetchRecipes() async {
-    final response = await _dio.get('/recipes');
+  Future<List<RecipeModel>> fetchRecipes({CancelToken? cancelToken}) async {
+    final response = await _dio.get('/recipes', cancelToken: cancelToken);
     final data = response.data as List<dynamic>;
     return data
         .map((item) => RecipeModel.fromJson(item as Map<String, dynamic>))

@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../auth/presentation/providers/auth_notifier.dart';
@@ -15,5 +18,32 @@ final recipesListProvider = FutureProvider.autoDispose<List<RecipeModel>>((
   }
 
   final service = ref.read(recipeServiceProvider);
-  return service.fetchRecipes();
+  final cancelToken = CancelToken();
+  ref.onDispose(cancelToken.cancel);
+
+  try {
+    return await service
+        .fetchRecipes(cancelToken: cancelToken)
+        .timeout(const Duration(seconds: 12));
+  } on TimeoutException {
+    if (!cancelToken.isCancelled) {
+      cancelToken.cancel('Timed out while loading recipes');
+    }
+    throw Exception(
+      'Server is not responding. Please check if recipe-service is running and try again.',
+    );
+  } on DioException catch (error) {
+    if (CancelToken.isCancel(error)) {
+      throw Exception('Request cancelled');
+    }
+    if (error.type == DioExceptionType.connectionTimeout ||
+        error.type == DioExceptionType.sendTimeout ||
+        error.type == DioExceptionType.receiveTimeout ||
+        error.type == DioExceptionType.connectionError) {
+      throw Exception(
+        'Cannot reach the server. Please start recipe-service and refresh.',
+      );
+    }
+    rethrow;
+  }
 });

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -17,17 +19,57 @@ class RecipeListPage extends ConsumerStatefulWidget {
 }
 
 class _RecipeListPageState extends ConsumerState<RecipeListPage> {
+  static const _loadingWatchdogDuration = Duration(seconds: 18);
+
   final TextEditingController _searchController = TextEditingController();
+  Timer? _loadingWatchdog;
+  bool _requiresManualRetry = false;
+
+  void _armLoadingWatchdog() {
+    if (_loadingWatchdog != null || _requiresManualRetry) {
+      return;
+    }
+    _loadingWatchdog = Timer(_loadingWatchdogDuration, () {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _requiresManualRetry = true;
+      });
+    });
+  }
+
+  void _disarmLoadingWatchdog() {
+    _loadingWatchdog?.cancel();
+    _loadingWatchdog = null;
+  }
+
+  void _retryLoad() {
+    _disarmLoadingWatchdog();
+    setState(() {
+      _requiresManualRetry = false;
+    });
+    ref.invalidate(recipesListProvider);
+  }
 
   @override
   void dispose() {
+    _disarmLoadingWatchdog();
     _searchController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final recipesAsync = ref.watch(recipesListProvider);
+    final recipesAsync = _requiresManualRetry
+        ? null
+        : ref.watch(recipesListProvider);
+
+    if (!_requiresManualRetry && recipesAsync!.isLoading) {
+      _armLoadingWatchdog();
+    } else {
+      _disarmLoadingWatchdog();
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF2F7F7),
@@ -36,8 +78,12 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
         child: RefreshIndicator(
           triggerMode: RefreshIndicatorTriggerMode.anywhere,
           onRefresh: () async {
-            ref.invalidate(recipesListProvider);
-            await ref.read(recipesListProvider.future);
+            _retryLoad();
+            try {
+              await ref.read(recipesListProvider.future);
+            } catch (_) {
+              // Keep RefreshIndicator stable when request fails.
+            }
           },
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -48,16 +94,24 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
                   onSearchChanged: (_) => setState(() {}),
                 ),
               ),
-              recipesAsync.when(
-                data: (recipes) => RecipeListContent(
-                  recipes: recipes,
-                  query: _searchController.text,
+              if (_requiresManualRetry)
+                LoadErrorSliver(
+                  error:
+                      'Server appears offline or unreachable. Start recipe-service and tap Try again.',
+                  onRetry: _retryLoad,
+                )
+              else
+                recipesAsync!.when(
+                  data: (recipes) => RecipeListContent(
+                    recipes: recipes,
+                    query: _searchController.text,
+                  ),
+                  loading: () => const RecipeListSkeletonSliver(),
+                  error: (error, stack) => LoadErrorSliver(
+                    error: error.toString(),
+                    onRetry: _retryLoad,
+                  ),
                 ),
-                loading: () => const RecipeListSkeletonSliver(),
-                error: (error, stack) => SliverToBoxAdapter(
-                  child: LoadErrorSliver(error: error.toString()),
-                ),
-              ),
               const SliverToBoxAdapter(child: SizedBox(height: 110)),
             ],
           ),
