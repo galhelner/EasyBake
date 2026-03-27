@@ -8,11 +8,7 @@ import '../../features/auth/presentation/providers/auth_notifier.dart';
 /// The base API client used for authenticated endpoints (recipes + auth).
 ///
 /// By default this points to the recipe-service (port 4000).
-late Ref _authRef;
-
 final dioProvider = Provider<Dio>((ref) {
-  _authRef = ref; // Store ref for interceptor callbacks
-
   final dio = Dio(
     BaseOptions(
       // Switches IP automatically based on device.
@@ -29,21 +25,19 @@ final dioProvider = Provider<Dio>((ref) {
   dio.interceptors.add(
     InterceptorsWrapper(
       onRequest: (options, handler) {
-        final token = _authRef.read(authTokenProvider);
+        final token = ref.read(authTokenProvider);
         if (token != null && token.isNotEmpty) {
           options.headers['Authorization'] = 'Bearer $token';
         }
         handler.next(options);
       },
       onResponse: (response, handler) {
-
-        // Check for 401 in the response
-        if (response.statusCode == 401) {
-          _authRef.read(authNotifierProvider.notifier).clear();
-        }
         handler.next(response);
       },
       onError: (error, handler) {
+        if (error.response?.statusCode == 401) {
+          ref.read(authNotifierProvider.notifier).clear();
+        }
         handler.next(error);
       },
     ),
