@@ -174,6 +174,9 @@ const mapRecipeToDTO = (recipe: any): RecipeDTO => ({
     })) ?? [],
 });
 
+const normalizeIngredientNames = (ingredients: { name: string }[]): string[] =>
+  Array.from(new Set(ingredients.map((i) => i.name.toLowerCase().trim()).filter(Boolean)));
+
 const cleanupTempUpload = async (file?: Express.Multer.File): Promise<void> => {
   if (!file?.path) {
     return;
@@ -217,7 +220,7 @@ export const createRecipe = async (
     const { title, instructions, ingredients } = parsed.data;
     const imageUrl = req.file ? await uploadImage(req.file) : DEFAULT_RECIPE_IMAGE_URL;
 
-    const ingredientNames = ingredients.map((i) => i.name.toLowerCase().trim());
+    const ingredientNames = normalizeIngredientNames(ingredients);
     const healthScore = await requestAiHealthScore(title, ingredientNames, instructions);
 
     const createData: any = {
@@ -436,6 +439,153 @@ export const getRecipeById = async (
     // eslint-disable-next-line no-console
     console.error('Error fetching recipe', error);
     res.status(500).json({ error: 'Failed to fetch recipe' });
+  }
+};
+
+export const updateRecipe = async (
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    logger.info(`Incoming request: ${req.method} ${req.originalUrl}`);
+
+    if (!req.user?.id) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const { id } = req.params;
+
+    const parsed = createRecipeSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation error', details: parsed.error.flatten() });
+      return;
+    }
+
+    const existingRecipe = await prisma.recipe.findFirst({
+      where: {
+        id,
+        author: {
+          authId: req.user.id,
+        },
+      },
+      select: {
+        id: true,
+        imageUrl: true,
+      },
+    });
+
+    if (!existingRecipe) {
+      res.status(404).json({ error: 'Recipe not found' });
+      return;
+    }
+
+    const { title, instructions, ingredients } = parsed.data;
+    const ingredientNames = normalizeIngredientNames(ingredients);
+    const healthScore = await requestAiHealthScore(title, ingredientNames, instructions);
+    const imageUrl = req.file
+      ? await uploadImage(req.file)
+      : existingRecipe.imageUrl ?? DEFAULT_RECIPE_IMAGE_URL;
+
+    const updatedRecipe = await prisma.recipe.update({
+      where: {
+        id: existingRecipe.id,
+      },
+      data: {
+        title,
+        instructions,
+        healthScore,
+        imageUrl,
+        ingredients: {
+          deleteMany: {},
+          create: ingredientNames.map((name) => ({
+            ingredient: {
+              connectOrCreate: {
+                where: { name },
+                create: { name },
+              },
+            },
+          })),
+        },
+      },
+      include: {
+        ingredients: {
+          include: {
+            ingredient: true,
+          },
+        },
+      },
+    });
+
+    try {
+      const embeddingText = buildRecipeEmbeddingText(title, ingredientNames, instructions);
+      const embedding = await generateEmbedding(embeddingText);
+      await saveRecipeEmbedding(updatedRecipe.id, embedding);
+    } catch (embeddingError) {
+      // eslint-disable-next-line no-console
+      console.warn('Recipe updated but embedding generation failed', embeddingError);
+    }
+
+    res.json(mapRecipeToDTO(updatedRecipe));
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error updating recipe', error);
+    res.status(500).json({ error: 'Failed to update recipe' });
+  } finally {
+    await cleanupTempUpload(req.file);
+  }
+};
+
+export const deleteRecipe = async (
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    logger.info(`Incoming request: ${req.method} ${req.originalUrl}`);
+
+    if (!req.user?.id) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const { id } = req.params;
+
+    const existingRecipe = await prisma.recipe.findFirst({
+      where: {
+        id,
+        author: {
+          authId: req.user.id,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!existingRecipe) {
+      res.status(404).json({ error: 'Recipe not found' });
+      return;
+    }
+
+    await prisma.$transaction([
+      prisma.recipeIngredient.deleteMany({
+        where: {
+          recipeId: existingRecipe.id,
+        },
+      }),
+      prisma.recipe.delete({
+        where: {
+          id: existingRecipe.id,
+        },
+      }),
+    ]);
+
+    res.status(204).send();
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error deleting recipe', error);
+    res.status(500).json({ error: 'Failed to delete recipe' });
   }
 };
 
