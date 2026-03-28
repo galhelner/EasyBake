@@ -13,7 +13,14 @@ import '../widgets/recipe_create_input_field.dart';
 import '../widgets/recipe_create_upload_card.dart';
 
 class RecipeCreatePage extends ConsumerStatefulWidget {
-  const RecipeCreatePage({super.key});
+  const RecipeCreatePage({
+    super.key,
+    this.initialRecipe,
+    this.initialRecipeJson,
+  });
+
+  final RecipeModel? initialRecipe;
+  final Map<String, dynamic>? initialRecipeJson;
 
   @override
   ConsumerState<RecipeCreatePage> createState() => _RecipeCreatePageState();
@@ -44,6 +51,51 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
   XFile? _selectedImageFile;
   String? _titleError;
   String? _ingredientError;
+
+  @override
+  void initState() {
+    super.initState();
+    _applyInitialRecipe();
+  }
+
+  void _applyInitialRecipe() {
+    final initialRecipe = widget.initialRecipe ??
+        (widget.initialRecipeJson != null
+            ? RecipeModel.fromJson(widget.initialRecipeJson!)
+            : null);
+
+    if (initialRecipe == null) {
+      return;
+    }
+
+    _titleController.text = initialRecipe.title;
+    _replaceControllerValues(_ingredientControllers, initialRecipe.ingredients);
+    _replaceControllerValues(_instructionControllers, initialRecipe.instructions);
+  }
+
+  void _replaceControllerValues(
+    List<TextEditingController> target,
+    List<String> values,
+  ) {
+    for (final controller in target) {
+      controller.dispose();
+    }
+    target.clear();
+
+    final normalized = values
+        .map((value) => value.trim())
+        .where((value) => value.isNotEmpty)
+        .toList();
+
+    if (normalized.isEmpty) {
+      target.add(TextEditingController());
+      return;
+    }
+
+    target.addAll(
+      normalized.map((value) => TextEditingController(text: value)),
+    );
+  }
 
   Future<void> _createRecipe() async {
     if (!_validateRequiredFields()) return;
@@ -312,6 +364,8 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                   onRemove: _removeIngredientField,
                   primaryColor: _kPrimaryBlue,
                   hintColor: _kHintText,
+                  minLines: 1,
+                  maxLines: 3,
                   hasError: _ingredientError != null,
                   errorText: _ingredientError,
                   onFieldChanged: _handleIngredientChanged,
@@ -325,6 +379,8 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                   onRemove: _removeInstructionField,
                   primaryColor: _kPrimaryBlue,
                   hintColor: _kHintText,
+                  minLines: 2,
+                  maxLines: 4,
                 ),
                 const SizedBox(height: 30),
                 Center(

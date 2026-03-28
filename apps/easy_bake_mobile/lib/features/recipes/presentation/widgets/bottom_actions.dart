@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../chat/presentation/widgets/ai_chef_chat_bubble.dart';
+
 class BottomActions extends StatelessWidget {
   final VoidCallback onCreate;
   final VoidCallback? onAiCreate;
@@ -27,36 +29,46 @@ class BottomActions extends StatelessWidget {
           SizedBox(
             width: 68,
             height: 68,
-            child: Material(
-              color: Colors.white,
-              shape: const CircleBorder(
-                side: BorderSide(color: Color(0xFF304466), width: 2),
-              ),
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                onTap: onAiCreate ?? () {},
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Center(
-                      child: Image.asset(
-                        'assets/app_logo.png',
-                        width: 38,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                    const Positioned(
-                      right: 14,
-                      top: 10,
-                      child: Icon(
-                        Icons.auto_awesome,
-                        color: Color(0xFFFFC857),
-                        size: 14,
-                      ),
-                    ),
-                  ],
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Positioned(
+                  right: 0,
+                  bottom: 72,
+                  child: const AiChefChatBubble(),
                 ),
-              ),
+                Material(
+                  color: Colors.white,
+                  shape: const CircleBorder(
+                    side: BorderSide(color: Color(0xFF304466), width: 2),
+                  ),
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: onAiCreate ?? () {},
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Center(
+                          child: Image.asset(
+                            'assets/app_logo.png',
+                            width: 38,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                        const Positioned(
+                          right: 14,
+                          top: 10,
+                          child: Icon(
+                            Icons.auto_awesome,
+                            color: Color(0xFFFFC857),
+                            size: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],

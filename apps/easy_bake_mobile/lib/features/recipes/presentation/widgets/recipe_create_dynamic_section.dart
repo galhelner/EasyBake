@@ -13,6 +13,8 @@ class RecipeCreateDynamicSection extends StatelessWidget {
   final bool hasError;
   final String? errorText;
   final ValueChanged<String>? onFieldChanged;
+  final int minLines;
+  final int maxLines;
 
   const RecipeCreateDynamicSection({
     super.key,
@@ -26,6 +28,8 @@ class RecipeCreateDynamicSection extends StatelessWidget {
     this.hasError = false,
     this.errorText,
     this.onFieldChanged,
+    this.minLines = 1,
+    this.maxLines = 1,
   });
 
   @override
@@ -45,6 +49,7 @@ class RecipeCreateDynamicSection extends StatelessWidget {
         for (var i = 0; i < controllers.length; i++) ...[
           const SizedBox(height: 10),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: RecipeCreateInputField(
@@ -54,13 +59,18 @@ class RecipeCreateDynamicSection extends StatelessWidget {
                   hintColor: hintColor,
                   hasError: hasError,
                   onChanged: onFieldChanged,
+                  minLines: minLines,
+                  maxLines: maxLines,
                 ),
               ),
               const SizedBox(width: 14),
-              _FieldActionButton(
-                onTap: onAdd,
-                primaryColor: primaryColor,
-                icon: Icons.add,
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: _FieldActionButton(
+                  onTap: onAdd,
+                  primaryColor: primaryColor,
+                  icon: Icons.add,
+                ),
               ),
               if (controllers.length > 1) ...[
                 const SizedBox(width: 8),

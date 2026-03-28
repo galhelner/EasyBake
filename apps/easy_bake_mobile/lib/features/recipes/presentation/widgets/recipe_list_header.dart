@@ -7,11 +7,13 @@ import '../../../auth/presentation/providers/auth_notifier.dart';
 class RecipeListHeader extends ConsumerWidget {
   final TextEditingController searchController;
   final ValueChanged<String> onSearchChanged;
+  final bool showSearch;
 
   const RecipeListHeader({
     super.key,
     required this.searchController,
     required this.onSearchChanged,
+    this.showSearch = true,
   });
 
   @override
@@ -41,11 +43,13 @@ class RecipeListHeader extends ConsumerWidget {
             width: 210,
             fit: BoxFit.contain,
           ),
-          const SizedBox(height: 14),
-          _SearchInput(
-            controller: searchController,
-            onChanged: onSearchChanged,
-          ),
+          if (showSearch) ...[
+            const SizedBox(height: 14),
+            _SearchInput(
+              controller: searchController,
+              onChanged: onSearchChanged,
+            ),
+          ],
           const SizedBox(height: 16),
         ],
       ),

@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../chat/data/services/chat_service.dart';
+import '../../../chat/presentation/widgets/ai_chef_chat_popup_dialog.dart';
 import '../../presentation/providers/recipe_providers.dart';
 import '../widgets/bottom_actions.dart';
 import '../widgets/load_error_sliver.dart';
@@ -64,6 +66,17 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
     final recipesAsync = _requiresManualRetry
         ? null
         : ref.watch(recipesListProvider);
+    final hasAnyRecipes = _requiresManualRetry
+        ? true
+        : recipesAsync?.maybeWhen(
+            data: (recipes) => recipes.isNotEmpty,
+            orElse: () => true,
+          ) ??
+          true;
+
+    if (!hasAnyRecipes && _searchController.text.isNotEmpty) {
+      _searchController.clear();
+    }
 
     if (!_requiresManualRetry && recipesAsync!.isLoading) {
       _armLoadingWatchdog();
@@ -92,6 +105,7 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
                 child: RecipeListHeader(
                   searchController: _searchController,
                   onSearchChanged: (_) => setState(() {}),
+                  showSearch: hasAnyRecipes,
                 ),
               ),
               if (_requiresManualRetry)
@@ -123,6 +137,23 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
           Navigator.of(
             context,
           ).push(MaterialPageRoute(builder: (_) => const RecipeCreatePage()));
+        },
+        onAiCreate: () {
+          unawaited(
+            showAiChefChatPopup(
+              context,
+              pageContext: 'home',
+              chatService: ref.read(chatServiceProvider),
+              onOpenRecipeCreated: (recipePayload) {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        RecipeCreatePage(initialRecipeJson: recipePayload),
+                  ),
+                );
+              },
+            ),
+          );
         },
       ),
     );

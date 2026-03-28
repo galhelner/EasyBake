@@ -49,7 +49,9 @@ interface RecipeContextPayload {
   }>;
 }
 
-const AI_SERVICE_BASE_URL = (process.env.AI_SERVICE_URL ?? 'http://127.0.0.1:8000').replace(/\/$/, '');
+const AI_SERVICE_URL_RAW = (process.env.AI_SERVICE_URL ?? 'http://127.0.0.1:8000').replace(/\/$/, '');
+const AI_SERVICE_BASE_URL = AI_SERVICE_URL_RAW.replace(/\/api$/i, '');
+const AI_SERVICE_API_BASE_URL = `${AI_SERVICE_BASE_URL}/api`;
 
 const buildRecipeContext = (recipe: RecipeContextPayload): string => {
   const ingredients = recipe.ingredients.length
@@ -417,7 +419,7 @@ export const streamChat = async (
   try {
     logger.info('Calling AI Service for: intent routing');
     const routeResponse = await axios.post<RouterResponsePayload>(
-      `${AI_SERVICE_BASE_URL}/api/route`,
+      `${AI_SERVICE_API_BASE_URL}/route`,
       { prompt, page_context, recipe_context: recipeContext },
       {
         headers: {
@@ -451,7 +453,7 @@ export const streamChat = async (
       try {
         logger.info(`Calling AI Service for: ${endpoint}`);
         const upstreamResponse = await axios.post(
-          `${AI_SERVICE_BASE_URL}${endpoint}`,
+          `${AI_SERVICE_API_BASE_URL}${endpoint}`,
           { prompt, recipe_context: recipeContext },
           {
             headers: {
@@ -505,16 +507,16 @@ export const streamChat = async (
   switch (routedIntent.intent) {
     case 'ASSISTANT_HELP':
     case 'GENERAL_CHAT':
-      await streamFromAi('/api/stream-assistant');
+      await streamFromAi('/stream-assistant');
       return;
     case 'HEALTH_AUDIT':
-      await streamFromAi('/api/stream-health');
+      await streamFromAi('/stream-health');
       return;
     case 'CREATE_RECIPE': {
       try {
         logger.info('Calling AI Service for: generate recipe');
         const recipeResponse = await axios.post(
-          `${AI_SERVICE_BASE_URL}/api/generate-recipe`,
+          `${AI_SERVICE_API_BASE_URL}/generate-recipe`,
           { prompt, recipe_context: recipeContext },
           {
             headers: {
@@ -543,7 +545,7 @@ export const streamChat = async (
       try {
         logger.info('Calling AI Service for: search specialist');
         const searchResponse = await axios.post(
-          `${AI_SERVICE_BASE_URL}/api/search-specialist`,
+          `${AI_SERVICE_API_BASE_URL}/search-specialist`,
           { prompt, recipe_context: recipeContext },
           {
             headers: {

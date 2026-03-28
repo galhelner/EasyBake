@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../chat/data/services/chat_service.dart';
+import '../../../chat/presentation/widgets/ai_chef_chat_popup_dialog.dart';
 import '../../data/services/recipe_service.dart';
 import '../../domain/models/recipe_model.dart';
 import '../providers/recipe_providers.dart';
@@ -13,6 +15,7 @@ import '../widgets/recipe_details/recipe_details_skeleton.dart';
 import '../widgets/recipe_details/recipe_details_tab_bar.dart';
 import '../widgets/recipe_details/recipe_details_theme.dart';
 import '../widgets/recipe_details/recipe_details_top_bar.dart';
+import 'recipe_create_page.dart';
 
 enum _RecipeDetailTab { ingredients, instructions }
 
@@ -174,7 +177,24 @@ class _RecipeDetailsPageState extends ConsumerState<RecipeDetailsPage> {
     return Scaffold(
       backgroundColor: kRecipeDetailsPageBackground,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: const RecipeDetailsAiAssistantButton(),
+      floatingActionButton: RecipeDetailsAiAssistantButton(
+        onTap: () {
+          showAiChefChatPopup(
+            context,
+            pageContext: 'recipe_detail',
+            recipeId: _recipe.id,
+            chatService: ref.read(chatServiceProvider),
+            onOpenRecipeCreated: (recipePayload) {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) =>
+                      RecipeCreatePage(initialRecipeJson: recipePayload),
+                ),
+              );
+            },
+          );
+        },
+      ),
       body: SafeArea(
         child: Stack(
           children: [
