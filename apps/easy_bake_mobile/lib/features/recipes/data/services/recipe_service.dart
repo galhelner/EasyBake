@@ -63,6 +63,10 @@ class RecipeService {
     );
     return RecipeModel.fromJson(response.data as Map<String, dynamic>);
   }
+
+  Future<void> deleteRecipe(String id) async {
+    await _dio.delete('/recipes/$id');
+  }
 }
 
 final recipeServiceProvider = Provider<RecipeService>((ref) {

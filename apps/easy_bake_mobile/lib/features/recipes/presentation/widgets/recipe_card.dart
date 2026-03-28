@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/models/recipe_model.dart';
-import 'recipe_details_dialog.dart';
+import '../pages/recipe_details_page.dart';
 
 class RecipeCard extends StatelessWidget {
   final RecipeModel recipe;
@@ -24,9 +24,10 @@ class RecipeCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(10),
         onTap: () {
-          showDialog(
-            context: context,
-            builder: (context) => RecipeDetailsDialog(recipe: recipe),
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => RecipeDetailsPage(initialRecipe: recipe),
+            ),
           );
         },
         child: Padding(
