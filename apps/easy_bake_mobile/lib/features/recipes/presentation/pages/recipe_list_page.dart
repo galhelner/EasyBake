@@ -73,6 +73,7 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
             orElse: () => true,
           ) ??
           true;
+    final allowPageScroll = _requiresManualRetry || hasAnyRecipes;
 
     if (!hasAnyRecipes && _searchController.text.isNotEmpty) {
       _searchController.clear();
@@ -99,7 +100,9 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
             }
           },
           child: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
+            physics: allowPageScroll
+                ? const AlwaysScrollableScrollPhysics()
+                : const NeverScrollableScrollPhysics(),
             slivers: [
               SliverToBoxAdapter(
                 child: RecipeListHeader(
@@ -126,7 +129,8 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
                     onRetry: _retryLoad,
                   ),
                 ),
-              const SliverToBoxAdapter(child: SizedBox(height: 110)),
+              if (allowPageScroll)
+                const SliverToBoxAdapter(child: SizedBox(height: 110)),
             ],
           ),
         ),
