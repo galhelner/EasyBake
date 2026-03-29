@@ -166,7 +166,7 @@ class _AnimatedSplash extends StatelessWidget {
                       ),
                       SizedBox(height: 8),
                       Text(
-                        'Whisking up ideas for your next recipe',
+                        'The brain behind your best meals.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 16,
