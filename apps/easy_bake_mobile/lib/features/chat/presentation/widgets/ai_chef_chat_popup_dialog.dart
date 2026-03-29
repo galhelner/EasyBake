@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../auth/presentation/providers/auth_notifier.dart';
 import '../../data/services/chat_service.dart';
 
 Future<void> showAiChefChatPopup(
@@ -24,7 +26,7 @@ Future<void> showAiChefChatPopup(
   );
 }
 
-class _AiChefChatPopupDialog extends StatefulWidget {
+class _AiChefChatPopupDialog extends ConsumerStatefulWidget {
   const _AiChefChatPopupDialog({
     required this.pageContext,
     required this.chatService,
@@ -38,10 +40,11 @@ class _AiChefChatPopupDialog extends StatefulWidget {
   final ValueChanged<Map<String, dynamic>> onOpenRecipeCreated;
 
   @override
-  State<_AiChefChatPopupDialog> createState() => _AiChefChatPopupDialogState();
+  ConsumerState<_AiChefChatPopupDialog> createState() =>
+      _AiChefChatPopupDialogState();
 }
 
-class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
+class _AiChefChatPopupDialogState extends ConsumerState<_AiChefChatPopupDialog> {
   final TextEditingController _questionController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final List<_ChatMessage> _messages = [
@@ -87,6 +90,12 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
       return;
     }
 
+    final authState = ref.read(authNotifierProvider);
+    final displayName = authState.displayName?.trim();
+    final greeting = displayName != null && displayName.isNotEmpty
+        ? 'Hello $displayName!\nHow can I help you?'
+        : 'How can I help you?';
+
     setState(() {
       _isServiceOnline = isOnline;
       _isCheckingInitialConnection = false;
@@ -94,7 +103,7 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
         ..clear()
         ..add(
           isOnline
-              ? const _ChatMessage.ai('How can I help you?')
+              ? _ChatMessage.ai(greeting)
               : const _ChatMessage.ai(
                   'Recipe service is currently unavailable. Please tap Refresh and try again.',
                 ),

@@ -9,8 +9,18 @@ class AuthNotifier extends Notifier<AuthState> {
   @override
   AuthState build() => const AuthState();
 
-  void setAuth({required String accessToken, String? userId, String? email}) {
-    state = AuthState(userId: userId, email: email, accessToken: accessToken);
+  void setAuth({
+    required String accessToken,
+    String? userId,
+    String? email,
+    String? displayName,
+  }) {
+    state = AuthState(
+      userId: userId,
+      email: email,
+      displayName: displayName,
+      accessToken: accessToken,
+    );
     final storage = ref.read(authStorageServiceProvider);
     unawaited(storage.persistAuth(state));
   }

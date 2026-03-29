@@ -30,6 +30,7 @@ class AuthApiService {
       accessToken: accessToken,
       userId: user?['id'] as String?,
       email: user?['email'] as String?,
+      displayName: user?['fullName'] as String?,
     );
   }
 
@@ -55,6 +56,7 @@ class AuthApiService {
       accessToken: accessToken,
       userId: user?['id'] as String?,
       email: user?['email'] as String?,
+      displayName: user?['fullName'] as String?,
     );
   }
 }

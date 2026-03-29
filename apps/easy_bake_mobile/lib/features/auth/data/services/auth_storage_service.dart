@@ -7,6 +7,7 @@ class AuthStorageService {
   static const _kAccessTokenKey = 'auth.accessToken';
   static const _kUserIdKey = 'auth.userId';
   static const _kEmailKey = 'auth.email';
+  static const _kDisplayNameKey = 'auth.displayName';
 
   Future<AuthState> restoreFromStorage() async {
     final prefs = await SharedPreferences.getInstance();
@@ -20,6 +21,7 @@ class AuthStorageService {
       accessToken: token,
       userId: prefs.getString(_kUserIdKey),
       email: prefs.getString(_kEmailKey),
+      displayName: prefs.getString(_kDisplayNameKey),
     );
   }
 
@@ -29,6 +31,7 @@ class AuthStorageService {
 
     final userId = authState.userId;
     final email = authState.email;
+    final displayName = authState.displayName;
 
     if (userId != null && userId.isNotEmpty) {
       await prefs.setString(_kUserIdKey, userId);
@@ -41,6 +44,12 @@ class AuthStorageService {
     } else {
       await prefs.remove(_kEmailKey);
     }
+
+    if (displayName != null && displayName.isNotEmpty) {
+      await prefs.setString(_kDisplayNameKey, displayName);
+    } else {
+      await prefs.remove(_kDisplayNameKey);
+    }
   }
 
   Future<void> clearPersistedAuth() async {
@@ -48,6 +57,7 @@ class AuthStorageService {
     await prefs.remove(_kAccessTokenKey);
     await prefs.remove(_kUserIdKey);
     await prefs.remove(_kEmailKey);
+    await prefs.remove(_kDisplayNameKey);
   }
 }
 

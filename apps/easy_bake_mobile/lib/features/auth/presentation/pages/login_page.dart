@@ -64,6 +64,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             accessToken: authState.accessToken!,
             userId: authState.userId,
             email: authState.email,
+            displayName: authState.displayName,
           );
 
       if (mounted) {
