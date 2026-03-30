@@ -38,14 +38,14 @@ class RecipeListContent extends StatelessWidget {
     }
 
     return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       sliver: SliverGrid.builder(
         itemCount: recipes.length,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          mainAxisSpacing: 20,
-          crossAxisSpacing: 16,
-          childAspectRatio: 143 / 174,
+          mainAxisSpacing: 16,
+          crossAxisSpacing: 12,
+          childAspectRatio: 0.75,
         ),
         itemBuilder: (context, index) {
           final recipe = recipes[index];
@@ -77,91 +77,84 @@ class _RecipesEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = isSearching ? 'No matching recipes' : 'Your recipe book is empty';
+    final title = isSearching ? 'No recipes found' : 'Your recipe collection is empty';
     final subtitle = isSearching
-        ? 'Try a different keyword or clear search to see all recipes.'
-        : 'Tap the + button below to add your first recipe, or ask AI to create one for you.';
+        ? 'Try searching with different keywords or clear your search to see all recipes.'
+        : 'Tap the + button to add your first recipe, or use AI to create one for you.';
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(28, 6, 28, 20),
-      child: Align(
-        alignment: Alignment.topCenter,
-        child: Container(
-          width: double.infinity,
-          constraints: const BoxConstraints(maxWidth: 420),
-          padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFF8FBFD), Color(0xFFEAF2F8)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+      padding: const EdgeInsets.fromLTRB(24, 40, 24, 20),
+      child: Center(
+        child: SingleChildScrollView(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 380),
+            padding: const EdgeInsets.fromLTRB(28, 32, 28, 32),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: const Color(0xFFE0E8ED),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF2E4E69).withValues(alpha: 0.06),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFFD2E2EE)),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x1F1A2A3A),
-                blurRadius: 16,
-                offset: Offset(0, 7),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 78,
-                height: 78,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: const Color(0xFFCBDCE8)),
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Icon(
-                      isSearching ? Icons.search_off_rounded : Icons.menu_book_rounded,
-                      size: 34,
-                      color: const Color(0xFF2E4E69),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Icon Container
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF0F4F7),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: const Color(0xFFE0E8ED),
+                      width: 1,
                     ),
-                    Positioned(
-                      right: 14,
-                      top: 14,
-                      child: Container(
-                        width: 9,
-                        height: 9,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFFFC857),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      isSearching
+                          ? Icons.search_off_rounded
+                          : Icons.menu_book_rounded,
+                      size: 40,
+                      color: const Color(0xFF8BB3D6),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Color(0xFF20364B),
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.2,
+                const SizedBox(height: 20),
+                // Title
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Color(0xFF20364B),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    height: 1.3,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                subtitle,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Color(0xFF4E677D),
-                  fontSize: 14,
-                  height: 1.35,
+                const SizedBox(height: 12),
+                // Subtitle
+                Text(
+                  subtitle,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: const Color(0xFF4E677D).withValues(alpha: 0.8),
+                    fontSize: 14,
+                    height: 1.5,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

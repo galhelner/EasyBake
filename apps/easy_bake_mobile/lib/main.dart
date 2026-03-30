@@ -20,7 +20,12 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
       title: 'EasyBake',
-      theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.blue),
+      theme: ThemeData(
+        useMaterial3: true,
+        colorSchemeSeed: const Color(0xFF8BB3D6),
+        brightness: Brightness.light,
+        typography: Typography.material2021(),
+      ),
       home: const AppBootstrapPage(),
     );
   }

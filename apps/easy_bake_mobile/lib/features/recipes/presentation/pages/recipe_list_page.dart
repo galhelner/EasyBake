@@ -86,11 +86,13 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F7F7),
+      backgroundColor: const Color(0xFFEDF1F6),
       body: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.only(top: 12),
         child: RefreshIndicator(
           triggerMode: RefreshIndicatorTriggerMode.anywhere,
+          color: const Color(0xFF8BB3D6),
+          backgroundColor: Colors.white,
           onRefresh: () async {
             _retryLoad();
             try {

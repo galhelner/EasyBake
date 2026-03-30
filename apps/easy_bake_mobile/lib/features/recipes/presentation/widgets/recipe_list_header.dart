@@ -19,74 +19,166 @@ class RecipeListHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(25, 10, 25, 10),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: [
+          // Logout Button
           Align(
-            alignment: Alignment.centerLeft,
+            alignment: Alignment.centerRight,
             child: Padding(
-              padding: const EdgeInsets.only(right: 12, top: 12),
-              child: IconButton(
-                icon: const Icon(Icons.logout, color: Color(0xFF304466)),
-                tooltip: 'Logout',
-                onPressed: () {
-                  ref.read(authNotifierProvider.notifier).clear();
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (_) => const LoginPage()),
-                  );
-                },
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Material(
+                color: Colors.transparent,
+                child: Tooltip(
+                  message: 'Logout',
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE8F0F5).withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.logout,
+                        color: Color(0xFF2E4E69),
+                        size: 20,
+                      ),
+                      onPressed: () {
+                        ref.read(authNotifierProvider.notifier).clear();
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(builder: (_) => const LoginPage()),
+                        );
+                      },
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
+          // Logo
           Image.asset(
             'assets/app_logo_full.png',
-            width: 210,
+            width: 200,
             fit: BoxFit.contain,
           ),
           if (showSearch) ...[
-            const SizedBox(height: 14),
+            const SizedBox(height: 20),
             _SearchInput(
               controller: searchController,
               onChanged: onSearchChanged,
             ),
           ],
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
         ],
       ),
     );
   }
 }
 
-class _SearchInput extends StatelessWidget {
+class _SearchInput extends StatefulWidget {
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
 
   const _SearchInput({required this.controller, required this.onChanged});
 
   @override
+  State<_SearchInput> createState() => _SearchInputState();
+}
+
+class _SearchInputState extends State<_SearchInput> {
+  bool _isFocused = false;
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 42,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(5),
-        border: Border.all(color: const Color(0xFF304466)),
-      ),
-      alignment: Alignment.center,
-      child: TextField(
-        controller: controller,
-        onChanged: onChanged,
-        textAlignVertical: TextAlignVertical.center,
-        decoration: const InputDecoration(
-          border: InputBorder.none,
-          isDense: true,
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          hintText: 'Search Recipe',
-          hintStyle: TextStyle(fontSize: 20, color: Color(0xFF706C6C)),
-          prefixIcon: Icon(Icons.search_rounded, color: Color(0xFF304466)),
-          prefixIconConstraints: BoxConstraints(minWidth: 40, minHeight: 24),
+    return Focus(
+      onFocusChange: (isFocused) {
+        setState(() {
+          _isFocused = isFocused;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        height: 48,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: _isFocused
+                ? const Color(0xFF8BB3D6)
+                : const Color(0xFFE0E8ED),
+            width: _isFocused ? 2 : 1,
+          ),
+          boxShadow: _isFocused
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF8BB3D6).withValues(alpha: 0.1),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: const Color(0xFF2E4E69).withValues(alpha: 0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
         ),
-        style: TextStyle(fontSize: 18),
+        child: TextField(
+          controller: widget.controller,
+          onChanged: widget.onChanged,
+          textAlignVertical: TextAlignVertical.center,
+          style: const TextStyle(
+            fontSize: 16,
+            color: Color(0xFF20364B),
+            fontWeight: FontWeight.w500,
+          ),
+          decoration: InputDecoration(
+            border: InputBorder.none,
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+            hintText: 'Search recipes...',
+            hintStyle: TextStyle(
+              fontSize: 16,
+              color: const Color(0xFF4E677D).withValues(alpha: 0.6),
+              fontWeight: FontWeight.w400,
+            ),
+            prefixIcon: const Padding(
+              padding: EdgeInsets.fromLTRB(12, 0, 8, 0),
+              child: Icon(
+                Icons.search_rounded,
+                color: Color(0xFF8BB3D6),
+                size: 22,
+              ),
+            ),
+            prefixIconConstraints: const BoxConstraints(
+              minWidth: 0,
+              minHeight: 48,
+            ),
+            suffixIcon: widget.controller.text.isNotEmpty
+                ? Padding(
+                    padding: const EdgeInsets.fromLTRB(0, 0, 8, 0),
+                    child: GestureDetector(
+                      onTap: () {
+                        widget.controller.clear();
+                        widget.onChanged('');
+                      },
+                      child: const Icon(
+                        Icons.close_rounded,
+                        color: Color(0xFF8BB3D6),
+                        size: 20,
+                      ),
+                    ),
+                  )
+                : null,
+            suffixIconConstraints: const BoxConstraints(
+              minWidth: 0,
+              minHeight: 48,
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -15,56 +15,53 @@ class BottomActions extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          // Create Recipe Button
           SizedBox(
-            width: 60,
-            height: 60,
+            width: 56,
+            height: 56,
             child: FloatingActionButton(
               heroTag: 'create',
               backgroundColor: const Color(0xFF8BB3D6),
-              elevation: 0,
+              elevation: 4,
               onPressed: onCreate,
-              child: const Icon(Icons.add, size: 38, color: Colors.white),
-            ),
+              shape: const CircleBorder(),
+              child: const Icon(
+                Icons.add,
+                size: 28,
+                color: Colors.white,
+              ),
+            ).withHoverEffect(),
           ),
+          // AI Chef Button
           SizedBox(
-            width: 68,
-            height: 68,
+            width: 64,
+            height: 64,
             child: Stack(
               clipBehavior: Clip.none,
               children: [
                 Positioned(
                   right: 0,
-                  bottom: 72,
+                  bottom: 70,
                   child: const AiChefChatBubble(),
                 ),
                 Material(
                   color: Colors.white,
-                  shape: const CircleBorder(
-                    side: BorderSide(color: Color(0xFF304466), width: 2),
+                  shape: CircleBorder(
+                    side: BorderSide(
+                      color: const Color(0xFF2E4E69).withValues(alpha: 0.15),
+                      width: 1.5,
+                    ),
                   ),
+                  elevation: 4,
                   child: InkWell(
                     customBorder: const CircleBorder(),
                     onTap: onAiCreate ?? () {},
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Center(
-                          child: Image.asset(
-                            'assets/app_logo.png',
-                            width: 38,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                        const Positioned(
-                          right: 14,
-                          top: 10,
-                          child: Icon(
-                            Icons.auto_awesome,
-                            color: Color(0xFFFFC857),
-                            size: 14,
-                          ),
-                        ),
-                      ],
+                    child: Center(
+                      child: Image.asset(
+                        'assets/app_logo.png',
+                        width: 32,
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
                 ),
@@ -72,6 +69,59 @@ class BottomActions extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+extension FloatingActionButtonHoverEffect on Widget {
+  Widget withHoverEffect() {
+    return _FloatingActionButtonWithHover(child: this);
+  }
+}
+
+class _FloatingActionButtonWithHover extends StatefulWidget {
+  final Widget child;
+
+  const _FloatingActionButtonWithHover({required this.child});
+
+  @override
+  State<_FloatingActionButtonWithHover> createState() =>
+      _FloatingActionButtonWithHoverState();
+}
+
+class _FloatingActionButtonWithHoverState
+    extends State<_FloatingActionButtonWithHover>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    _animation = Tween<double>(begin: 1.0, end: 1.08).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => _controller.forward(),
+      onExit: (_) => _controller.reverse(),
+      child: ScaleTransition(
+        scale: _animation,
+        child: widget.child,
       ),
     );
   }
