@@ -27,11 +27,11 @@ class RecipeCreatePage extends ConsumerStatefulWidget {
 }
 
 class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
-  static const _kPageBackground = Color(0xFFF2F7F7);
-  static const _kPrimaryBlue = Color(0xFF2B3D5A);
-  static const _kHintText = Color(0xFF706C6C);
+  static const _kPageBackground = Color(0xFFF5F7FA);
+  static const _kPrimaryBlue = Color(0xFF2E4E69);
   static const _kButtonBlue = Color(0xFF8BB3D6);
-  static const _kUploadCardBackground = Color(0xFFDEECF5);
+  static const _kHintText = Color(0xFF4E677D);
+  static const _kUploadCardBackground = Color(0xFFF0F4F7);
   static const _kLogoAssetPath = 'assets/app_logo.png';
 
   final _formKey = GlobalKey<FormState>();
@@ -321,7 +321,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
       backgroundColor: _kPageBackground,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 10, 24, 24),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Form(
             key: _formKey,
             child: Column(
@@ -332,14 +332,14 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                   primaryColor: _kPrimaryBlue,
                   logoAssetPath: _kLogoAssetPath,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 28),
                 RecipeCreateUploadCard(
-                  primaryColor: _kPrimaryBlue,
+                  primaryColor: _kButtonBlue,
                   backgroundColor: _kUploadCardBackground,
                   imageBytes: _selectedImageBytes,
                   onTap: _showImageSourceOptions,
                 ),
-                const SizedBox(height: 38),
+                const SizedBox(height: 28),
                 RecipeCreateInputField(
                   controller: _titleController,
                   hintText: 'Recipe Title',
@@ -349,10 +349,27 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                   onChanged: _handleTitleChanged,
                 ),
                 if (_titleError != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    _titleError!,
-                    style: const TextStyle(color: Colors.red, fontSize: 13),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF3B30).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: const Color(0xFFFF3B30).withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Text(
+                      _titleError!,
+                      style: const TextStyle(
+                        color: Color(0xFFFF3B30),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
                 ],
                 const SizedBox(height: 28),
@@ -370,7 +387,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                   errorText: _ingredientError,
                   onFieldChanged: _handleIngredientChanged,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 28),
                 RecipeCreateDynamicSection(
                   title: 'Instructions',
                   fieldHint: 'Instruction Step',
@@ -382,41 +399,42 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                   minLines: 2,
                   maxLines: 4,
                 ),
-                const SizedBox(height: 30),
-                Center(
-                  child: SizedBox(
-                    width: 203,
-                    height: 43,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _createRecipe,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _kButtonBlue,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        elevation: 0,
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _createRecipe,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _kButtonBlue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text(
-                              'Save Recipe',
-                              style: TextStyle(
-                                fontSize: 20,
-                                height: 1,
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
+                      elevation: 2,
+                      disabledBackgroundColor:
+                          _kButtonBlue.withValues(alpha: 0.5),
                     ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            'Save Recipe',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
                   ),
                 ),
+                const SizedBox(height: 24),
               ],
             ),
           ),

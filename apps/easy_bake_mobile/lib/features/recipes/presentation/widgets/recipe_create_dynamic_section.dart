@@ -37,17 +37,19 @@ class RecipeCreateDynamicSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: TextStyle(
-            color: primaryColor,
-            fontSize: 20,
-            height: 1,
-            fontWeight: FontWeight.w600,
+        Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+          child: Text(
+            title,
+            style: TextStyle(
+              color: primaryColor,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+            ),
           ),
         ),
         for (var i = 0; i < controllers.length; i++) ...[
-          const SizedBox(height: 10),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -63,31 +65,50 @@ class RecipeCreateDynamicSection extends StatelessWidget {
                   maxLines: maxLines,
                 ),
               ),
-              const SizedBox(width: 14),
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
+              const SizedBox(width: 10),
+              // Add button
+              SizedBox(
+                height: 48,
                 child: _FieldActionButton(
                   onTap: onAdd,
-                  primaryColor: primaryColor,
-                  icon: Icons.add,
+                  icon: Icons.add_rounded,
                 ),
               ),
+              // Remove button
               if (controllers.length > 1) ...[
                 const SizedBox(width: 8),
-                _FieldActionButton(
-                  onTap: () => onRemove(i),
-                  primaryColor: primaryColor,
-                  icon: Icons.remove,
+                SizedBox(
+                  height: 48,
+                  child: _FieldActionButton(
+                    onTap: () => onRemove(i),
+                    icon: Icons.remove_rounded,
+                    isRemove: true,
+                  ),
                 ),
               ],
             ],
           ),
+          if (i < controllers.length - 1) const SizedBox(height: 10),
         ],
         if (errorText != null) ...[
-          const SizedBox(height: 8),
-          Text(
-            errorText!,
-            style: const TextStyle(color: Colors.red, fontSize: 13),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFF3B30).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: const Color(0xFFFF3B30).withValues(alpha: 0.2),
+              ),
+            ),
+            child: Text(
+              errorText!,
+              style: const TextStyle(
+                color: Color(0xFFFF3B30),
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
         ],
       ],
@@ -97,28 +118,45 @@ class RecipeCreateDynamicSection extends StatelessWidget {
 
 class _FieldActionButton extends StatelessWidget {
   final VoidCallback onTap;
-  final Color primaryColor;
   final IconData icon;
+  final bool isRemove;
 
   const _FieldActionButton({
     required this.onTap,
-    required this.primaryColor,
     required this.icon,
+    this.isRemove = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(21),
-      onTap: onTap,
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: primaryColor, width: 2.5),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          width: 48,
+          decoration: BoxDecoration(
+            color: isRemove
+                ? const Color(0xFFFF3B30).withValues(alpha: 0.08)
+                : const Color(0xFF8BB3D6).withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isRemove
+                  ? const Color(0xFFFF3B30).withValues(alpha: 0.2)
+                  : const Color(0xFF8BB3D6).withValues(alpha: 0.2),
+            ),
+          ),
+          child: Center(
+            child: Icon(
+              icon,
+              size: 20,
+              color: isRemove
+                  ? const Color(0xFFFF3B30)
+                  : const Color(0xFF8BB3D6),
+            ),
+          ),
         ),
-        child: Icon(icon, size: 22, color: primaryColor),
       ),
     );
   }

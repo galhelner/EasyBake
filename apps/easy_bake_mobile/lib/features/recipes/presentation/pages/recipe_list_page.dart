@@ -8,6 +8,7 @@ import '../../../chat/presentation/widgets/ai_chef_chat_popup_dialog.dart';
 import '../../presentation/providers/recipe_providers.dart';
 import '../widgets/bottom_actions.dart';
 import '../widgets/load_error_sliver.dart';
+import '../widgets/recipe_creation_modal.dart';
 import '../widgets/recipe_list_content.dart';
 import '../widgets/recipe_list_header.dart';
 import '../widgets/recipe_list_skeleton_sliver.dart';
@@ -87,9 +88,11 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFEDF1F6),
-      body: Padding(
-        padding: const EdgeInsets.only(top: 12),
-        child: RefreshIndicator(
+      body: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: RefreshIndicator(
           triggerMode: RefreshIndicatorTriggerMode.anywhere,
           color: const Color(0xFF8BB3D6),
           backgroundColor: Colors.white,
@@ -101,48 +104,55 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
               // Keep RefreshIndicator stable when request fails.
             }
           },
-          child: CustomScrollView(
-            physics: allowPageScroll
-                ? const AlwaysScrollableScrollPhysics()
-                : const NeverScrollableScrollPhysics(),
-            slivers: [
-              SliverToBoxAdapter(
-                child: RecipeListHeader(
-                  searchController: _searchController,
-                  onSearchChanged: (_) => setState(() {}),
-                  showSearch: hasAnyRecipes,
-                ),
-              ),
-              if (_requiresManualRetry)
-                LoadErrorSliver(
-                  error:
-                      'Server appears offline or unreachable. Start recipe-service and tap Try again.',
-                  onRetry: _retryLoad,
-                )
-              else
-                recipesAsync!.when(
-                  data: (recipes) => RecipeListContent(
-                    recipes: recipes,
-                    query: _searchController.text,
+            child: CustomScrollView(
+              physics: allowPageScroll
+                  ? const AlwaysScrollableScrollPhysics()
+                  : const NeverScrollableScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: RecipeListHeader(
+                    searchController: _searchController,
+                    onSearchChanged: (_) => setState(() {}),
+                    showSearch: hasAnyRecipes,
                   ),
-                  loading: () => const RecipeListSkeletonSliver(),
-                  error: (error, stack) => LoadErrorSliver(
-                    error: error.toString(),
+                ),
+                if (_requiresManualRetry)
+                  LoadErrorSliver(
+                    error:
+                        'Server appears offline or unreachable. Start recipe-service and tap Try again.',
                     onRetry: _retryLoad,
+                  )
+                else
+                  recipesAsync!.when(
+                    data: (recipes) => RecipeListContent(
+                      recipes: recipes,
+                      query: _searchController.text,
+                    ),
+                    loading: () => const RecipeListSkeletonSliver(),
+                    error: (error, stack) => LoadErrorSliver(
+                      error: error.toString(),
+                      onRetry: _retryLoad,
+                    ),
                   ),
-                ),
-              if (allowPageScroll)
-                const SliverToBoxAdapter(child: SizedBox(height: 110)),
-            ],
+                if (allowPageScroll)
+                  const SliverToBoxAdapter(child: SizedBox(height: 110)),
+              ],
+            ),
           ),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: BottomActions(
         onCreate: () {
-          Navigator.of(
+          showRecipeCreationModal(
             context,
-          ).push(MaterialPageRoute(builder: (_) => const RecipeCreatePage()));
+            onCreateManually: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const RecipeCreatePage()),
+              );
+            },
+            onCreateFromImage: null,
+          );
         },
         onAiCreate: () {
           unawaited(

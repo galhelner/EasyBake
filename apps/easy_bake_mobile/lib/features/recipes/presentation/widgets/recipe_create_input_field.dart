@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class RecipeCreateInputField extends StatelessWidget {
+class RecipeCreateInputField extends StatefulWidget {
   final TextEditingController controller;
   final String hintText;
   final Color primaryColor;
@@ -23,60 +23,87 @@ class RecipeCreateInputField extends StatelessWidget {
   });
 
   @override
+  State<RecipeCreateInputField> createState() => _RecipeCreateInputFieldState();
+}
+
+class _RecipeCreateInputFieldState extends State<RecipeCreateInputField> {
+  @override
   Widget build(BuildContext context) {
-    final isMultiline = maxLines > 1;
+    final isMultiline = widget.maxLines > 1;
 
     return ConstrainedBox(
-      constraints: BoxConstraints(
-        minHeight: 45,
-        maxHeight: isMultiline ? 130 : 45,
-      ),
-      child: TextFormField(
-        controller: controller,
-        onChanged: onChanged,
-        keyboardType: isMultiline
-            ? TextInputType.multiline
-            : TextInputType.text,
-        textInputAction: isMultiline
-            ? TextInputAction.newline
-            : TextInputAction.next,
-        minLines: minLines,
-        maxLines: maxLines,
-        style: TextStyle(
-          color: primaryColor,
-          fontSize: isMultiline ? 16 : 20,
-          height: 1.25,
+        constraints: BoxConstraints(
+          minHeight: 48,
+          maxHeight: isMultiline ? 140 : 48,
         ),
-        textAlignVertical: TextAlignVertical.top,
-        decoration: InputDecoration(
-          hintText: hintText,
-          hintStyle: TextStyle(
-            color: hintColor,
-            fontSize: isMultiline ? 15 : 18,
-            height: 1.2,
-            fontWeight: FontWeight.w400,
+        child: TextFormField(
+          controller: widget.controller,
+          onChanged: widget.onChanged,
+          keyboardType: isMultiline
+              ? TextInputType.multiline
+              : TextInputType.text,
+          textInputAction: isMultiline
+              ? TextInputAction.newline
+              : TextInputAction.next,
+          minLines: widget.minLines,
+          maxLines: widget.maxLines,
+          style: TextStyle(
+            color: widget.primaryColor,
+            fontSize: isMultiline ? 15 : 16,
+            height: 1.4,
+            fontWeight: FontWeight.w500,
           ),
-          contentPadding: EdgeInsets.symmetric(
-            horizontal: 18,
-            vertical: isMultiline ? 12 : 10,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(5),
-            borderSide: BorderSide(color: hasError ? Colors.red : primaryColor),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(5),
-            borderSide: BorderSide(color: hasError ? Colors.red : primaryColor),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(5),
-            borderSide: BorderSide(
-              color: hasError ? Colors.red : primaryColor,
-              width: 1.5,
+          textAlignVertical: TextAlignVertical.top,
+          decoration: InputDecoration(
+            hintText: widget.hintText,
+            hintStyle: TextStyle(
+              color: widget.hintColor.withValues(alpha: 0.5),
+              fontSize: isMultiline ? 15 : 16,
+              height: 1.4,
+              fontWeight: FontWeight.w400,
+            ),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: isMultiline ? 12 : 12,
+            ),
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: widget.hasError
+                    ? const Color(0xFFFF3B30)
+                    : const Color(0xFFE0E8ED),
+                width: 1,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: widget.hasError
+                    ? const Color(0xFFFF3B30)
+                    : const Color(0xFFE0E8ED),
+                width: 1,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: widget.hasError
+                    ? const Color(0xFFFF3B30)
+                    : const Color(0xFF8BB3D6),
+                width: 2,
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xFFFF3B30),
+                width: 2,
+              ),
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 }

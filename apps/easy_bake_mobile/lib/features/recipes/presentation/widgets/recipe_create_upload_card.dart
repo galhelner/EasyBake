@@ -18,122 +18,115 @@ class RecipeCreateUploadCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(15),
+      child: GestureDetector(
         onTap: onTap,
         child: Container(
-          width: 265,
-          height: 150,
+          width: double.infinity,
+          constraints: const BoxConstraints(maxWidth: 320, maxHeight: 180),
           decoration: BoxDecoration(
             color: backgroundColor,
-            borderRadius: BorderRadius.circular(15),
-          ),
-          child: CustomPaint(
-            painter: const _DashedRRectBorderPainter(
-              color: Color(0xFF7A96A2),
-              strokeWidth: 2,
-              radius: 15,
-              dashLength: 6,
-              dashGap: 4,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: primaryColor.withValues(alpha: 0.15),
+              width: 1.5,
             ),
-            child: imageBytes == null
-                ? Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.add_photo_alternate_rounded,
-                        size: 64,
-                        color: primaryColor,
+            boxShadow: [
+              BoxShadow(
+                color: primaryColor.withValues(alpha: 0.06),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: imageBytes == null
+              ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: primaryColor.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Upload Recipe Image',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w400,
+                      child: Center(
+                        child: Icon(
+                          Icons.add_photo_alternate_rounded,
+                          size: 32,
+                          color: primaryColor.withValues(alpha: 0.5),
                         ),
                       ),
-                    ],
-                  )
-                : ClipRRect(
-                    borderRadius: BorderRadius.circular(15),
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Image.memory(imageBytes!, fit: BoxFit.cover),
-                        const Align(
-                          alignment: Alignment.bottomCenter,
-                          child: ColoredBox(
-                            color: Color(0x99000000),
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 6,
-                              ),
-                              child: Text(
-                                'Tap to change photo',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 13,
-                                ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Upload Recipe Image',
+                      style: TextStyle(
+                        color: const Color(0xFF2E4E69),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'PNG, JPG up to 5MB',
+                      style: TextStyle(
+                        color: const Color(0xFF4E677D).withValues(alpha: 0.6),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                )
+              : Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.memory(imageBytes!, fit: BoxFit.cover),
+                    ),
+                    // Overlay
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        color: Colors.black.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    // Change photo button
+                    Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.edit_rounded,
+                              size: 16,
+                              color: Color(0xFF8BB3D6),
+                            ),
+                            SizedBox(width: 6),
+                            Text(
+                              'Change photo',
+                              style: TextStyle(
+                                color: Color(0xFF8BB3D6),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                          ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-          ),
+                  ],
+                ),
         ),
       ),
     );
-  }
-}
-
-class _DashedRRectBorderPainter extends CustomPainter {
-  final Color color;
-  final double strokeWidth;
-  final double radius;
-  final double dashLength;
-  final double dashGap;
-
-  const _DashedRRectBorderPainter({
-    required this.color,
-    required this.strokeWidth,
-    required this.radius,
-    required this.dashLength,
-    required this.dashGap,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth;
-
-    final rect = Offset.zero & size;
-    final rRect = RRect.fromRectAndRadius(rect, Radius.circular(radius));
-    final path = Path()..addRRect(rRect);
-
-    for (final metric in path.computeMetrics()) {
-      double distance = 0;
-      while (distance < metric.length) {
-        final next = (distance + dashLength).clamp(0, metric.length).toDouble();
-        final segment = metric.extractPath(distance, next);
-        canvas.drawPath(segment, paint);
-        distance += dashLength + dashGap;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _DashedRRectBorderPainter oldDelegate) {
-    return oldDelegate.color != color ||
-        oldDelegate.strokeWidth != strokeWidth ||
-        oldDelegate.radius != radius ||
-        oldDelegate.dashLength != dashLength ||
-        oldDelegate.dashGap != dashGap;
   }
 }

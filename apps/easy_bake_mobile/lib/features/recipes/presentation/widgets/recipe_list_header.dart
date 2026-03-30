@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../auth/presentation/pages/login_page.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
 
+enum _ProfileMenuAction { logout }
+
 class RecipeListHeader extends ConsumerWidget {
   final TextEditingController searchController;
   final ValueChanged<String> onSearchChanged;
@@ -18,47 +20,90 @@ class RecipeListHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final profileButton = Material(
+      color: Colors.transparent,
+      child: PopupMenuButton<_ProfileMenuAction>(
+        tooltip: 'Profile',
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+        color: Colors.white,
+        elevation: 10,
+        offset: const Offset(0, 52),
+        onSelected: (action) {
+          if (action == _ProfileMenuAction.logout) {
+            ref.read(authNotifierProvider.notifier).clear();
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const LoginPage()),
+            );
+          }
+        },
+        itemBuilder: (context) => const [
+          PopupMenuItem<_ProfileMenuAction>(
+            value: _ProfileMenuAction.logout,
+            child: Row(
+              children: [
+                Icon(
+                  Icons.logout_rounded,
+                  color: Color(0xFF2E4E69),
+                  size: 18,
+                ),
+                SizedBox(width: 10),
+                Text('Logout'),
+              ],
+            ),
+          ),
+        ],
+        child: Container(
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: const Color(0xFF8BB3D6).withValues(alpha: 0.35),
+              width: 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF2E4E69).withValues(alpha: 0.08),
+                blurRadius: 14,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: const Icon(
+            Icons.account_circle_rounded,
+            color: Color(0xFF2E4E69),
+            size: 30,
+          ),
+        ),
+      ),
+    );
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         children: [
-          // Logout Button
-          Align(
-            alignment: Alignment.centerRight,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Material(
-                color: Colors.transparent,
-                child: Tooltip(
-                  message: 'Logout',
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE8F0F5).withValues(alpha: 0.6),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: IconButton(
-                      icon: const Icon(
-                        Icons.logout,
-                        color: Color(0xFF2E4E69),
-                        size: 20,
-                      ),
-                      onPressed: () {
-                        ref.read(authNotifierProvider.notifier).clear();
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(builder: (_) => const LoginPage()),
-                        );
-                      },
-                    ),
+          Stack(
+            children: [
+              Align(
+                alignment: Alignment.center,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 20),
+                  child: Image.asset(
+                    'assets/app_logo_full.png',
+                    width: 200,
+                    fit: BoxFit.contain,
                   ),
                 ),
               ),
-            ),
-          ),
-          // Logo
-          Image.asset(
-            'assets/app_logo_full.png',
-            width: 200,
-            fit: BoxFit.contain,
+              Positioned(
+                left: 2,
+                top: 2,
+                child: profileButton,
+              ),
+            ],
           ),
           if (showSearch) ...[
             const SizedBox(height: 20),
