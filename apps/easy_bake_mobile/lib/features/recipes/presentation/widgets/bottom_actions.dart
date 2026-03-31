@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../chat/presentation/widgets/ai_chef_chat_bubble.dart';
+import '../../../ai-chat/presentation/widgets/ai_chef_chat_bubble.dart';
 
 class BottomActions extends StatelessWidget {
   final VoidCallback onCreate;
@@ -15,24 +15,25 @@ class BottomActions extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Create Recipe Button
           SizedBox(
             width: 56,
             height: 56,
-            child: FloatingActionButton(
-              heroTag: 'create',
-              backgroundColor: const Color(0xFF8BB3D6),
-              elevation: 4,
-              onPressed: onCreate,
-              shape: const CircleBorder(),
-              child: const Icon(
-                Icons.add,
-                size: 28,
-                color: Colors.white,
+            child: _TapScaleEffect(
+              onTap: onCreate,
+              child: Material(
+                color: const Color(0xFF8BB3D6),
+                elevation: 4,
+                shape: const CircleBorder(),
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: onCreate,
+                  child: const Center(
+                    child: Icon(Icons.add, size: 28, color: Colors.white),
+                  ),
+                ),
               ),
-            ).withHoverEffect(),
+            ),
           ),
-          // AI Chef Button
           SizedBox(
             width: 64,
             height: 64,
@@ -42,25 +43,42 @@ class BottomActions extends StatelessWidget {
                 Positioned(
                   right: 0,
                   bottom: 70,
-                  child: const AiChefChatBubble(),
-                ),
-                Material(
-                  color: Colors.white,
-                  shape: CircleBorder(
-                    side: BorderSide(
-                      color: const Color(0xFF2E4E69).withValues(alpha: 0.15),
-                      width: 1.5,
-                    ),
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    duration: const Duration(milliseconds: 280),
+                    curve: Curves.easeOut,
+                    builder: (context, value, child) {
+                      return Opacity(
+                        opacity: value,
+                        child: Transform.translate(
+                          offset: Offset(0, 6 * (1 - value)),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: const AiChefChatBubble(),
                   ),
-                  elevation: 4,
-                  child: InkWell(
-                    customBorder: const CircleBorder(),
-                    onTap: onAiCreate ?? () {},
-                    child: Center(
-                      child: Image.asset(
-                        'assets/app_logo.png',
-                        width: 32,
-                        fit: BoxFit.contain,
+                ),
+                _TapScaleEffect(
+                  onTap: onAiCreate,
+                  child: Material(
+                    color: Colors.white,
+                    shape: CircleBorder(
+                      side: BorderSide(
+                        color: const Color(0xFF2E4E69).withValues(alpha: 0.15),
+                        width: 1.5,
+                      ),
+                    ),
+                    elevation: 4,
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: onAiCreate,
+                      child: Center(
+                        child: Image.asset(
+                          'assets/ai_chef_logo.png',
+                          width: 32,
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
                   ),
@@ -74,53 +92,39 @@ class BottomActions extends StatelessWidget {
   }
 }
 
-extension FloatingActionButtonHoverEffect on Widget {
-  Widget withHoverEffect() {
-    return _FloatingActionButtonWithHover(child: this);
-  }
-}
+class _TapScaleEffect extends StatefulWidget {
+  const _TapScaleEffect({required this.child, required this.onTap});
 
-class _FloatingActionButtonWithHover extends StatefulWidget {
   final Widget child;
-
-  const _FloatingActionButtonWithHover({required this.child});
+  final VoidCallback? onTap;
 
   @override
-  State<_FloatingActionButtonWithHover> createState() =>
-      _FloatingActionButtonWithHoverState();
+  State<_TapScaleEffect> createState() => _TapScaleEffectState();
 }
 
-class _FloatingActionButtonWithHoverState
-    extends State<_FloatingActionButtonWithHover>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
+class _TapScaleEffectState extends State<_TapScaleEffect> {
+  bool _isPressed = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 200),
-      vsync: this,
-    );
-    _animation = Tween<double>(begin: 1.0, end: 1.08).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  void _setPressed(bool value) {
+    if (_isPressed == value) {
+      return;
+    }
+    setState(() {
+      _isPressed = value;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => _controller.forward(),
-      onExit: (_) => _controller.reverse(),
-      child: ScaleTransition(
-        scale: _animation,
+    return GestureDetector(
+      onTapDown: (_) => _setPressed(true),
+      onTapUp: (_) => _setPressed(false),
+      onTapCancel: () => _setPressed(false),
+      onTap: widget.onTap,
+      child: AnimatedScale(
+        scale: _isPressed ? 0.94 : 1,
+        duration: const Duration(milliseconds: 130),
+        curve: Curves.easeOutCubic,
         child: widget.child,
       ),
     );

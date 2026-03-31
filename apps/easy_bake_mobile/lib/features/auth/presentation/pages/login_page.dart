@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../recipes/presentation/pages/recipe_list_page.dart';
 import '../../data/services/auth_api_service.dart';
 import '../providers/auth_notifier.dart';
 import '../widgets/auth_input_field.dart';
@@ -66,12 +65,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             email: authState.email,
             displayName: authState.displayName,
           );
-
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const RecipeListPage()),
-        );
-      }
     } catch (e) {
       if (mounted) {
         await _showAuthErrorDialog(_friendlyAuthErrorMessage(e));

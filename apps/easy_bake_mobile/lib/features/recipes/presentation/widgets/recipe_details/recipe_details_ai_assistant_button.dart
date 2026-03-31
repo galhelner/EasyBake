@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../chat/presentation/widgets/ai_chef_chat_bubble.dart';
+import '../../../../ai-chat/presentation/widgets/ai_chef_chat_bubble.dart';
 import 'recipe_details_theme.dart';
 
 class RecipeDetailsAiAssistantButton extends StatelessWidget {

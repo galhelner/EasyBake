@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../chat/data/services/chat_service.dart';
-import '../../../chat/presentation/widgets/ai_chef_chat_popup_dialog.dart';
+import '../../../ai-chat/data/services/chat_service.dart';
+import '../../../ai-chat/presentation/widgets/ai_chef_chat_popup_dialog.dart';
 import '../../presentation/providers/recipe_providers.dart';
 import '../widgets/bottom_actions.dart';
 import '../widgets/load_error_sliver.dart';
@@ -15,7 +15,9 @@ import '../widgets/recipe_list_skeleton_sliver.dart';
 import 'recipe_create_page.dart';
 
 class RecipeListPage extends ConsumerStatefulWidget {
-  const RecipeListPage({super.key});
+  const RecipeListPage({super.key, this.showBottomActions = true});
+
+  final bool showBottomActions;
 
   @override
   ConsumerState<RecipeListPage> createState() => _RecipeListPageState();
@@ -70,10 +72,10 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
     final hasAnyRecipes = _requiresManualRetry
         ? true
         : recipesAsync?.maybeWhen(
-            data: (recipes) => recipes.isNotEmpty,
-            orElse: () => true,
-          ) ??
-          true;
+                data: (recipes) => recipes.isNotEmpty,
+                orElse: () => true,
+              ) ??
+              true;
     final allowPageScroll = _requiresManualRetry || hasAnyRecipes;
 
     if (!hasAnyRecipes && _searchController.text.isNotEmpty) {
@@ -93,17 +95,17 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
         child: Padding(
           padding: const EdgeInsets.only(top: 8),
           child: RefreshIndicator(
-          triggerMode: RefreshIndicatorTriggerMode.anywhere,
-          color: const Color(0xFF8BB3D6),
-          backgroundColor: Colors.white,
-          onRefresh: () async {
-            _retryLoad();
-            try {
-              await ref.read(recipesListProvider.future);
-            } catch (_) {
-              // Keep RefreshIndicator stable when request fails.
-            }
-          },
+            triggerMode: RefreshIndicatorTriggerMode.anywhere,
+            color: const Color(0xFF8BB3D6),
+            backgroundColor: Colors.white,
+            onRefresh: () async {
+              _retryLoad();
+              try {
+                await ref.read(recipesListProvider.future);
+              } catch (_) {
+                // Keep RefreshIndicator stable when request fails.
+              }
+            },
             child: CustomScrollView(
               physics: allowPageScroll
                   ? const AlwaysScrollableScrollPhysics()
@@ -142,36 +144,41 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: BottomActions(
-        onCreate: () {
-          showRecipeCreationModal(
-            context,
-            onCreateManually: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const RecipeCreatePage()),
-              );
-            },
-            onCreateFromImage: null,
-          );
-        },
-        onAiCreate: () {
-          unawaited(
-            showAiChefChatPopup(
-              context,
-              pageContext: 'home',
-              chatService: ref.read(chatServiceProvider),
-              onOpenRecipeCreated: (recipePayload) {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        RecipeCreatePage(initialRecipeJson: recipePayload),
+      floatingActionButton: widget.showBottomActions
+          ? BottomActions(
+              onCreate: () {
+                showRecipeCreationModal(
+                  context,
+                  onCreateManually: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const RecipeCreatePage(),
+                      ),
+                    );
+                  },
+                  onCreateFromImage: null,
+                );
+              },
+              onAiCreate: () {
+                unawaited(
+                  showAiChefChatPopup(
+                    context,
+                    pageContext: 'home',
+                    chatService: ref.read(chatServiceProvider),
+                    onOpenRecipeCreated: (recipePayload) {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => RecipeCreatePage(
+                            initialRecipeJson: recipePayload,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 );
               },
-            ),
-          );
-        },
-      ),
+            )
+          : null,
     );
   }
 }

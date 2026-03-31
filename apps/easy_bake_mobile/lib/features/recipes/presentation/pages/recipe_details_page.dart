@@ -2,8 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../chat/data/services/chat_service.dart';
-import '../../../chat/presentation/widgets/ai_chef_chat_popup_dialog.dart';
+import '../../../ai-chat/data/services/chat_service.dart';
+import '../../../ai-chat/presentation/widgets/ai_chef_chat_popup_dialog.dart';
 import '../../data/services/recipe_service.dart';
 import '../../domain/models/recipe_model.dart';
 import '../providers/recipe_providers.dart';

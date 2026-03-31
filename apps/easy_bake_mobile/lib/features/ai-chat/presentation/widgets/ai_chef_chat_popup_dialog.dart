@@ -26,7 +26,7 @@ Future<void> showAiChefChatPopup(
   );
 }
 
-class _AiChefChatPopupDialog extends ConsumerStatefulWidget {
+class _AiChefChatPopupDialog extends StatefulWidget {
   const _AiChefChatPopupDialog({
     required this.pageContext,
     required this.chatService,
@@ -40,11 +40,10 @@ class _AiChefChatPopupDialog extends ConsumerStatefulWidget {
   final ValueChanged<Map<String, dynamic>> onOpenRecipeCreated;
 
   @override
-  ConsumerState<_AiChefChatPopupDialog> createState() =>
-      _AiChefChatPopupDialogState();
+  State<_AiChefChatPopupDialog> createState() => _AiChefChatPopupDialogState();
 }
 
-class _AiChefChatPopupDialogState extends ConsumerState<_AiChefChatPopupDialog> {
+class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
   final TextEditingController _questionController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final List<_ChatMessage> _messages = [
@@ -90,7 +89,10 @@ class _AiChefChatPopupDialogState extends ConsumerState<_AiChefChatPopupDialog> 
       return;
     }
 
-    final authState = ref.read(authNotifierProvider);
+    final authState = ProviderScope.containerOf(
+      context,
+      listen: false,
+    ).read(authNotifierProvider);
     final displayName = authState.displayName?.trim();
     final greeting = displayName != null && displayName.isNotEmpty
         ? 'Hello $displayName!\nHow can I help you?'
@@ -135,7 +137,8 @@ class _AiChefChatPopupDialogState extends ConsumerState<_AiChefChatPopupDialog> 
     _questionController.clear();
     _scrollToBottom();
 
-    final contextForRequest = _normalizedPageContext == 'recipe_detail' &&
+    final contextForRequest =
+        _normalizedPageContext == 'recipe_detail' &&
             (widget.recipeId == null || widget.recipeId!.trim().isEmpty)
         ? 'home'
         : _normalizedPageContext;
@@ -182,7 +185,9 @@ class _AiChefChatPopupDialogState extends ConsumerState<_AiChefChatPopupDialog> 
           _isServiceOnline = true;
           _removeTypingIndicator();
           _activeStreamingMessageIndex = null;
-          _messages.add(_ChatMessage.ai('Your recipe "$recipeTitle" is ready.'));
+          _messages.add(
+            _ChatMessage.ai('Your recipe "$recipeTitle" is ready.'),
+          );
           _messages.add(
             _ChatMessage.recipeCta(
               recipeTitle: recipeTitle,
@@ -372,7 +377,7 @@ class _AiChefChatPopupDialogState extends ConsumerState<_AiChefChatPopupDialog> 
                         border: Border.all(color: const Color(0xFFBFD0D9)),
                       ),
                       child: Image.asset(
-                        'assets/app_logo.png',
+                        'assets/ai_chef_logo.png',
                         fit: BoxFit.contain,
                       ),
                     ),
@@ -501,9 +506,12 @@ class _AiChefChatPopupDialogState extends ConsumerState<_AiChefChatPopupDialog> 
                           children: [
                             if (isAi)
                               Padding(
-                                padding: const EdgeInsets.only(right: 8, top: 4),
+                                padding: const EdgeInsets.only(
+                                  right: 8,
+                                  top: 4,
+                                ),
                                 child: Image.asset(
-                                  'assets/app_logo.png',
+                                  'assets/ai_chef_logo.png',
                                   width: 22,
                                   height: 22,
                                   fit: BoxFit.contain,
@@ -556,8 +564,9 @@ class _AiChefChatPopupDialogState extends ConsumerState<_AiChefChatPopupDialog> 
                         constraints: const BoxConstraints(maxHeight: 140),
                         child: TextField(
                           controller: _questionController,
-                            enabled:
-                              !_isAwaitingResponse && !_isCheckingInitialConnection,
+                          enabled:
+                              !_isAwaitingResponse &&
+                              !_isCheckingInitialConnection,
                           keyboardType: TextInputType.multiline,
                           textInputAction: TextInputAction.newline,
                           minLines: 1,
@@ -586,7 +595,8 @@ class _AiChefChatPopupDialogState extends ConsumerState<_AiChefChatPopupDialog> 
                     ),
                     const SizedBox(width: 8),
                     IconButton(
-                      onPressed: _isAwaitingResponse || _isCheckingInitialConnection
+                      onPressed:
+                          _isAwaitingResponse || _isCheckingInitialConnection
                           ? null
                           : _sendMessage,
                       icon: const Icon(
@@ -629,7 +639,11 @@ class _AiChefChatPopupDialogState extends ConsumerState<_AiChefChatPopupDialog> 
     }
 
     setState(() {
-      _messages.add(const _ChatMessage.ai('Connection restored. You can continue chatting.'));
+      _messages.add(
+        const _ChatMessage.ai(
+          'Connection restored. You can continue chatting.',
+        ),
+      );
     });
     _scrollToBottom();
   }
@@ -676,11 +690,7 @@ class _AiChefChatPopupDialogState extends ConsumerState<_AiChefChatPopupDialog> 
         return const Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.sync,
-              size: 15,
-              color: Color(0xFF3A5670),
-            ),
+            Icon(Icons.sync, size: 15, color: Color(0xFF3A5670)),
             SizedBox(width: 8),
             _TypingDots(),
           ],
@@ -850,18 +860,10 @@ class _ChatMessage {
     : this._(text: text, sender: _ChatSender.ai, kind: _ChatMessageKind.text);
 
   const _ChatMessage.user(String text)
-    : this._(
-        text: text,
-        sender: _ChatSender.user,
-        kind: _ChatMessageKind.text,
-      );
+    : this._(text: text, sender: _ChatSender.user, kind: _ChatMessageKind.text);
 
   const _ChatMessage.typing()
-    : this._(
-        text: '',
-        sender: _ChatSender.ai,
-        kind: _ChatMessageKind.typing,
-      );
+    : this._(text: '', sender: _ChatSender.ai, kind: _ChatMessageKind.typing);
 
   const _ChatMessage.connectionChecking()
     : this._(
@@ -873,14 +875,13 @@ class _ChatMessage {
   const _ChatMessage.recipeCta({
     required String recipeTitle,
     Map<String, dynamic>? recipePayload,
-  })
-    : this._(
-        text: '',
-        sender: _ChatSender.ai,
-        kind: _ChatMessageKind.recipeCta,
-        recipeTitle: recipeTitle,
-        recipePayload: recipePayload,
-      );
+  }) : this._(
+         text: '',
+         sender: _ChatSender.ai,
+         kind: _ChatMessageKind.recipeCta,
+         recipeTitle: recipeTitle,
+         recipePayload: recipePayload,
+       );
 
   const _ChatMessage.swapSummary({
     required String title,
@@ -914,7 +915,13 @@ class _ChatMessage {
   }
 }
 
-enum _ChatMessageKind { text, typing, connectionChecking, recipeCta, swapSummary }
+enum _ChatMessageKind {
+  text,
+  typing,
+  connectionChecking,
+  recipeCta,
+  swapSummary,
+}
 
 class _TypingDots extends StatefulWidget {
   const _TypingDots();
