@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../domain/models/recipe_model.dart';
+import '../../../domain/models/recipe_model.dart';
 import 'recipe_card.dart';
 
 class RecipeListContent extends StatelessWidget {

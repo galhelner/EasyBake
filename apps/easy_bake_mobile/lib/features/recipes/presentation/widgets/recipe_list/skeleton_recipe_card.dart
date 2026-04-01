@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/widgets/skeleton.dart';
+import '../../../../../core/widgets/skeleton.dart';
 
 class SkeletonRecipeCard extends StatelessWidget {
   const SkeletonRecipeCard({super.key});

@@ -9,9 +9,9 @@ import '../../presentation/providers/recipe_providers.dart';
 import '../widgets/bottom_actions.dart';
 import '../widgets/load_error_sliver.dart';
 import '../widgets/recipe_creation_modal.dart';
-import '../widgets/recipe_list_content.dart';
-import '../widgets/recipe_list_header.dart';
-import '../widgets/recipe_list_skeleton_sliver.dart';
+import '../widgets/recipe_list/recipe_list_content.dart';
+import '../widgets/recipe_list/recipe_list_header.dart';
+import '../widgets/recipe_list/recipe_list_skeleton_sliver.dart';
 import 'recipe_create_page.dart';
 
 class RecipeListPage extends ConsumerStatefulWidget {

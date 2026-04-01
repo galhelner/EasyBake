@@ -7,10 +7,10 @@ import 'dart:typed_data';
 import '../../data/services/recipe_service.dart';
 import '../../domain/models/recipe_model.dart';
 import '../providers/recipe_providers.dart';
-import '../widgets/recipe_create_dynamic_section.dart';
-import '../widgets/recipe_create_header.dart';
-import '../widgets/recipe_create_input_field.dart';
-import '../widgets/recipe_create_upload_card.dart';
+import '../widgets/recipe_create/recipe_create_dynamic_section.dart';
+import '../widgets/recipe_create/recipe_create_header.dart';
+import '../widgets/recipe_create/recipe_create_input_field.dart';
+import '../widgets/recipe_create/recipe_create_upload_card.dart';
 
 class RecipeCreatePage extends ConsumerStatefulWidget {
   const RecipeCreatePage({
