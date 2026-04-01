@@ -79,11 +79,12 @@ class _RecipesEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final title = isSearching ? 'No recipes found' : 'Your recipe collection is empty';
     final subtitle = isSearching
-        ? 'Try searching with different keywords or clear your search to see all recipes.'
+        ? 'Use AI Chef chat to semantically search your recipes.'
         : 'Tap the + button to add your first recipe, or use AI to create one for you.';
+    final bottomSafeSpace = isSearching ? 120.0 : 20.0;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 40, 24, 20),
+      padding: EdgeInsets.fromLTRB(24, 40, 24, bottomSafeSpace),
       child: Center(
         child: SingleChildScrollView(
           child: Container(

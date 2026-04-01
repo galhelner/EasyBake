@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../auth/presentation/providers/auth_notifier.dart';
+import '../../../recipes/domain/models/recipe_model.dart';
+import '../../../recipes/presentation/pages/recipe_details_page.dart';
 import '../../data/services/chat_service.dart';
 
 Future<void> showAiChefChatPopup(
@@ -194,6 +196,28 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
               recipePayload: recipe,
             ),
           );
+          _isAwaitingResponse = false;
+        });
+        _scrollToBottom();
+      case ChatEventType.searchResults:
+        final recipes = event.searchResults;
+        if (recipes == null || recipes.isEmpty) {
+          return;
+        }
+
+        setState(() {
+          _isServiceOnline = true;
+          _removeTypingIndicator();
+          if (_activeStreamingMessageIndex != null &&
+              _activeStreamingMessageIndex! < _messages.length) {
+            final existing = _messages[_activeStreamingMessageIndex!];
+            _messages[_activeStreamingMessageIndex!] = existing.copyWith(
+              recipes: recipes,
+            );
+          } else {
+            _messages.add(_ChatMessage.searchResults(recipes: recipes));
+          }
+          _activeStreamingMessageIndex = null;
           _isAwaitingResponse = false;
         });
         _scrollToBottom();
@@ -736,6 +760,67 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
             ],
           ),
         );
+      case _ChatMessageKind.searchResults:
+      case _ChatMessageKind.text when message.recipes != null:
+        final recipes = message.recipes;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (message.text.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Text(
+                  message.text,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.black,
+                    height: 1.35,
+                  ),
+                ),
+              ),
+            if (recipes != null && recipes.isNotEmpty)
+              Container(
+                clipBehavior: Clip.hardEdge,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFB),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFDDE5EB)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ...recipes.asMap().entries.map((entry) {
+                      final recipe = entry.value as Map<String, dynamic>;
+                      final title =
+                          recipe['title']?.toString() ?? 'Untitled Recipe';
+                      final healthScore =
+                          (recipe['healthScore'] as num?)?.toInt() ?? 50;
+                      final imageUrl = recipe['imageUrl']?.toString() ?? '';
+
+                      return _buildSearchResultRecipeCard(
+                        title: title,
+                        healthScore: healthScore,
+                        imageUrl: imageUrl,
+                        recipe: recipe,
+                        showBottomDivider: entry.key != recipes.length - 1,
+                      );
+                    }),
+                  ],
+                ),
+              )
+            else if (recipes == null || recipes.isEmpty)
+              const Text(
+                'No recipes found.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.black,
+                  height: 1.35,
+                ),
+              ),
+          ],
+        );
       case _ChatMessageKind.text:
         return Text(
           message.text,
@@ -746,6 +831,166 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
           ),
         );
     }
+  }
+
+  Widget _buildSearchResultRecipeCard({
+    required String title,
+    required int healthScore,
+    required String imageUrl,
+    required Map<String, dynamic> recipe,
+    bool showBottomDivider = true,
+  }) {
+    final healthColor = _getHealthColor(healthScore);
+    final healthLabel = _getHealthLabel(healthScore);
+
+    return GestureDetector(
+      onTap: () {
+        _openRecipeDetailsFromSearch(recipe);
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          border: showBottomDivider
+              ? const Border(
+                  bottom: BorderSide(color: Color(0xFFE0E6EC), width: 1),
+                )
+              : null,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              // Recipe Image
+              SizedBox(
+                width: 60,
+                height: 60,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: SizedBox(
+                    width: 60,
+                    height: 60,
+                    child: imageUrl.isNotEmpty
+                        ? Image.network(
+                            imageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => Container(
+                              color: const Color(0xFFF0F4F7),
+                              alignment: Alignment.center,
+                              child: Icon(
+                                Icons.image_not_supported_outlined,
+                                color: const Color(
+                                  0xFF8BB3D6,
+                                ).withValues(alpha: 0.4),
+                                size: 18,
+                              ),
+                            ),
+                          )
+                        : Container(
+                            color: const Color(0xFFF0F4F7),
+                            alignment: Alignment.center,
+                            child: Icon(
+                              Icons.image_not_supported_outlined,
+                              color: const Color(
+                                0xFF8BB3D6,
+                              ).withValues(alpha: 0.4),
+                              size: 18,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              // Recipe Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1A2C3A),
+                        height: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: healthColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _getHealthIcon(healthScore),
+                            size: 10,
+                            color: healthColor,
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            healthLabel,
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w500,
+                              color: healthColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Arrow
+              const Icon(
+                Icons.chevron_right,
+                size: 18,
+                color: Color(0xFF7A8D9D),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _openRecipeDetailsFromSearch(Map<String, dynamic> recipeJson) {
+    final recipe = RecipeModel.fromJson(recipeJson);
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => RecipeDetailsPage(initialRecipe: recipe),
+      ),
+    );
+  }
+
+  Color _getHealthColor(int score) {
+    if (score >= 70) return const Color(0xFF34C759);
+    if (score >= 40) return const Color(0xFFF5B52E);
+    return const Color(0xFFFF3B30);
+  }
+
+  String _getHealthLabel(int score) {
+    if (score >= 70) return 'Healthy';
+    if (score >= 40) return 'Average';
+    return 'Unhealthy';
+  }
+
+  IconData _getHealthIcon(int score) {
+    if (score >= 70) {
+      return Icons.favorite;
+    }
+    return Icons.warning_rounded;
   }
 
   Widget _buildSwapLine(String rawSwap) {
@@ -854,6 +1099,7 @@ class _ChatMessage {
     this.recipePayload,
     this.title,
     this.swaps,
+    this.recipes,
   });
 
   const _ChatMessage.ai(String text)
@@ -894,6 +1140,14 @@ class _ChatMessage {
          swaps: swaps,
        );
 
+  const _ChatMessage.searchResults({required List<dynamic> recipes})
+    : this._(
+        text: '',
+        sender: _ChatSender.ai,
+        kind: _ChatMessageKind.searchResults,
+        recipes: recipes,
+      );
+
   final String text;
   final _ChatSender sender;
   final _ChatMessageKind kind;
@@ -901,8 +1155,9 @@ class _ChatMessage {
   final Map<String, dynamic>? recipePayload;
   final String? title;
   final List<String>? swaps;
+  final List<dynamic>? recipes;
 
-  _ChatMessage copyWith({String? text}) {
+  _ChatMessage copyWith({String? text, List<dynamic>? recipes}) {
     return _ChatMessage._(
       text: text ?? this.text,
       sender: sender,
@@ -911,6 +1166,7 @@ class _ChatMessage {
       recipePayload: recipePayload,
       title: title,
       swaps: swaps,
+      recipes: recipes ?? this.recipes,
     );
   }
 }
@@ -921,6 +1177,7 @@ enum _ChatMessageKind {
   connectionChecking,
   recipeCta,
   swapSummary,
+  searchResults,
 }
 
 class _TypingDots extends StatefulWidget {

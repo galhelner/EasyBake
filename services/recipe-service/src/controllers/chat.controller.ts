@@ -322,67 +322,6 @@ const forwardStructuredSseStream = (
   });
 };
 
-const forwardSseStream = (
-  req: AuthenticatedRequest,
-  res: FlushableResponse,
-  upstreamStream: Readable,
-  onAbort: () => void,
-): void => {
-  let streamClosed = false;
-
-  const closeStream = (): void => {
-    if (streamClosed) {
-      return;
-    }
-
-    streamClosed = true;
-    if (!res.writableEnded) {
-      res.end();
-    }
-  };
-
-  req.on('close', () => {
-    onAbort();
-    if (!upstreamStream.destroyed) {
-      upstreamStream.destroy();
-    }
-    closeStream();
-  });
-
-  upstreamStream.on('data', (chunk: Buffer | string) => {
-    try {
-      const chunkText = chunk.toString();
-      if (!chunkText) {
-        return;
-      }
-
-      writeSseDelta(res, chunkText);
-    } catch (streamParseError) {
-      // eslint-disable-next-line no-console
-      console.error('AI stream parse failed', streamParseError);
-      onAbort();
-      closeStream();
-    }
-  });
-
-  upstreamStream.on('end', () => {
-    logger.info('AI stream completed');
-    closeStream();
-  });
-
-  upstreamStream.on('error', (streamError: Error) => {
-    // eslint-disable-next-line no-console
-    console.error('AI upstream stream failed', streamError);
-    onAbort();
-
-    if (!res.writableEnded) {
-      writeSseDelta(res, 'AI stream interrupted. Please try again.');
-    }
-
-    closeStream();
-  });
-};
-
 export const streamChat = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -542,37 +481,162 @@ export const streamChat = async (
       return;
     }
     case 'SEARCH_RECIPES': {
-      try {
-        logger.info('Calling AI Service for: search specialist');
-        const searchResponse = await axios.post(
-          `${AI_SERVICE_API_BASE_URL}/search-specialist`,
-          { prompt, recipe_context: recipeContext },
-          {
-            headers: {
-              'Content-Type': 'application/json',
+      const streamSemanticSearch = async (): Promise<void> => {
+        try {
+          logger.info('Calling AI Service for: search specialist');
+          const searchFiltersResponse = await axios.post(
+            `${AI_SERVICE_API_BASE_URL}/search-specialist`,
+            { prompt, recipe_context: recipeContext },
+            {
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              timeout: 30000,
             },
-            timeout: 30000,
-          },
-        );
+          );
 
-        res.status(200).json({
-          intent: routedIntent.intent,
-          confidence: routedIntent.confidence,
-          search: searchResponse.data,
-        });
-      } catch (error) {
-        logAxiosFailure('AI search-specialist call failed', error);
+          const searchFilters = searchFiltersResponse.data;
+          const normalizedQuery = searchFilters.query || prompt;
 
-        const statusCode = getAxiosStatusCode(error);
-        const retryAfter = getAxiosRetryAfter(error);
-        if (retryAfter) {
-          res.setHeader('Retry-After', retryAfter);
+          // Get user context
+          if (!req.user?.id) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+          }
+
+          const user = await prisma.user.findUnique({
+            where: { authId: req.user.id },
+            select: { id: true },
+          });
+
+          if (!user) {
+            res.writeHead(200, {
+              'Content-Type': 'text/event-stream',
+              'Cache-Control': 'no-cache',
+              Connection: 'keep-alive',
+              'X-Accel-Buffering': 'no',
+            });
+            res.write(`data: ${JSON.stringify({ type: 'searchResults', recipes: [] })}\n\n`);
+            res.write('data: [DONE]\n\n');
+            res.end();
+            return;
+          }
+
+          // Generate embedding for the normalized query
+          logger.info(`Generating embedding for semantic search: "${normalizedQuery}"`);
+          const embeddingResponse = await axios.post(
+            `${AI_SERVICE_API_BASE_URL}/embeddings`,
+            { text: normalizedQuery },
+            {
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              timeout: 30000,
+            },
+          );
+
+          const embedding = embeddingResponse.data?.embedding;
+          if (!Array.isArray(embedding) || embedding.length === 0) {
+            throw new Error('Invalid embedding response from AI service');
+          }
+
+          // Convert embedding to vector literal
+          const vectorLiteral = `[${embedding.map((v: number) => Number(v).toString()).join(',')}]`;
+          const SEARCH_MAX_DISTANCE = Number(process.env.SEARCH_MAX_DISTANCE ?? '0.5');
+
+          // Search recipes using vector similarity (pgvector)
+          const searchResults = await prisma.$queryRaw<Array<{ id: string; distance: number }>>`
+            SELECT "id", ("embedding" <=> CAST(${vectorLiteral} AS vector)) AS "distance"
+            FROM "Recipe"
+            WHERE "embedding" IS NOT NULL
+              AND "authorId" = ${user.id}
+              AND ("embedding" <=> CAST(${vectorLiteral} AS vector)) <= ${SEARCH_MAX_DISTANCE}
+            ORDER BY "embedding" <=> CAST(${vectorLiteral} AS vector)
+            LIMIT 3
+          `;
+
+          logger.info(`Found ${searchResults.length} recipes matching the search`);
+
+          // Fetch full recipe details
+          const recipeIds = searchResults.map((result) => result.id);
+          let recipes: any[] = [];
+
+          if (recipeIds.length > 0) {
+            recipes = await prisma.recipe.findMany({
+              where: {
+                id: {
+                  in: recipeIds,
+                },
+              },
+              include: {
+                ingredients: {
+                  include: {
+                    ingredient: true,
+                  },
+                },
+              },
+            });
+
+            // Sort recipes based on search order
+            const recipeById = new Map(recipes.map((recipe) => [recipe.id, recipe]));
+            recipes = recipeIds
+              .map((id) => recipeById.get(id))
+              .filter(Boolean);
+          }
+
+          // Map recipes to DTO format
+          const recipeDTOs = recipes.map((recipe) => ({
+            id: recipe.id,
+            title: recipe.title,
+            healthScore: recipe.healthScore,
+            imageUrl: recipe.imageUrl || 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=300&h=200',
+            ingredients: recipe.ingredients?.map((ri: any) => ri.ingredient.name) || [],
+          }));
+
+          // Send SSE response with search results
+          res.writeHead(200, {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            Connection: 'keep-alive',
+            'X-Accel-Buffering': 'no',
+          });
+
+          // Send introduction message
+          const introMessage = recipeIds.length > 0
+            ? `Here are the recipes I found for you:`
+            : `I couldn't find any recipes matching "${normalizedQuery}". Try different keywords or ingredients!`;
+
+          res.write(`data: ${JSON.stringify({ delta: introMessage, type: 'text' })}\n\n`);
+
+          // Send search results as metadata event
+          if (recipeIds.length > 0) {
+            res.write(`data: ${JSON.stringify({ type: 'searchResults', recipes: recipeDTOs })}\n\n`);
+          }
+
+          // Signal completion
+          res.write('data: [DONE]\n\n');
+          res.end();
+        } catch (error) {
+          logAxiosFailure('AI semantic search failed', error);
+
+          const streamingResponse = res as FlushableResponse;
+          if (!streamingResponse.headersSent) {
+            streamingResponse.writeHead(200, {
+              'Content-Type': 'text/event-stream',
+              'Cache-Control': 'no-cache',
+              Connection: 'keep-alive',
+              'X-Accel-Buffering': 'no',
+            });
+          }
+
+          const errorMessage = getUserFacingAxiosErrorMessage(error);
+          streamingResponse.write(`data: ${JSON.stringify({ delta: errorMessage, type: 'text' })}\n\n`);
+          streamingResponse.write('data: [DONE]\n\n');
+          streamingResponse.end();
         }
+      };
 
-        res.status(statusCode).json({
-          error: getUserFacingAxiosErrorMessage(error),
-        });
-      }
+      await streamSemanticSearch();
       return;
     }
     default:

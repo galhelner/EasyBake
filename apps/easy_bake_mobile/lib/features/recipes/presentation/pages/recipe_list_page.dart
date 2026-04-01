@@ -66,6 +66,8 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final fixedMediaQuery = mediaQuery.copyWith(viewInsets: EdgeInsets.zero);
     final recipesAsync = _requiresManualRetry
         ? null
         : ref.watch(recipesListProvider);
@@ -88,64 +90,12 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
       _disarmLoadingWatchdog();
     }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFEDF1F6),
-      body: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: RefreshIndicator(
-            triggerMode: RefreshIndicatorTriggerMode.anywhere,
-            color: const Color(0xFF8BB3D6),
-            backgroundColor: Colors.white,
-            onRefresh: () async {
-              _retryLoad();
-              try {
-                await ref.read(recipesListProvider.future);
-              } catch (_) {
-                // Keep RefreshIndicator stable when request fails.
-              }
-            },
-            child: CustomScrollView(
-              physics: allowPageScroll
-                  ? const AlwaysScrollableScrollPhysics()
-                  : const NeverScrollableScrollPhysics(),
-              slivers: [
-                SliverToBoxAdapter(
-                  child: RecipeListHeader(
-                    searchController: _searchController,
-                    onSearchChanged: (_) => setState(() {}),
-                    showSearch: hasAnyRecipes,
-                  ),
-                ),
-                if (_requiresManualRetry)
-                  LoadErrorSliver(
-                    error:
-                        'Server appears offline or unreachable. Start recipe-service and tap Try again.',
-                    onRetry: _retryLoad,
-                  )
-                else
-                  recipesAsync!.when(
-                    data: (recipes) => RecipeListContent(
-                      recipes: recipes,
-                      query: _searchController.text,
-                    ),
-                    loading: () => const RecipeListSkeletonSliver(),
-                    error: (error, stack) => LoadErrorSliver(
-                      error: error.toString(),
-                      onRetry: _retryLoad,
-                    ),
-                  ),
-                if (allowPageScroll)
-                  const SliverToBoxAdapter(child: SizedBox(height: 110)),
-              ],
-            ),
-          ),
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: widget.showBottomActions
-          ? BottomActions(
+    final bottomActions = widget.showBottomActions
+        ? Positioned(
+            left: 20,
+            right: 20,
+        bottom: fixedMediaQuery.padding.bottom + 12,
+            child: BottomActions(
               onCreate: () {
                 showRecipeCreationModal(
                   context,
@@ -177,8 +127,74 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
                   ),
                 );
               },
-            )
-          : null,
+            ),
+          )
+        : null;
+
+    return MediaQuery(
+      data: fixedMediaQuery,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFEDF1F6),
+        resizeToAvoidBottomInset: false,
+        body: Stack(
+          children: [
+            SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: RefreshIndicator(
+                  triggerMode: RefreshIndicatorTriggerMode.anywhere,
+                  color: const Color(0xFF8BB3D6),
+                  backgroundColor: Colors.white,
+                  onRefresh: () async {
+                    _retryLoad();
+                    try {
+                      await ref.read(recipesListProvider.future);
+                    } catch (_) {
+                      // Keep RefreshIndicator stable when request fails.
+                    }
+                  },
+                  child: CustomScrollView(
+                    physics: allowPageScroll
+                        ? const AlwaysScrollableScrollPhysics()
+                        : const NeverScrollableScrollPhysics(),
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: RecipeListHeader(
+                          searchController: _searchController,
+                          onSearchChanged: (_) => setState(() {}),
+                          showSearch: hasAnyRecipes,
+                        ),
+                      ),
+                      if (_requiresManualRetry)
+                        LoadErrorSliver(
+                          error:
+                              'Server appears offline or unreachable. Start recipe-service and tap Try again.',
+                          onRetry: _retryLoad,
+                        )
+                      else
+                        recipesAsync!.when(
+                          data: (recipes) => RecipeListContent(
+                            recipes: recipes,
+                            query: _searchController.text,
+                          ),
+                          loading: () => const RecipeListSkeletonSliver(),
+                          error: (error, stack) => LoadErrorSliver(
+                            error: error.toString(),
+                            onRetry: _retryLoad,
+                          ),
+                        ),
+                      if (allowPageScroll)
+                        const SliverToBoxAdapter(child: SizedBox(height: 110)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            bottomActions ?? const SizedBox.shrink(),
+          ],
+        ),
+      ),
     );
   }
 }

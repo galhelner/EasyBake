@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/network/api_client.dart';
 
-enum ChatEventType { textDelta, metadata, recipeCreated, error, done }
+enum ChatEventType { textDelta, metadata, recipeCreated, searchResults, error, done }
 
 class ChatEvent {
   const ChatEvent._({
@@ -14,6 +14,7 @@ class ChatEvent {
     this.delta,
     this.metadata,
     this.recipe,
+    this.searchResults,
     this.message,
     this.isConnectionIssue = false,
   });
@@ -26,6 +27,9 @@ class ChatEvent {
 
   const ChatEvent.recipeCreated(Map<String, dynamic> recipe)
     : this._(type: ChatEventType.recipeCreated, recipe: recipe);
+
+  const ChatEvent.searchResults(List<dynamic> results)
+    : this._(type: ChatEventType.searchResults, searchResults: results);
 
   const ChatEvent.error(String message, {bool isConnectionIssue = false})
     : this._(
@@ -40,6 +44,7 @@ class ChatEvent {
   final String? delta;
   final Map<String, dynamic>? metadata;
   final Map<String, dynamic>? recipe;
+  final List<dynamic>? searchResults;
   final String? message;
   final bool isConnectionIssue;
 }
@@ -180,6 +185,14 @@ class ChatService {
 
           if (type == 'metadata') {
             yield ChatEvent.metadata(decoded);
+            continue;
+          }
+
+          if (type == 'searchResults') {
+            final recipes = decoded['recipes'];
+            if (recipes is List) {
+              yield ChatEvent.searchResults(recipes);
+            }
             continue;
           }
 
