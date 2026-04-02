@@ -1,20 +1,19 @@
-﻿import 'dart:io';
-
-import 'package:dio/dio.dart';
+﻿import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/auth/presentation/providers/auth_notifier.dart';
 
+const _cloudRecipeServiceBaseUrl =
+  'https://easybake-recipe-service-h7dtcrbhfbdthmcz.israelcentral-01.azurewebsites.net';
+
 /// The base API client used for authenticated endpoints (recipes + auth).
 ///
-/// By default this points to the recipe-service (port 4000).
+/// By default this points to the hosted recipe-service endpoint.
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(
     BaseOptions(
-      // Switches IP automatically based on device.
-      baseUrl: Platform.isAndroid
-          ? 'http://10.231.1.139:4000'
-          : 'http://localhost:4000',
+      // Use the cloud endpoint for all devices.
+      baseUrl: _cloudRecipeServiceBaseUrl,
       connectTimeout: const Duration(seconds: 10),
       sendTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 15),
