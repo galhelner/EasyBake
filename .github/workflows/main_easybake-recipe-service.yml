@@ -38,7 +38,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: services/recipe-service
+          path: |
+            services/recipe-service/
+            !services/recipe-service/antenv/
 
   deploy:
     runs-on: ubuntu-latest
