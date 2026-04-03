@@ -1,7 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'features/auth/presentation/pages/login_page.dart';
+import 'features/auth/presentation/pages/auth_page.dart';
 import 'features/auth/presentation/providers/auth_notifier.dart';
 import 'features/home/presentation/pages/home_tabs_page.dart';
 
@@ -94,7 +94,7 @@ class _AppBootstrapPageState extends ConsumerState<AppBootstrapPage>
       return _AnimatedSplash(animation: _controller, logoAsset: _logoAsset);
     }
 
-    return isAuthenticated ? const HomeTabsPage() : const LoginPage();
+    return isAuthenticated ? const HomeTabsPage() : const AuthPage();
   }
 }
 

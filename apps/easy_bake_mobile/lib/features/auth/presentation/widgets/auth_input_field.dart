@@ -29,7 +29,7 @@ class AuthInputField extends StatelessWidget {
       obscureText: obscureText,
       keyboardType: keyboardType,
       style: const TextStyle(
-        fontSize: 18,
+        fontSize: 16,
         color: Color(0xFF304466),
         fontWeight: FontWeight.w400,
       ),
@@ -40,7 +40,7 @@ class AuthInputField extends StatelessWidget {
           color: const Color(0xFF706C6C),
           fontWeight: FontWeight.w400,
         ),
-        prefixIcon: Icon(icon, color: const Color(0xFF304466), size: 22),
+        prefixIcon: Icon(icon, color: const Color(0xFF304466), size: 20),
         suffixIcon: onToggleObscure != null
             ? IconButton(
                 icon: Icon(
@@ -52,7 +52,7 @@ class AuthInputField extends StatelessWidget {
             : null,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
-          vertical: 18,
+          vertical: 14,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../auth/presentation/pages/login_page.dart';
+import '../../../auth/presentation/pages/auth_page.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
 import '../../../recipes/domain/models/recipe_model.dart';
 import '../../../recipes/presentation/providers/recipe_providers.dart';
@@ -40,7 +40,7 @@ class ProfilePage extends ConsumerWidget {
       }
 
       Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const LoginPage()),
+        MaterialPageRoute(builder: (_) => const AuthPage()),
         (route) => false,
       );
     }
