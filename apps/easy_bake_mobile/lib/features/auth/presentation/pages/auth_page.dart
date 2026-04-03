@@ -46,7 +46,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
           );
     } catch (error) {
       if (mounted) {
-        await _showAuthErrorDialog(_friendlyAuthErrorMessage(error));
+        await _showAuthErrorDialog(_authErrorDialogData(error));
       }
     }
   }
@@ -74,7 +74,9 @@ class _AuthPageState extends ConsumerState<AuthPage> {
           );
     } catch (error) {
       if (mounted) {
-        await _showAuthErrorDialog(_friendlyAuthErrorMessage(error));
+        await _showAuthErrorDialog(
+          _authErrorDialogData(error, isRegister: true),
+        );
       }
     }
   }
@@ -288,18 +290,79 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     );
   }
 
-  String _friendlyAuthErrorMessage(Object error) {
+  _AuthErrorDialogData _authErrorDialogData(
+    Object error, {
+    bool isRegister = false,
+  }) {
     if (error is DioException) {
       if (error.response?.statusCode == 401) {
-        return 'Incorrect email or password.';
+        return const _AuthErrorDialogData(
+          title: 'Wrong credentials',
+          message: 'The email or password is incorrect. Please try again.',
+          icon: Icons.lock_outline_rounded,
+          accentColor: _kActionBlue,
+          iconBackgroundColor: Color(0xFFE6F0FA),
+        );
       }
-      if (error.response?.statusCode == 409) return 'Email already in use.';
-      return 'Server error. Please try again later.';
+      if (isRegister && _isEmailAlreadyRegisteredError(error)) {
+        return const _AuthErrorDialogData(
+          title: 'Email already exists',
+          message: 'A user with this email is already registered.',
+          icon: Icons.email_outlined,
+          accentColor: Color(0xFFD64545),
+          iconBackgroundColor: Color(0xFFFCE8E8),
+        );
+      }
+
+      return const _AuthErrorDialogData(
+        title: 'Oops! Something went wrong',
+        message: 'Please try again in a moment.',
+        icon: Icons.sentiment_dissatisfied_rounded,
+        accentColor: _kActionBlue,
+        iconBackgroundColor: Color(0xFFE6F0FA),
+      );
     }
-    return 'An unexpected error occurred.';
+
+    return const _AuthErrorDialogData(
+      title: 'Oops! Something went wrong',
+      message: 'An unexpected error occurred. Please try again.',
+      icon: Icons.sentiment_dissatisfied_rounded,
+      accentColor: _kActionBlue,
+      iconBackgroundColor: Color(0xFFE6F0FA),
+    );
   }
 
-  Future<void> _showAuthErrorDialog(String message) {
+  bool _isEmailAlreadyRegisteredError(DioException error) {
+    final statusCode = error.response?.statusCode;
+    if (statusCode != 400 && statusCode != 409) {
+      return false;
+    }
+
+    final errorText = _extractErrorText(error.response?.data).toLowerCase();
+    return errorText.contains('email already registered') ||
+        errorText.contains('email already exists') ||
+        errorText.contains('already registered') ||
+        errorText.contains('already exists') ||
+        errorText.contains('email in use') ||
+        errorText.contains('email exists');
+  }
+
+  String _extractErrorText(Object? responseData) {
+    if (responseData is Map<String, dynamic>) {
+      final values = <Object?>[
+        responseData['error'],
+        responseData['message'],
+        responseData['detail'],
+        responseData['details'],
+      ];
+
+      return values.whereType<String>().join(' ');
+    }
+
+    return responseData?.toString() ?? '';
+  }
+
+  Future<void> _showAuthErrorDialog(_AuthErrorDialogData data) {
     return showDialog(
       context: context,
       builder: (ctx) => Dialog(
@@ -331,19 +394,15 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                 height: 58,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: _kButtonBlue.withValues(alpha: 0.22),
+                  color: data.iconBackgroundColor,
                 ),
-                child: const Icon(
-                  Icons.sentiment_dissatisfied_rounded,
-                  color: _kActionBlue,
-                  size: 30,
-                ),
+                child: Icon(data.icon, color: data.accentColor, size: 30),
               ),
               const SizedBox(height: 14),
-              const Text(
-                'Oops! Something went wrong',
+              Text(
+                data.title,
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
                   color: _kPrimaryText,
@@ -351,7 +410,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
               ),
               const SizedBox(height: 10),
               Text(
-                message,
+                data.message,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 15,
@@ -385,4 +444,20 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       ),
     );
   }
+}
+
+class _AuthErrorDialogData {
+  const _AuthErrorDialogData({
+    required this.title,
+    required this.message,
+    required this.icon,
+    required this.accentColor,
+    required this.iconBackgroundColor,
+  });
+
+  final String title;
+  final String message;
+  final IconData icon;
+  final Color accentColor;
+  final Color iconBackgroundColor;
 }
