@@ -34,6 +34,7 @@ class AuthInputField extends StatelessWidget {
         fontWeight: FontWeight.w400,
       ),
       decoration: InputDecoration(
+        isDense: true,
         hintText: hint,
         hintStyle: TextStyle(
           fontSize: hintFontSize,
@@ -52,8 +53,14 @@ class AuthInputField extends StatelessWidget {
             : null,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
-          vertical: 14,
+          vertical: 12,
         ),
+        errorStyle: const TextStyle(
+          fontSize: 11,
+          height: 1.0,
+          color: Colors.red,
+        ),
+        errorMaxLines: 1,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFF304466), width: 1),
