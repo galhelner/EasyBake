@@ -5,7 +5,7 @@ const router = Router();
 
 router.post('/register', register);
 router.post('/login', login);
-router.get('/email-exists', emailExists);
+router.post('/email-exists', emailExists);
 
 export default router;
 

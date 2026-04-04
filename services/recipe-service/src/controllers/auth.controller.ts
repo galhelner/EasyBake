@@ -16,26 +16,44 @@ const loginSchema = z.object({
   password: z.string().min(1),
 });
 
-const emailExistsQuerySchema = z.object({
+const emailExistsBodySchema = z.object({
   email: z.string().email(),
 });
 
+const normalizeEmail = (email: string): string => email.trim().toLowerCase();
+
+const extractDisplayName = (userMetadata: unknown): string | undefined => {
+  if (!userMetadata || typeof userMetadata !== 'object') {
+    return undefined;
+  }
+
+  const metadata = userMetadata as Record<string, unknown>;
+  const displayName = metadata['display_name'];
+  if (typeof displayName === 'string' && displayName.trim().length > 0) {
+    return displayName.trim();
+  }
+
+  const fullName = metadata['fullName'];
+  if (typeof fullName === 'string' && fullName.trim().length > 0) {
+    return fullName.trim();
+  }
+
+  return undefined;
+};
+
 export const emailExists = async (req: Request, res: Response): Promise<void> => {
-  const parsed = emailExistsQuerySchema.safeParse(req.query);
+  const parsed = emailExistsBodySchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: 'Validation error', details: parsed.error.flatten() });
     return;
   }
 
-  const email = parsed.data.email.trim();
+  const email = normalizeEmail(parsed.data.email);
 
   try {
-    const existingUser = await prisma.user.findFirst({
+    const existingUser = await prisma.user.findUnique({
       where: {
-        email: {
-          equals: email,
-          mode: 'insensitive',
-        },
+        email,
       },
       select: {
         id: true,
@@ -56,11 +74,21 @@ export const register = async (req: AuthenticatedRequest, res: Response): Promis
     return;
   }
 
-  const { email, password, fullName } = parsed.data;
+  const normalizedEmail = normalizeEmail(parsed.data.email);
+  const { password, fullName } = parsed.data;
 
   try {
     const supabase = getSupabaseClient();
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({
+      email: normalizedEmail,
+      password,
+      options: {
+        data: {
+          display_name: fullName,
+          fullName,
+        },
+      },
+    });
 
     if (error) {
       res.status(400).json({ error: error.message });
@@ -74,18 +102,21 @@ export const register = async (req: AuthenticatedRequest, res: Response): Promis
       return;
     }
 
-    // Update Supabase user display name
-    await supabase.auth.updateUser({
-      data: { display_name: fullName },
-    });
+    const normalizedSupabaseEmail = normalizeEmail(
+      supabaseUser.email ?? normalizedEmail,
+    );
 
     await prisma.user.upsert({
       where: { authId: supabaseUser.id },
-      update: {},
-      create: { authId: supabaseUser.id, email, fullName },
+      update: { email: normalizedSupabaseEmail, fullName },
+      create: {
+        authId: supabaseUser.id,
+        email: normalizedSupabaseEmail,
+        fullName,
+      },
     });
 
-    logger.info(`New user registered: ${fullName} (${email})`);
+    logger.info(`New user registered: ${fullName} (${normalizedSupabaseEmail})`);
 
     // Session may be null when email confirmation is required.
     res.status(201).json({
@@ -106,11 +137,15 @@ export const login = async (req: AuthenticatedRequest, res: Response): Promise<v
     return;
   }
 
-  const { email, password } = parsed.data;
+  const normalizedEmail = normalizeEmail(parsed.data.email);
+  const { password } = parsed.data;
 
   try {
     const supabase = getSupabaseClient();
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: normalizedEmail,
+      password,
+    });
 
     if (error) {
       res.status(401).json({ error: error.message });
@@ -125,10 +160,20 @@ export const login = async (req: AuthenticatedRequest, res: Response): Promise<v
     const supabaseUserId = data.user?.id;
     let user = null;
     if (supabaseUserId) {
+      const synchronizedEmail = normalizeEmail(data.user?.email ?? normalizedEmail);
+      const synchronizedFullName = extractDisplayName(data.user?.user_metadata);
+
       user = await prisma.user.upsert({
         where: { authId: supabaseUserId },
-        update: {},
-        create: { authId: supabaseUserId, email: data.user?.email ?? undefined },
+        update: {
+          email: synchronizedEmail,
+          fullName: synchronizedFullName,
+        },
+        create: {
+          authId: supabaseUserId,
+          email: synchronizedEmail,
+          fullName: synchronizedFullName,
+        },
       });
     }
 
