@@ -8,6 +8,7 @@ type MockResponse = {
 type AuthControllerModule = {
 	register: (req: any, res: any) => Promise<void>;
 	login: (req: any, res: any) => Promise<void>;
+	emailExists: (req: any, res: any) => Promise<void>;
 };
 
 type AuthModuleLoad = {
@@ -17,6 +18,7 @@ type AuthModuleLoad = {
 	mockUpdateUser: ReturnType<typeof jest.fn>;
 	mockSignInWithPassword: ReturnType<typeof jest.fn>;
 	mockPrismaUpsert: ReturnType<typeof jest.fn>;
+	mockPrismaFindFirst: ReturnType<typeof jest.fn>;
 	mockLoggerInfo: ReturnType<typeof jest.fn>;
 	mockLoggerError: ReturnType<typeof jest.fn>;
 };
@@ -48,6 +50,7 @@ async function loadAuthControllerModule(): Promise<AuthModuleLoad> {
 	}));
 
 	const mockPrismaUpsert = jest.fn();
+	const mockPrismaFindFirst = jest.fn();
 	const mockLoggerInfo = jest.fn();
 	const mockLoggerError = jest.fn();
 
@@ -60,6 +63,7 @@ async function loadAuthControllerModule(): Promise<AuthModuleLoad> {
 		default: {
 			user: {
 				upsert: mockPrismaUpsert,
+				findFirst: mockPrismaFindFirst,
 			},
 		},
 	}));
@@ -81,6 +85,7 @@ async function loadAuthControllerModule(): Promise<AuthModuleLoad> {
 		mockUpdateUser,
 		mockSignInWithPassword,
 		mockPrismaUpsert,
+		mockPrismaFindFirst,
 		mockLoggerInfo,
 		mockLoggerError,
 	};
@@ -250,5 +255,56 @@ describe('auth controller', () => {
 				fullName: 'Chef User',
 			},
 		});
+	});
+
+	it('emailExists returns 400 on invalid email', async () => {
+		const { controller, mockPrismaFindFirst } = await loadAuthControllerModule();
+		const req = { query: { email: 'invalid-email' } };
+		const res = createMockResponse();
+
+		await controller.emailExists(req, res);
+
+		expect(res.status).toHaveBeenCalledWith(400);
+		expect(res.json).toHaveBeenCalledWith(
+			expect.objectContaining({ error: 'Validation error' })
+		);
+		expect(mockPrismaFindFirst).not.toHaveBeenCalled();
+	});
+
+	it('emailExists returns true when email is found', async () => {
+		const { controller, mockPrismaFindFirst } = await loadAuthControllerModule();
+		mockPrismaFindFirst.mockResolvedValue({ id: 'db-1' });
+
+		const req = { query: { email: 'user@example.com' } };
+		const res = createMockResponse();
+
+		await controller.emailExists(req, res);
+
+		expect(mockPrismaFindFirst).toHaveBeenCalledWith({
+			where: {
+				email: {
+					equals: 'user@example.com',
+					mode: 'insensitive',
+				},
+			},
+			select: {
+				id: true,
+			},
+		});
+		expect(res.status).toHaveBeenCalledWith(200);
+		expect(res.json).toHaveBeenCalledWith({ exists: true });
+	});
+
+	it('emailExists returns false when email is not found', async () => {
+		const { controller, mockPrismaFindFirst } = await loadAuthControllerModule();
+		mockPrismaFindFirst.mockResolvedValue(null);
+
+		const req = { query: { email: 'new@example.com' } };
+		const res = createMockResponse();
+
+		await controller.emailExists(req, res);
+
+		expect(res.status).toHaveBeenCalledWith(200);
+		expect(res.json).toHaveBeenCalledWith({ exists: false });
 	});
 });

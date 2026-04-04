@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { z } from 'zod';
 import prisma from '../services/prismaClient';
 import { getSupabaseClient } from '../services/supabaseClient';
@@ -15,6 +15,39 @@ const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
 });
+
+const emailExistsQuerySchema = z.object({
+  email: z.string().email(),
+});
+
+export const emailExists = async (req: Request, res: Response): Promise<void> => {
+  const parsed = emailExistsQuerySchema.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Validation error', details: parsed.error.flatten() });
+    return;
+  }
+
+  const email = parsed.data.email.trim();
+
+  try {
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        email: {
+          equals: email,
+          mode: 'insensitive',
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    res.status(200).json({ exists: existingUser != null });
+  } catch (err) {
+    logger.error(`Email exists check error: ${err instanceof Error ? err.message : String(err)}`);
+    res.status(500).json({ error: 'Failed to check email' });
+  }
+};
 
 export const register = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const parsed = registerSchema.safeParse(req.body);
