@@ -54,7 +54,15 @@ class _SignInFormState extends State<SignInForm> {
             child: Column(
               mainAxisSize: MainAxisSize.max,
               children: [
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
+                SizedBox(
+                  height: 150,
+                  child: Image.asset(
+                    'assets/ai_chef_login_logo.png',
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                const SizedBox(height: 14),
                 AuthInputField(
                   controller: _emailController,
                   icon: Icons.email_outlined,

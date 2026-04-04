@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/services/auth_api_service.dart';
 import '../providers/auth_notifier.dart';
 import '../widgets/auth_mode_toggle.dart';
-import '../widgets/register_form.dart';
+import 'register_page.dart';
 import '../widgets/sign_in_form.dart';
 
 class AuthPage extends ConsumerStatefulWidget {
@@ -23,7 +23,38 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   static const _kCardBackground = Color(0xFFF8FCFC);
   static const _kLogoAssetPath = 'assets/app_logo_full.png';
 
-  bool _isRegister = false;
+  final PageController _authModePageController = PageController(initialPage: 0);
+  int _authModeIndex = 0;
+
+  @override
+  void dispose() {
+    _authModePageController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _goToSignInTab() async {
+    if (_authModeIndex == 0) {
+      return;
+    }
+
+    await _authModePageController.animateToPage(
+      0,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  Future<void> _goToRegisterTab() async {
+    if (_authModeIndex == 1) {
+      return;
+    }
+
+    await _authModePageController.animateToPage(
+      1,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
 
   Future<void> _handleSignIn({
     required String email,
@@ -83,7 +114,6 @@ class _AuthPageState extends ConsumerState<AuthPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
 
     return Scaffold(
@@ -210,66 +240,35 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                                         ),
                                       ),
                                       child: AuthModeToggle(
-                                        isRegister: _isRegister,
-                                        onSignInTap: () {
-                                          if (_isRegister) {
-                                            setState(() => _isRegister = false);
-                                          }
-                                        },
-                                        onRegisterTap: () {
-                                          if (!_isRegister) {
-                                            setState(() => _isRegister = true);
-                                          }
-                                        },
+                                        isRegister: _authModeIndex == 1,
+                                        onSignInTap: _goToSignInTab,
+                                        onRegisterTap: _goToRegisterTab,
                                       ),
                                     ),
                                     SizedBox(height: isSmallScreen ? 12 : 14),
-                                    Text(
-                                      _isRegister
-                                          ? "Let's Get Baking!"
-                                          : 'Welcome Back!',
-                                      textAlign: TextAlign.center,
-                                      style: theme.textTheme.headlineMedium
-                                          ?.copyWith(
-                                            fontSize: isSmallScreen ? 24 : 29,
-                                            fontWeight: FontWeight.w800,
-                                            color: _kPrimaryText,
-                                            letterSpacing: 0.2,
-                                          ),
-                                    ),
-                                    SizedBox(height: isSmallScreen ? 18 : 24),
                                     SizedBox(
                                       height: formAreaHeight,
-                                      child: AnimatedSwitcher(
-                                        duration: const Duration(
-                                          milliseconds: 220,
-                                        ),
-                                        switchInCurve: Curves.easeOut,
-                                        switchOutCurve: Curves.easeIn,
-                                        layoutBuilder:
-                                            (currentChild, previousChildren) {
-                                              return Stack(
-                                                alignment: Alignment.topCenter,
-                                                children: [
-                                                  ...previousChildren,
-                                                  currentChild ??
-                                                      const SizedBox.shrink(),
-                                                ],
-                                              );
-                                            },
-                                        child: _isRegister
-                                            ? RegisterForm(
-                                                key: const ValueKey(
-                                                  'register_form',
-                                                ),
-                                                onSubmit: _handleRegister,
-                                              )
-                                            : SignInForm(
-                                                key: const ValueKey(
-                                                  'sign_in_form',
-                                                ),
-                                                onSubmit: _handleSignIn,
-                                              ),
+                                      child: PageView(
+                                        controller: _authModePageController,
+                                        physics:
+                                            const NeverScrollableScrollPhysics(),
+                                        onPageChanged: (page) {
+                                          setState(() => _authModeIndex = page);
+                                        },
+                                        children: [
+                                          SignInForm(
+                                            key: const ValueKey(
+                                              'sign_in_form',
+                                            ),
+                                            onSubmit: _handleSignIn,
+                                          ),
+                                          RegisterPage(
+                                            key: const ValueKey(
+                                              'register_page',
+                                            ),
+                                            onSubmit: _handleRegister,
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ],
