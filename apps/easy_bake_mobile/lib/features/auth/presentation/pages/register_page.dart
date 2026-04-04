@@ -3,7 +3,12 @@
 import '../widgets/auth_input_field.dart';
 
 class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key, required this.onSubmit});
+  const RegisterPage({
+    super.key,
+    required this.onSubmit,
+    required this.onCheckEmailExists,
+    required this.onEmailExists,
+  });
 
   final Future<void> Function({
     required String fullName,
@@ -11,6 +16,8 @@ class RegisterPage extends StatefulWidget {
     required String password,
   })
   onSubmit;
+  final Future<bool> Function(String email) onCheckEmailExists;
+  final Future<void> Function() onEmailExists;
 
   @override
   State<RegisterPage> createState() => _RegisterPageState();
@@ -55,6 +62,27 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
+  String? _validateName(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Please enter your name';
+    }
+    if (value.trim().length < 2) {
+      return 'Name must be at least 2 characters';
+    }
+    return null;
+  }
+
+  String? _validateEmail(String? value) {
+    final email = value?.trim() ?? '';
+    if (email.isEmpty) {
+      return 'Please enter your email';
+    }
+    if (!email.contains('@') || !email.contains('.')) {
+      return 'Please enter a valid email';
+    }
+    return null;
+  }
+
   Future<void> _proceedToNextStep() async {
     if (_isLoading) {
       return;
@@ -68,6 +96,27 @@ class _RegisterPageState extends State<RegisterPage> {
 
     if (!isCurrentStepValid || _currentPage >= 2) {
       return;
+    }
+
+    if (_currentPage == 1) {
+      setState(() => _isLoading = true);
+
+      try {
+        final exists = await widget.onCheckEmailExists(
+          _emailController.text.trim(),
+        );
+
+        if (exists) {
+          if (mounted) {
+            await widget.onEmailExists();
+          }
+          return;
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
+      }
     }
 
     await _pageController.nextPage(
@@ -92,23 +141,25 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    final isNameValid = _nameFormKey.currentState?.validate() ?? false;
-    if (!isNameValid) {
+    final hasNameError = _validateName(_nameController.text) != null;
+    if (hasNameError) {
       await _pageController.animateToPage(
         0,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
+      _nameFormKey.currentState?.validate();
       return;
     }
 
-    final isEmailValid = _emailFormKey.currentState?.validate() ?? false;
-    if (!isEmailValid) {
+    final hasEmailError = _validateEmail(_emailController.text) != null;
+    if (hasEmailError) {
       await _pageController.animateToPage(
         1,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
+      _emailFormKey.currentState?.validate();
       return;
     }
 
@@ -214,13 +265,11 @@ class _RegisterPageState extends State<RegisterPage> {
             child: Container(
               width: 150,
               height: 150,
-              decoration: BoxDecoration(
-                color: Colors.transparent,
-              ),
+              decoration: BoxDecoration(color: Colors.transparent),
               child: Image.asset(
-                  'assets/ai_chef_register_logo.PNG',
-                  fit: BoxFit.contain,
-                ),
+                'assets/ai_chef_register_logo.PNG',
+                fit: BoxFit.contain,
+              ),
             ),
           ),
           const SizedBox(height: 18),
@@ -229,15 +278,7 @@ class _RegisterPageState extends State<RegisterPage> {
             icon: Icons.person_outline,
             hint: 'Full Name',
             hintFontSize: 14,
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Please enter your name';
-              }
-              if (value.trim().length < 2) {
-                return 'Name must be at least 2 characters';
-              }
-              return null;
-            },
+            validator: _validateName,
           ),
           const Spacer(),
           SizedBox(
@@ -315,16 +356,7 @@ class _RegisterPageState extends State<RegisterPage> {
             hint: 'Email Address',
             hintFontSize: 14,
             keyboardType: TextInputType.emailAddress,
-            validator: (value) {
-              final email = value?.trim() ?? '';
-              if (email.isEmpty) {
-                return 'Please enter your email';
-              }
-              if (!email.contains('@') || !email.contains('.')) {
-                return 'Please enter a valid email';
-              }
-              return null;
-            },
+            validator: _validateEmail,
           ),
           const Spacer(),
           Row(
@@ -371,14 +403,23 @@ class _RegisterPageState extends State<RegisterPage> {
                             Colors.white.withValues(alpha: 0.14),
                           ),
                         ),
-                    child: const Text(
-                      'Next',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.3,
-                      ),
-                    ),
+                    child: _isLoading && _currentPage == 1
+                        ? const SizedBox(
+                            height: 22,
+                            width: 22,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            'Next',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
                   ),
                 ),
               ),

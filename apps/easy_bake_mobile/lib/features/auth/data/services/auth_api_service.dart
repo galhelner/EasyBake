@@ -9,6 +9,16 @@ class AuthApiService {
 
   AuthApiService(this._dio);
 
+  Future<bool> emailExists({required String email}) async {
+    final response = await _dio.post(
+      '/auth/email-exists',
+      data: {'email': email.trim()},
+    );
+
+    final json = response.data as Map<String, dynamic>;
+    return json['exists'] == true;
+  }
+
   Future<AuthState> login({
     required String email,
     required String password,

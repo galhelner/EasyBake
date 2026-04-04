@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../home/presentation/pages/home_tabs_page.dart';
 import '../../data/services/auth_api_service.dart';
 import '../providers/auth_notifier.dart';
 import '../widgets/auth_mode_toggle.dart';
@@ -103,6 +104,13 @@ class _AuthPageState extends ConsumerState<AuthPage> {
             email: authState.email,
             displayName: authState.displayName,
           );
+
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const HomeTabsPage()),
+          (route) => false,
+        );
+      }
     } catch (error) {
       if (mounted) {
         await _showAuthErrorDialog(
@@ -110,6 +118,30 @@ class _AuthPageState extends ConsumerState<AuthPage> {
         );
       }
     }
+  }
+
+  Future<bool> _checkEmailExists(String email) async {
+    try {
+      final authService = ref.read(authApiServiceProvider);
+      return await authService.emailExists(email: email);
+    } catch (error) {
+      if (mounted) {
+        await _showAuthErrorDialog(_authErrorDialogData(error));
+      }
+      return true;
+    }
+  }
+
+  Future<void> _showEmailExistsDialog() {
+    return _showAuthErrorDialog(
+      const _AuthErrorDialogData(
+        title: 'Email already exists',
+        message: 'A user with this email is already registered.',
+        icon: Icons.email_outlined,
+        accentColor: Color(0xFFD64545),
+        iconBackgroundColor: Color(0xFFFCE8E8),
+      ),
+    );
   }
 
   @override
@@ -257,9 +289,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                                         },
                                         children: [
                                           SignInForm(
-                                            key: const ValueKey(
-                                              'sign_in_form',
-                                            ),
+                                            key: const ValueKey('sign_in_form'),
                                             onSubmit: _handleSignIn,
                                           ),
                                           RegisterPage(
@@ -267,6 +297,10 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                                               'register_page',
                                             ),
                                             onSubmit: _handleRegister,
+                                            onCheckEmailExists:
+                                                _checkEmailExists,
+                                            onEmailExists:
+                                                _showEmailExistsDialog,
                                           ),
                                         ],
                                       ),
