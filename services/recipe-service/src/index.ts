@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config();
-import express, { Application } from 'express';
+import express, { Application, NextFunction, Request, Response } from 'express';
 import { json } from 'express';
 import { rm } from 'fs/promises';
 import { resolve } from 'path';
@@ -16,7 +16,7 @@ const port = process.env.PORT || 4000;
 app.use(cors({
   origin: '*', // Allows all origins (fine for development)
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-App-Secret']
 }));
 
 app.use(json());
@@ -34,9 +34,25 @@ app.use((req, res, next) => {
   next();
 });
 
+// Security layer: require an internal shared secret from the mobile app.
+const enforceInternalAppSecret = (req: Request, res: Response, next: NextFunction): void => {
+  const expectedSecret = process.env.INTERNAL_APP_SECRET;
+  const receivedSecret = req.header('X-App-Secret');
+
+  if (!expectedSecret || receivedSecret !== expectedSecret) {
+    logger.warn(`Unauthorized request rejected: ${req.method} ${req.originalUrl}`);
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  next();
+};
+
 app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'ok', service: 'recipe-service' });
 });
+
+app.use(enforceInternalAppSecret);
 
 app.use('/auth', authRouter);
 app.use('/chat', chatRouter);

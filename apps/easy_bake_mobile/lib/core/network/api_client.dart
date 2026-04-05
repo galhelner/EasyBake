@@ -6,6 +6,12 @@ import '../../features/auth/presentation/providers/auth_notifier.dart';
 const _cloudRecipeServiceBaseUrl =
   'https://easybake-recipe-service-h7dtcrbhfbdthmcz.israelcentral-01.azurewebsites.net';
 
+// Inject via --dart-define=INTERNAL_APP_SECRET=... for non-hardcoded secret management.
+const _internalAppSecret = String.fromEnvironment(
+  'INTERNAL_APP_SECRET',
+  defaultValue: '',
+);
+
 /// The base API client used for authenticated endpoints (recipes + auth).
 ///
 /// By default this points to the hosted recipe-service endpoint.
@@ -17,6 +23,9 @@ final dioProvider = Provider<Dio>((ref) {
       connectTimeout: const Duration(seconds: 10),
       sendTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 15),
+      headers: {
+        'X-App-Secret': _internalAppSecret,
+      },
     ),
   );
 
