@@ -6,6 +6,7 @@ import {
   deleteRecipe,
   getRecipeById,
   getRecipes,
+  searchIngredients,
   searchRecipes,
   updateRecipe,
 } from '../controllers/recipe.controller';
@@ -22,6 +23,7 @@ router.use(authMiddleware);
 
 router.post('/', upload.single('image'), createRecipe);
 router.post('/search', searchRecipes);
+router.get('/ingredients/search', searchIngredients);
 router.get('/', getRecipes);
 router.put('/:id', upload.single('image'), updateRecipe);
 router.delete('/:id', deleteRecipe);

@@ -147,8 +147,17 @@ const semanticSearchSchema = z.object({
   query: z.string().min(1),
 });
 
+const ingredientLookupSchema = z.object({
+  q: z.string().trim().min(1),
+});
+
 export interface IngredientDTO {
   name: string;
+}
+
+export interface IngredientSuggestionDTO {
+  name: string;
+  icon: string;
 }
 
 export interface RecipeDTO {
@@ -354,6 +363,55 @@ export const searchRecipes = async (
     // eslint-disable-next-line no-console
     console.error('Error searching recipes semantically', error);
     res.status(500).json({ error: 'Failed to search recipes' });
+  }
+};
+
+export const searchIngredients = async (
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    logger.info(`Incoming request: ${req.method} ${req.originalUrl}`);
+
+    if (!req.user?.id) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const parsed = ingredientLookupSchema.safeParse(req.query);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation error', details: parsed.error.flatten() });
+      return;
+    }
+
+    const query = parsed.data.q;
+    const ingredients = await prisma.ingredient.findMany({
+      where: {
+        name: {
+          contains: query,
+          mode: 'insensitive',
+        },
+      },
+      orderBy: {
+        name: 'asc',
+      },
+      select: {
+        name: true,
+        icon: true,
+      },
+      take: 10,
+    });
+
+    const payload: IngredientSuggestionDTO[] = ingredients.map((ingredient) => ({
+      name: ingredient.name,
+      icon: ingredient.icon,
+    }));
+
+    res.json(payload);
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error searching ingredients', error);
+    res.status(500).json({ error: 'Failed to search ingredients' });
   }
 };
 
