@@ -45,6 +45,14 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
+  bool _showNameStepErrorLogo = false;
+
+  void _resetNameStepErrorVisuals() {
+    if (_showNameStepErrorLogo) {
+      setState(() => _showNameStepErrorLogo = false);
+      _nameFormKey.currentState?.validate();
+    }
+  }
 
   @override
   void initState() {
@@ -88,8 +96,21 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
+    if (_currentPage == 0) {
+      final nameValidationError = _validateName(_nameController.text);
+      if (nameValidationError != null) {
+        setState(() => _showNameStepErrorLogo = true);
+        _nameFormKey.currentState?.validate();
+        return;
+      }
+
+      if (_showNameStepErrorLogo) {
+        setState(() => _showNameStepErrorLogo = false);
+      }
+    }
+
     final isCurrentStepValid = switch (_currentPage) {
-      0 => _nameFormKey.currentState?.validate() ?? false,
+      0 => true,
       1 => _emailFormKey.currentState?.validate() ?? false,
       _ => true,
     };
@@ -143,6 +164,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
     final hasNameError = _validateName(_nameController.text) != null;
     if (hasNameError) {
+      setState(() => _showNameStepErrorLogo = true);
       await _pageController.animateToPage(
         0,
         duration: const Duration(milliseconds: 300),
@@ -267,7 +289,9 @@ class _RegisterPageState extends State<RegisterPage> {
               height: 150,
               decoration: BoxDecoration(color: Colors.transparent),
               child: Image.asset(
-                'assets/ai_chef_register_logo.PNG',
+                _showNameStepErrorLogo
+                    ? 'assets/ai_chef_register_error_logo.png'
+                    : 'assets/ai_chef_register_logo.png',
                 fit: BoxFit.contain,
               ),
             ),
@@ -278,7 +302,14 @@ class _RegisterPageState extends State<RegisterPage> {
             icon: Icons.person_outline,
             hint: 'Full Name',
             hintFontSize: 14,
-            validator: _validateName,
+            hideErrorText: true,
+            validator: (value) {
+              if (!_showNameStepErrorLogo) {
+                return null;
+              }
+              return _validateName(value);
+            },
+            onChanged: (_) => _resetNameStepErrorVisuals(),
           ),
           const Spacer(),
           SizedBox(

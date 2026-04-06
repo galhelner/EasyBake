@@ -9,6 +9,8 @@ class AuthInputField extends StatelessWidget {
   final VoidCallback? onToggleObscure;
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
+  final ValueChanged<String>? onChanged;
+  final bool hideErrorText;
 
   const AuthInputField({
     super.key,
@@ -20,6 +22,8 @@ class AuthInputField extends StatelessWidget {
     this.onToggleObscure,
     this.keyboardType,
     this.validator,
+    this.onChanged,
+    this.hideErrorText = false,
   });
 
   @override
@@ -55,11 +59,13 @@ class AuthInputField extends StatelessWidget {
           horizontal: 16,
           vertical: 12,
         ),
-        errorStyle: const TextStyle(
-          fontSize: 11,
-          height: 1.0,
-          color: Colors.red,
-        ),
+        errorStyle: hideErrorText
+            ? const TextStyle(
+                fontSize: 0,
+                height: 0,
+                color: Colors.transparent,
+              )
+            : null,
         errorMaxLines: 1,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -79,6 +85,7 @@ class AuthInputField extends StatelessWidget {
         ),
       ),
       validator: validator,
+      onChanged: onChanged,
     );
   }
 }

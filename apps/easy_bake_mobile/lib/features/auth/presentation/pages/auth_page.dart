@@ -156,7 +156,13 @@ class _AuthPageState extends ConsumerState<AuthPage> {
           builder: (context, constraints) {
             final isSmallScreen = constraints.maxHeight < 700;
             final logoHeight = isSmallScreen ? 64.0 : 82.0;
-            final formAreaHeight = isSmallScreen ? 330.0 : 362.0;
+            final baseFormAreaHeight = isSmallScreen ? 350.0 : 382.0;
+            final sharedExtraHeight = isSmallScreen ? 56.0 : 64.0;
+            final keyboardExtraHeight = keyboardInset > 0 ? 24.0 : 0.0;
+            final formAreaHeight =
+              baseFormAreaHeight +
+              sharedExtraHeight +
+              keyboardExtraHeight;
 
             return Stack(
               children: [
