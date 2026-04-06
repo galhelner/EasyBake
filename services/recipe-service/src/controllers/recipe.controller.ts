@@ -153,6 +153,7 @@ const ingredientLookupSchema = z.object({
 
 export interface IngredientDTO {
   name: string;
+  icon: string;
 }
 
 export interface IngredientSuggestionDTO {
@@ -180,6 +181,7 @@ const mapRecipeToDTO = (recipe: any): RecipeDTO => ({
   ingredients:
     recipe.ingredients?.map((ri: any) => ({
       name: ri.ingredient.name,
+      icon: ri.ingredient.icon ?? '🥘',
     })) ?? [],
 });
 
