@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -5,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'dart:typed_data';
 
 import '../../data/services/recipe_service.dart';
+import '../../domain/models/ingredient_suggestion_model.dart';
 import '../../domain/models/recipe_model.dart';
 import '../providers/recipe_providers.dart';
 import '../widgets/recipe_create/recipe_create_dynamic_section.dart';
@@ -41,6 +43,13 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
   final List<TextEditingController> _ingredientControllers = [
     TextEditingController(),
   ];
+  final List<List<IngredientSuggestionModel>> _ingredientSuggestions = [
+    const <IngredientSuggestionModel>[],
+  ];
+  final List<String> _ingredientSelectedIcons = [''];
+  final List<bool> _isIngredientSearchLoading = [false];
+  final List<Timer?> _ingredientSearchDebouncers = [null];
+  final List<bool> _isApplyingIngredientSuggestion = [false];
   final List<TextEditingController> _instructionControllers = [
     TextEditingController(),
   ];
@@ -59,7 +68,8 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
   }
 
   void _applyInitialRecipe() {
-    final initialRecipe = widget.initialRecipe ??
+    final initialRecipe =
+        widget.initialRecipe ??
         (widget.initialRecipeJson != null
             ? RecipeModel.fromJson(widget.initialRecipeJson!)
             : null);
@@ -70,13 +80,37 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
 
     _titleController.text = initialRecipe.title;
     _replaceControllerValues(_ingredientControllers, initialRecipe.ingredients);
-    _replaceControllerValues(_instructionControllers, initialRecipe.instructions);
+    _replaceControllerValues(
+      _instructionControllers,
+      initialRecipe.instructions,
+    );
   }
 
   void _replaceControllerValues(
     List<TextEditingController> target,
     List<String> values,
   ) {
+    if (identical(target, _ingredientControllers)) {
+      for (final timer in _ingredientSearchDebouncers) {
+        timer?.cancel();
+      }
+      _ingredientSuggestions
+        ..clear()
+        ..add(const <IngredientSuggestionModel>[]);
+      _ingredientSelectedIcons
+        ..clear()
+        ..add('');
+      _isIngredientSearchLoading
+        ..clear()
+        ..add(false);
+      _ingredientSearchDebouncers
+        ..clear()
+        ..add(null);
+      _isApplyingIngredientSuggestion
+        ..clear()
+        ..add(false);
+    }
+
     for (final controller in target) {
       controller.dispose();
     }
@@ -95,6 +129,29 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
     target.addAll(
       normalized.map((value) => TextEditingController(text: value)),
     );
+
+    if (identical(target, _ingredientControllers)) {
+      _ingredientSuggestions
+        ..clear()
+        ..addAll(
+          List.generate(
+            target.length,
+            (_) => const <IngredientSuggestionModel>[],
+          ),
+        );
+      _ingredientSelectedIcons
+        ..clear()
+        ..addAll(List.generate(target.length, (_) => ''));
+      _isIngredientSearchLoading
+        ..clear()
+        ..addAll(List.generate(target.length, (_) => false));
+      _ingredientSearchDebouncers
+        ..clear()
+        ..addAll(List.generate(target.length, (_) => null));
+      _isApplyingIngredientSuggestion
+        ..clear()
+        ..addAll(List.generate(target.length, (_) => false));
+    }
   }
 
   Future<void> _createRecipe() async {
@@ -160,17 +217,132 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
     });
   }
 
-  void _handleIngredientChanged(String _) {
-    if (_ingredientError == null) return;
-    if (_collectValues(_ingredientControllers).isEmpty) return;
+  void _handleIngredientChanged(String _, {int? index}) {
+    if (index != null && index < _isApplyingIngredientSuggestion.length) {
+      if (_isApplyingIngredientSuggestion[index]) {
+        return;
+      }
+    }
+
+    final hasAnyIngredient = _collectValues(_ingredientControllers).isNotEmpty;
+
+    if (_ingredientError != null && hasAnyIngredient) {
+      setState(() {
+        _ingredientError = null;
+      });
+    }
+
+    if (index != null && index < _ingredientSelectedIcons.length) {
+      if (_ingredientSelectedIcons[index].isNotEmpty) {
+        setState(() {
+          _ingredientSelectedIcons[index] = '';
+        });
+      }
+    }
+
+    if (index != null) {
+      _scheduleIngredientSearch(index);
+    }
+  }
+
+  Future<void> _scheduleIngredientSearch(int index) async {
+    if (index >= _ingredientControllers.length) {
+      return;
+    }
+
+    _ingredientSearchDebouncers[index]?.cancel();
+
+    final query = _ingredientControllers[index].text.trim();
+    if (query.isEmpty) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _ingredientSuggestions[index] = const <IngredientSuggestionModel>[];
+        _isIngredientSearchLoading[index] = false;
+      });
+      return;
+    }
+
     setState(() {
-      _ingredientError = null;
+      _isIngredientSearchLoading[index] = true;
+    });
+
+    _ingredientSearchDebouncers[index] = Timer(
+      const Duration(milliseconds: 250),
+      () async {
+        try {
+          final service = ref.read(recipeServiceProvider);
+          final matches = await service.fetchIngredientSuggestions(query);
+          if (!mounted || index >= _ingredientControllers.length) {
+            return;
+          }
+
+          final latestText = _ingredientControllers[index].text.trim();
+          if (latestText != query) {
+            return;
+          }
+
+          setState(() {
+            _ingredientSuggestions[index] = matches;
+            _isIngredientSearchLoading[index] = false;
+          });
+        } catch (_) {
+          if (!mounted || index >= _ingredientControllers.length) {
+            return;
+          }
+
+          setState(() {
+            _ingredientSuggestions[index] = const <IngredientSuggestionModel>[];
+            _isIngredientSearchLoading[index] = false;
+          });
+        }
+      },
+    );
+  }
+
+  void _selectIngredientSuggestion(
+    int index,
+    IngredientSuggestionModel suggestion,
+  ) {
+    if (index >= _ingredientControllers.length) {
+      return;
+    }
+
+    final controller = _ingredientControllers[index];
+    _isApplyingIngredientSuggestion[index] = true;
+    controller.text = suggestion.name;
+    controller.selection = TextSelection.collapsed(
+      offset: controller.text.length,
+    );
+
+    setState(() {
+      _ingredientSuggestions[index] = const <IngredientSuggestionModel>[];
+      _ingredientSelectedIcons[index] = suggestion.icon;
+      _isIngredientSearchLoading[index] = false;
+      if (_ingredientError != null &&
+          _collectValues(_ingredientControllers).isNotEmpty) {
+        _ingredientError = null;
+      }
+    });
+
+    Future.microtask(() {
+      if (!mounted || index >= _isApplyingIngredientSuggestion.length) {
+        return;
+      }
+      _isApplyingIngredientSuggestion[index] = false;
     });
   }
 
   @override
   void dispose() {
     _titleController.dispose();
+    for (final timer in _ingredientSearchDebouncers) {
+      timer?.cancel();
+    }
+    for (final suggestion in _ingredientSelectedIcons) {
+      suggestion;
+    }
     for (final controller in _ingredientControllers) {
       controller.dispose();
     }
@@ -190,15 +362,211 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
   void _addIngredientField() {
     setState(() {
       _ingredientControllers.add(TextEditingController());
+      _ingredientSuggestions.add(const <IngredientSuggestionModel>[]);
+      _ingredientSelectedIcons.add('');
+      _isIngredientSearchLoading.add(false);
+      _ingredientSearchDebouncers.add(null);
+      _isApplyingIngredientSuggestion.add(false);
     });
   }
 
   void _removeIngredientField(int index) {
     if (_ingredientControllers.length <= 1) return;
     setState(() {
+      _ingredientSearchDebouncers[index]?.cancel();
       final removed = _ingredientControllers.removeAt(index);
       removed.dispose();
+      _ingredientSuggestions.removeAt(index);
+      _ingredientSelectedIcons.removeAt(index);
+      _isIngredientSearchLoading.removeAt(index);
+      _ingredientSearchDebouncers.removeAt(index);
+      _isApplyingIngredientSuggestion.removeAt(index);
     });
+  }
+
+  Widget _buildIngredientSuggestions(int index) {
+    final suggestions = _ingredientSuggestions[index];
+    final isLoading = _isIngredientSearchLoading[index];
+
+    if (!isLoading && suggestions.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE0E8ED)),
+      ),
+      child: isLoading
+          ? const Padding(
+              padding: EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  SizedBox(width: 10),
+                  Text('Searching ingredients...'),
+                ],
+              ),
+            )
+          : ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 220),
+              child: ListView.separated(
+                shrinkWrap: true,
+                itemCount: suggestions.length,
+                separatorBuilder: (context, index) => const Divider(height: 1),
+                itemBuilder: (context, suggestionIndex) {
+                  final suggestion = suggestions[suggestionIndex];
+                  return ListTile(
+                    dense: true,
+                    leading: suggestion.icon.isEmpty
+                        ? null
+                        : Text(
+                            suggestion.icon,
+                            style: const TextStyle(fontSize: 20),
+                          ),
+                    title: Text(suggestion.name),
+                    onTap: () => _selectIngredientSuggestion(index, suggestion),
+                  );
+                },
+              ),
+            ),
+    );
+  }
+
+  Widget _buildIngredientsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(bottom: 14),
+          child: Text(
+            'Ingredients',
+            style: TextStyle(
+              color: _kPrimaryBlue,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+            ),
+          ),
+        ),
+        for (var i = 0; i < _ingredientControllers.length; i++) ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  children: [
+                    RecipeCreateInputField(
+                      controller: _ingredientControllers[i],
+                      hintText: 'Ingredient #${i + 1}',
+                      primaryColor: _kPrimaryBlue,
+                      hintColor: _kHintText,
+                      hasError: _ingredientError != null,
+                      prefixIcon: _ingredientSelectedIcons[i].isEmpty
+                          ? null
+                          : Text(
+                              _ingredientSelectedIcons[i],
+                              style: const TextStyle(fontSize: 18),
+                            ),
+                      minLines: 1,
+                      maxLines: 1,
+                      onChanged: (value) =>
+                          _handleIngredientChanged(value, index: i),
+                    ),
+                    _buildIngredientSuggestions(i),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              SizedBox(
+                height: 48,
+                child: _buildFieldActionButton(
+                  onTap: _addIngredientField,
+                  icon: Icons.add_rounded,
+                  isRemove: false,
+                ),
+              ),
+              if (_ingredientControllers.length > 1) ...[
+                const SizedBox(width: 8),
+                SizedBox(
+                  height: 48,
+                  child: _buildFieldActionButton(
+                    onTap: () => _removeIngredientField(i),
+                    icon: Icons.remove_rounded,
+                    isRemove: true,
+                  ),
+                ),
+              ],
+            ],
+          ),
+          if (i < _ingredientControllers.length - 1) const SizedBox(height: 10),
+        ],
+        if (_ingredientError != null) ...[
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFF3B30).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: const Color(0xFFFF3B30).withValues(alpha: 0.2),
+              ),
+            ),
+            child: Text(
+              _ingredientError!,
+              style: const TextStyle(
+                color: Color(0xFFFF3B30),
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildFieldActionButton({
+    required VoidCallback onTap,
+    required IconData icon,
+    required bool isRemove,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          width: 48,
+          decoration: BoxDecoration(
+            color: isRemove
+                ? const Color(0xFFFF3B30).withValues(alpha: 0.08)
+                : const Color(0xFF8BB3D6).withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isRemove
+                  ? const Color(0xFFFF3B30).withValues(alpha: 0.2)
+                  : const Color(0xFF8BB3D6).withValues(alpha: 0.2),
+            ),
+          ),
+          child: Center(
+            child: Icon(
+              icon,
+              size: 20,
+              color: isRemove
+                  ? const Color(0xFFFF3B30)
+                  : const Color(0xFF8BB3D6),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   void _addInstructionField() {
@@ -373,20 +741,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                   ),
                 ],
                 const SizedBox(height: 28),
-                RecipeCreateDynamicSection(
-                  title: 'Ingredients',
-                  fieldHint: 'Ingredient',
-                  controllers: _ingredientControllers,
-                  onAdd: _addIngredientField,
-                  onRemove: _removeIngredientField,
-                  primaryColor: _kPrimaryBlue,
-                  hintColor: _kHintText,
-                  minLines: 1,
-                  maxLines: 3,
-                  hasError: _ingredientError != null,
-                  errorText: _ingredientError,
-                  onFieldChanged: _handleIngredientChanged,
-                ),
+                _buildIngredientsSection(),
                 const SizedBox(height: 28),
                 RecipeCreateDynamicSection(
                   title: 'Instructions',
@@ -412,8 +767,9 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       elevation: 2,
-                      disabledBackgroundColor:
-                          _kButtonBlue.withValues(alpha: 0.5),
+                      disabledBackgroundColor: _kButtonBlue.withValues(
+                        alpha: 0.5,
+                      ),
                     ),
                     child: _isLoading
                         ? const SizedBox(

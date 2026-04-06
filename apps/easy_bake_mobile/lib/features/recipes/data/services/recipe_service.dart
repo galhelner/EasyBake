@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import '../../../../core/network/api_client.dart';
+import '../../domain/models/ingredient_suggestion_model.dart';
 import '../../domain/models/recipe_model.dart';
 
 class RecipeService {
@@ -66,6 +67,29 @@ class RecipeService {
 
   Future<void> deleteRecipe(String id) async {
     await _dio.delete('/recipes/$id');
+  }
+
+  Future<List<IngredientSuggestionModel>> fetchIngredientSuggestions(
+    String query,
+  ) async {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) {
+      return const [];
+    }
+
+    final response = await _dio.get(
+      '/recipes/ingredients/search',
+      queryParameters: {'q': trimmed},
+    );
+
+    final data = response.data as List<dynamic>;
+    return data
+        .map(
+          (item) =>
+              IngredientSuggestionModel.fromJson(item as Map<String, dynamic>),
+        )
+        .where((item) => item.name.isNotEmpty)
+        .toList();
   }
 }
 

@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 
 class RecipeDetailsIngredientList extends StatefulWidget {
-  const RecipeDetailsIngredientList({super.key, required this.items});
+  const RecipeDetailsIngredientList({
+    super.key,
+    required this.items,
+    Map<String, String>? iconsByName,
+  }) : iconsByName = iconsByName ?? const {};
 
   final List<String> items;
+  final Map<String, String> iconsByName;
 
   @override
   State<RecipeDetailsIngredientList> createState() =>
@@ -72,6 +77,7 @@ class _RecipeDetailsIngredientListState
             ),
             child: _IngredientTile(
               text: widget.items[i],
+              icon: widget.iconsByName[widget.items[i]],
               checked: _checkedItems[i],
               onChanged: (checked) {
                 setState(() {
@@ -88,11 +94,13 @@ class _RecipeDetailsIngredientListState
 class _IngredientTile extends StatelessWidget {
   const _IngredientTile({
     required this.text,
+    this.icon,
     required this.checked,
     required this.onChanged,
   });
 
   final String text;
+  final String? icon;
   final bool checked;
   final ValueChanged<bool> onChanged;
 
@@ -150,6 +158,13 @@ class _IngredientTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
+              if (icon != null && icon!.isNotEmpty) ...[
+                Text(
+                  icon!,
+                  style: const TextStyle(fontSize: 18),
+                ),
+                const SizedBox(width: 10),
+              ],
               Expanded(
                 child: Text(
                   text,

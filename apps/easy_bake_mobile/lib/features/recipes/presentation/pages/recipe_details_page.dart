@@ -233,7 +233,10 @@ class _RecipeDetailsPageState extends ConsumerState<RecipeDetailsPage> {
                     ),
                     const SizedBox(height: 22),
                     if (_selectedTab == _RecipeDetailTab.ingredients)
-                      RecipeDetailsIngredientList(items: ingredients)
+                      RecipeDetailsIngredientList(
+                        items: ingredients,
+                        iconsByName: _recipe.ingredientIcons,
+                      )
                     else
                       RecipeDetailsInstructionList(items: instructions),
                   ],

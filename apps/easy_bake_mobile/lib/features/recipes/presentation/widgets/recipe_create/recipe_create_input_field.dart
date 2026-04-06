@@ -6,6 +6,7 @@ class RecipeCreateInputField extends StatefulWidget {
   final Color primaryColor;
   final Color hintColor;
   final bool hasError;
+  final Widget? prefixIcon;
   final ValueChanged<String>? onChanged;
   final int minLines;
   final int maxLines;
@@ -17,6 +18,7 @@ class RecipeCreateInputField extends StatefulWidget {
     required this.primaryColor,
     required this.hintColor,
     this.hasError = false,
+    this.prefixIcon,
     this.onChanged,
     this.minLines = 1,
     this.maxLines = 1,
@@ -62,6 +64,17 @@ class _RecipeCreateInputFieldState extends State<RecipeCreateInputField> {
               height: 1.4,
               fontWeight: FontWeight.w400,
             ),
+            prefixIcon: widget.prefixIcon == null
+                ? null
+                : Padding(
+                    padding: const EdgeInsets.only(left: 14, right: 8),
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Center(child: widget.prefixIcon),
+                    ),
+                  ),
+            prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
             contentPadding: EdgeInsets.symmetric(
               horizontal: 16,
               vertical: isMultiline ? 12 : 12,

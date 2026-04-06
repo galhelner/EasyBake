@@ -2,6 +2,7 @@ class RecipeModel {
   final String? id;
   final String title;
   final List<String> ingredients;
+  final Map<String, String> ingredientIcons;
   final List<String> instructions;
   final int healthScore;
   final String? imageUrl;
@@ -11,11 +12,12 @@ class RecipeModel {
     this.id,
     required this.title,
     required this.ingredients,
+    Map<String, String>? ingredientIcons,
     required this.instructions,
     required this.healthScore,
     this.imageUrl,
     this.authorId,
-  });
+  }) : ingredientIcons = ingredientIcons ?? const {};
 
   factory RecipeModel.fromJson(Map<String, dynamic> json) {
     final instructionsValue = json['instructions'];
@@ -23,11 +25,13 @@ class RecipeModel {
 
     final ingredientsValue = json['ingredients'];
     final ingredientsList = _parseIngredients(ingredientsValue);
+    final ingredientIcons = _parseIngredientIcons(ingredientsValue);
 
     return RecipeModel(
       id: json['id'] as String?,
       title: json['title'] as String? ?? 'New Recipe',
       ingredients: ingredientsList,
+      ingredientIcons: ingredientIcons,
       instructions: instructionsList,
       healthScore:
           (json['healthScore'] as int?) ?? (json['health_score'] as int?) ?? 5,
@@ -72,6 +76,26 @@ class RecipeModel {
         .map((s) => s.trim())
         .where((s) => s.isNotEmpty)
         .toList();
+  }
+
+  static Map<String, String> _parseIngredientIcons(dynamic value) {
+    if (value is! List) {
+      return const {};
+    }
+
+    final result = <String, String>{};
+    for (final item in value) {
+      if (item is Map<String, dynamic>) {
+        final rawName = item['name']?.toString().trim() ?? '';
+        final rawIcon = item['icon']?.toString().trim() ?? '';
+        if (rawName.isEmpty || rawIcon.isEmpty) {
+          continue;
+        }
+        result[rawName] = rawIcon;
+      }
+    }
+
+    return result;
   }
 
   Map<String, dynamic> toCreateJson() {
