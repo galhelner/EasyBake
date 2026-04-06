@@ -181,7 +181,7 @@ const mapRecipeToDTO = (recipe: any): RecipeDTO => ({
   ingredients:
     recipe.ingredients?.map((ri: any) => ({
       name: ri.ingredient.name,
-      icon: ri.ingredient.icon ?? '🥘',
+      icon: ri.ingredient.icon ?? '',
     })) ?? [],
 });
 

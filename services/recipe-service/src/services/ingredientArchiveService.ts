@@ -13,7 +13,7 @@ const ingredientArchiveSchema = z.array(ingredientSchema).min(1);
 const AI_SERVICE_API_BASE_URL = (process.env.AI_SERVICE_URL ?? 'http://127.0.0.1:8000/api').replace(/\/$/, '');
 
 const normalizeIngredientName = (name: string): string => name.trim().toLowerCase();
-const normalizeIngredientIcon = (icon: string): string => icon.trim() || '🥘';
+const normalizeIngredientIcon = (icon: string): string => icon.trim();
 
 export const loadIngredientsArchive = async (): Promise<number> => {
   logger.info('Requesting ingredient archive from ai-service');
