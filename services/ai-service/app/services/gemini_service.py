@@ -1,5 +1,7 @@
 import asyncio
+import json
 import os
+import re
 from collections.abc import Iterator
 from functools import lru_cache
 from pathlib import Path
@@ -7,9 +9,10 @@ from typing import TypeVar
 
 from google import genai
 from google.genai import types
-from pydantic import BaseModel
+from pydantic import BaseModel, TypeAdapter
 
 from app.core.logger import get_logger
+from app.schemas.ingredient import IngredientSchema
 from app.schemas.recipe import RecipeSchema
 from app.schemas.router import (
     AssistantResponse,
@@ -28,6 +31,7 @@ logger = get_logger()
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 SchemaT = TypeVar("SchemaT", bound=BaseModel)
+IngredientListAdapter = TypeAdapter(list[IngredientSchema])
 ALLOWED_INTENTS_BY_CONTEXT: dict[str, set[str]] = {
     "home": {"CREATE_RECIPE", "SEARCH_RECIPES", "GENERAL_CHAT"},
     "recipe_detail": {"ASSISTANT_HELP", "HEALTH_AUDIT", "GENERAL_CHAT"},
@@ -271,3 +275,62 @@ async def calculate_health_score(
     )
     logger.info(f"Calculated Health Score for {title}: {score}")
     return score
+
+
+def _extract_text_from_generative_response(response: object) -> str:
+    response_text = getattr(response, "text", None)
+    if isinstance(response_text, str) and response_text.strip():
+        return response_text
+
+    candidates = getattr(response, "candidates", None)
+    if candidates:
+        for candidate in candidates:
+            content = getattr(candidate, "content", None)
+            parts = getattr(content, "parts", None)
+            if not parts:
+                continue
+
+            text_parts: list[str] = []
+            for part in parts:
+                part_text = getattr(part, "text", None)
+                if isinstance(part_text, str) and part_text.strip():
+                    text_parts.append(part_text)
+
+            if text_parts:
+                return "".join(text_parts)
+
+    raise ValueError("Gemini returned no text for ingredient generation")
+
+
+def _strip_markdown_json_fences(raw_text: str) -> str:
+    cleaned = raw_text.strip()
+    cleaned = re.sub(r"^```(?:json)?\\s*", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\\s*```$", "", cleaned)
+    return cleaned.strip()
+
+
+def _generate_ingredients_archive_sync() -> list[IngredientSchema]:
+    response = client.models.generate_content(
+        model=MODEL_NAME,
+        contents="Generate the ingredient archive now.",
+        config=types.GenerateContentConfig(
+            system_instruction=_load_instruction("ingredient_generator.txt"),
+        ),
+    )
+    raw_text = _extract_text_from_generative_response(response)
+    cleaned_text = _strip_markdown_json_fences(raw_text)
+
+    try:
+        payload = json.loads(cleaned_text)
+    except json.JSONDecodeError as error:
+        raise ValueError("Gemini returned invalid ingredient JSON") from error
+
+    ingredients = IngredientListAdapter.validate_python(payload)
+    if len(ingredients) < 150:
+        raise ValueError("Gemini returned fewer than 150 ingredients")
+
+    return ingredients
+
+
+async def generate_ingredients_archive() -> list[IngredientSchema]:
+    return await asyncio.to_thread(_generate_ingredients_archive_sync)

@@ -154,6 +154,8 @@ flutter run
 ## 🧪 Development Notes
 
 - Environment variables are loaded from service-level `.env` files.
+- `GEMINI_API_KEY` must be configured in `services/ai-service/.env`.
+- `INTERNAL_APP_SECRET` must be configured in `services/recipe-service/.env`.
 - `recipe-service` depends on `ai-service` health before startup in Docker.
 - The mobile app is designed to consume the backend APIs as the single source of recipe intelligence.
 

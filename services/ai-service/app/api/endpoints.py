@@ -5,6 +5,7 @@ from collections.abc import Iterator
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from app.core.logger import get_logger
+from app.schemas.ingredient import IngredientSchema
 from app.schemas.recipe import RecipeSchema
 from app.schemas.router import (
     MessageRequest,
@@ -21,6 +22,7 @@ from app.schemas.router import (
 from app.services.gemini_service import (
     calculate_health_score,
     classify_intent,
+    generate_ingredients_archive,
     generate_embedding,
     generate_recipe,
     parse_search_filters,
@@ -175,6 +177,7 @@ def _build_specialist_prompt(prompt: str, recipe_context: str | None) -> str:
         f"{prompt}"
     )
 
+
 @router.post("/route", response_model=RouterResponse)
 async def classify_intent_endpoint(payload: RouterRequest):
     logger.info("Received request for: /api/route")
@@ -255,5 +258,15 @@ async def analyze_health_score_endpoint(payload: HealthScoreRequest):
             payload.instructions,
         )
         return HealthScoreResponse(health_score=score)
+    except Exception as e:
+        raise _http_exception_from_error(e)
+
+
+@router.post("/generate-ingredients", response_model=list[IngredientSchema])
+async def generate_ingredients_endpoint():
+    logger.info("Received request for: /api/generate-ingredients")
+
+    try:
+        return await generate_ingredients_archive()
     except Exception as e:
         raise _http_exception_from_error(e)

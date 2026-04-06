@@ -11,10 +11,11 @@ ARG DATABASE_URL="postgresql://postgres:postgres@localhost:5432/postgres"
 ENV DATABASE_URL=${DATABASE_URL}
 
 COPY package*.json ./
+COPY prisma ./prisma
+COPY prisma.config.ts ./
 RUN npm ci
 
-COPY prisma ./prisma
-COPY tsconfig.json prisma.config.ts ./
+COPY tsconfig.json ./
 COPY src ./src
 
 RUN npx prisma generate && npm run build && npm prune --omit=dev
