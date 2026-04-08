@@ -29,6 +29,7 @@ type RecipeModuleLoad = {
 	mockPrismaTransaction: ReturnType<typeof jest.fn>;
 	mockPrismaExecuteRaw: ReturnType<typeof jest.fn>;
 	mockUploadImage: ReturnType<typeof jest.fn>;
+	mockDeleteImageByPublicUrl: ReturnType<typeof jest.fn>;
 	mockLoggerInfo: ReturnType<typeof jest.fn>;
 	mockLoggerWarn: ReturnType<typeof jest.fn>;
 };
@@ -60,6 +61,7 @@ async function loadRecipeControllerModule(): Promise<RecipeModuleLoad> {
 	const mockPrismaTransaction = jest.fn(async (operations: unknown[]) => operations);
 	const mockPrismaExecuteRaw = jest.fn();
 	const mockUploadImage = jest.fn();
+	const mockDeleteImageByPublicUrl = jest.fn();
 	const mockLoggerInfo = jest.fn();
 	const mockLoggerWarn = jest.fn();
 
@@ -94,6 +96,7 @@ async function loadRecipeControllerModule(): Promise<RecipeModuleLoad> {
 	jest.doMock('../../../services/storageService', () => ({
 		DEFAULT_RECIPE_IMAGE_URL: 'https://example.com/default-recipe.jpg',
 		uploadImage: mockUploadImage,
+		deleteImageByPublicUrl: mockDeleteImageByPublicUrl,
 	}));
 
 	jest.doMock('../../../services/logger', () => ({
@@ -120,6 +123,7 @@ async function loadRecipeControllerModule(): Promise<RecipeModuleLoad> {
 		mockPrismaTransaction,
 		mockPrismaExecuteRaw,
 		mockUploadImage,
+		mockDeleteImageByPublicUrl,
 		mockLoggerInfo,
 		mockLoggerWarn,
 	};

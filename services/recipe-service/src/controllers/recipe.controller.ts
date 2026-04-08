@@ -5,7 +5,7 @@ import { resolve } from 'path';
 import { z } from 'zod';
 import prisma from '../services/prismaClient';
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
-import { DEFAULT_RECIPE_IMAGE_URL, uploadImage } from '../services/storageService';
+import { DEFAULT_RECIPE_IMAGE_URL, deleteImageByPublicUrl, uploadImage } from '../services/storageService';
 import logger from '../services/logger';
 
 const AI_SERVICE_BASE_URL = (process.env.AI_SERVICE_URL ?? 'http://127.0.0.1:8000/api').replace(/\/$/, '');
@@ -135,6 +135,38 @@ const parseInstructionSteps = (value: unknown): unknown => {
   return value;
 };
 
+const parseBooleanish = (value: unknown): boolean | undefined => {
+  if (value === undefined || value === null || value === '') {
+    return undefined;
+  }
+
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  if (typeof value === 'number') {
+    if (value === 1) {
+      return true;
+    }
+    if (value === 0) {
+      return false;
+    }
+    return undefined;
+  }
+
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (['true', '1', 'yes', 'y'].includes(normalized)) {
+      return true;
+    }
+    if (['false', '0', 'no', 'n'].includes(normalized)) {
+      return false;
+    }
+  }
+
+  return undefined;
+};
+
 const createRecipeSchema = z.object({
   title: z.string().min(1),
   instructions: z.preprocess(
@@ -142,6 +174,7 @@ const createRecipeSchema = z.object({
     z.array(z.string().min(1)).default([]),
   ),
   ingredients: z.preprocess(parseIngredients, z.array(ingredientSchema).default([])),
+  remove_image: z.preprocess(parseBooleanish, z.boolean().optional()).optional(),
 }).strict();
 
 const semanticSearchSchema = z.object({
@@ -579,12 +612,15 @@ export const updateRecipe = async (
       return;
     }
 
-    const { title, instructions, ingredients } = parsed.data;
+    const { title, instructions, ingredients, remove_image: removeImage } = parsed.data;
     const normalizedIngredients = normalizeIngredients(ingredients);
     const ingredientNames = normalizedIngredients.map((ingredient) => ingredient.name);
     const healthScore = await requestAiHealthScore(title, ingredientNames, instructions);
+    const previousImageUrl = existingRecipe.imageUrl ?? null;
     const imageUrl = req.file
       ? await uploadImage(req.file)
+      : removeImage
+        ? DEFAULT_RECIPE_IMAGE_URL
       : existingRecipe.imageUrl ?? DEFAULT_RECIPE_IMAGE_URL;
 
     const updatedRecipe = await prisma.recipe.update({
@@ -627,6 +663,19 @@ export const updateRecipe = async (
       console.warn('Recipe updated but embedding generation failed', embeddingError);
     }
 
+    const shouldDeletePreviousImage =
+      !!previousImageUrl
+      && previousImageUrl !== DEFAULT_RECIPE_IMAGE_URL
+      && (Boolean(req.file) || removeImage === true);
+
+    if (shouldDeletePreviousImage) {
+      try {
+        await deleteImageByPublicUrl(previousImageUrl);
+      } catch (deleteImageError: any) {
+        logger.warn(`Recipe updated but old image cleanup failed: ${deleteImageError?.message ?? 'Unknown error'}`);
+      }
+    }
+
     res.json(mapRecipeToDTO(updatedRecipe));
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -660,6 +709,7 @@ export const deleteRecipe = async (
       },
       select: {
         id: true,
+        imageUrl: true,
       },
     });
 
@@ -680,6 +730,14 @@ export const deleteRecipe = async (
         },
       }),
     ]);
+
+    if (existingRecipe.imageUrl && existingRecipe.imageUrl !== DEFAULT_RECIPE_IMAGE_URL) {
+      try {
+        await deleteImageByPublicUrl(existingRecipe.imageUrl);
+      } catch (deleteImageError: any) {
+        logger.warn(`Recipe deleted but image cleanup failed: ${deleteImageError?.message ?? 'Unknown error'}`);
+      }
+    }
 
     res.status(204).send();
   } catch (error) {
