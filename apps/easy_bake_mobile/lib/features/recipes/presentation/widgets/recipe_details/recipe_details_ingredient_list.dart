@@ -5,10 +5,13 @@ class RecipeDetailsIngredientList extends StatefulWidget {
     super.key,
     required this.items,
     Map<String, String>? iconsByName,
-  }) : iconsByName = iconsByName ?? const {};
+    Map<String, String>? amountsByName,
+  }) : iconsByName = iconsByName ?? const {},
+       amountsByName = amountsByName ?? const {};
 
   final List<String> items;
   final Map<String, String> iconsByName;
+  final Map<String, String> amountsByName;
 
   @override
   State<RecipeDetailsIngredientList> createState() =>
@@ -77,6 +80,7 @@ class _RecipeDetailsIngredientListState
             ),
             child: _IngredientTile(
               text: widget.items[i],
+              amount: widget.amountsByName[widget.items[i]],
               icon: widget.iconsByName[widget.items[i]],
               checked: _checkedItems[i],
               onChanged: (checked) {
@@ -94,12 +98,14 @@ class _RecipeDetailsIngredientListState
 class _IngredientTile extends StatelessWidget {
   const _IngredientTile({
     required this.text,
+    this.amount,
     this.icon,
     required this.checked,
     required this.onChanged,
   });
 
   final String text;
+  final String? amount;
   final String? icon;
   final bool checked;
   final ValueChanged<bool> onChanged;
@@ -183,6 +189,31 @@ class _IngredientTile extends StatelessWidget {
                   ),
                 ),
               ),
+              if (amount != null && amount!.trim().isNotEmpty) ...[
+                const SizedBox(width: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: checked
+                        ? const Color(0xFF5F8E68).withValues(alpha: 0.12)
+                        : const Color(0xFF2E4E69).withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    amount!.trim(),
+                    style: TextStyle(
+                      color: checked
+                          ? const Color(0xFF4E6F55)
+                          : const Color(0xFF2E4E69),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

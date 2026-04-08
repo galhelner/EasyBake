@@ -53,6 +53,9 @@ class ChatService {
   ChatService(this._dio);
 
   final Dio _dio;
+  static const _chatConnectTimeout = Duration(seconds: 45);
+  static const _chatSendTimeout = Duration(seconds: 45);
+  static const _chatReceiveTimeout = Duration(seconds: 180);
 
   Stream<ChatEvent> sendPrompt({
     required String prompt,
@@ -82,6 +85,9 @@ class ChatService {
         data: payload,
         options: Options(
           responseType: ResponseType.stream,
+          connectTimeout: _chatConnectTimeout,
+          sendTimeout: _chatSendTimeout,
+          receiveTimeout: _chatReceiveTimeout,
           headers: const {
             'Accept': 'text/event-stream, application/json',
           },

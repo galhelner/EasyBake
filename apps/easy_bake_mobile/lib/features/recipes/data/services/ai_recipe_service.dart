@@ -26,6 +26,14 @@ class AiRecipeService {
             .toList() ??
         [];
 
+    final ingredientAmounts = <String, String>{
+      for (final item in (data['ingredients'] as List<dynamic>? ?? const []))
+        if (item is Map<String, dynamic>)
+          if ((item['name']?.toString().trim() ?? '').isNotEmpty &&
+              (item['amount']?.toString().trim() ?? '').isNotEmpty)
+            item['name'].toString().trim(): item['amount'].toString().trim(),
+    };
+
     final instructions =
         (data['instructions'] as List<dynamic>?)
             ?.map((item) => item.toString())
@@ -35,6 +43,7 @@ class AiRecipeService {
     return RecipeModel(
       title: data['title'] as String? ?? 'Untitled',
       ingredients: ingredients,
+      ingredientAmounts: ingredientAmounts,
       instructions: instructions,
       healthScore: (data['health_score'] as int?) ?? 5,
     );

@@ -24,7 +24,7 @@ class RecipeListPage extends ConsumerStatefulWidget {
 }
 
 class _RecipeListPageState extends ConsumerState<RecipeListPage> {
-  static const _loadingWatchdogDuration = Duration(seconds: 18);
+  static const _loadingWatchdogDuration = Duration(seconds: 50);
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _loadingWatchdog;

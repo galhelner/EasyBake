@@ -9,6 +9,7 @@ import '../../domain/models/recipe_model.dart';
 
 class RecipeService {
   final Dio _dio;
+  static const _saveRequestTimeout = Duration(seconds: 120);
 
   RecipeService(this._dio);
 
@@ -27,13 +28,27 @@ class RecipeService {
 
   Future<RecipeModel> createRecipe(RecipeModel recipe) async {
     final createData = recipe.toCreateJson();
-    final response = await _dio.post('/recipes', data: createData);
+    final response = await _dio.post(
+      '/recipes',
+      data: createData,
+      options: Options(
+        sendTimeout: _saveRequestTimeout,
+        receiveTimeout: _saveRequestTimeout,
+      ),
+    );
     return RecipeModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<RecipeModel> updateRecipe(String id, RecipeModel recipe) async {
     final updateData = recipe.toCreateJson();
-    final response = await _dio.put('/recipes/$id', data: updateData);
+    final response = await _dio.put(
+      '/recipes/$id',
+      data: updateData,
+      options: Options(
+        sendTimeout: _saveRequestTimeout,
+        receiveTimeout: _saveRequestTimeout,
+      ),
+    );
     return RecipeModel.fromJson(response.data as Map<String, dynamic>);
   }
 
@@ -66,7 +81,11 @@ class RecipeService {
     final response = await _dio.post(
       '/recipes',
       data: formData,
-      options: Options(contentType: 'multipart/form-data'),
+      options: Options(
+        contentType: 'multipart/form-data',
+        sendTimeout: _saveRequestTimeout,
+        receiveTimeout: _saveRequestTimeout,
+      ),
     );
     return RecipeModel.fromJson(response.data as Map<String, dynamic>);
   }
@@ -101,7 +120,11 @@ class RecipeService {
     final response = await _dio.put(
       '/recipes/$id',
       data: formData,
-      options: Options(contentType: 'multipart/form-data'),
+      options: Options(
+        contentType: 'multipart/form-data',
+        sendTimeout: _saveRequestTimeout,
+        receiveTimeout: _saveRequestTimeout,
+      ),
     );
     return RecipeModel.fromJson(response.data as Map<String, dynamic>);
   }

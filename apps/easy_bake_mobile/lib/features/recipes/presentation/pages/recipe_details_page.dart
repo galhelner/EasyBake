@@ -31,6 +31,8 @@ class RecipeDetailsPage extends ConsumerStatefulWidget {
 }
 
 class _RecipeDetailsPageState extends ConsumerState<RecipeDetailsPage> {
+  static const _kLogoAssetPath = 'assets/app_logo.png';
+
   late RecipeModel _recipe;
   _RecipeDetailTab _selectedTab = _RecipeDetailTab.ingredients;
   bool _isRefreshing = false;
@@ -222,7 +224,7 @@ class _RecipeDetailsPageState extends ConsumerState<RecipeDetailsPage> {
               const RecipeDetailsSkeleton()
             else ...[
               SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 12, 24, 120),
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 180),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -256,6 +258,7 @@ class _RecipeDetailsPageState extends ConsumerState<RecipeDetailsPage> {
                       RecipeDetailsIngredientList(
                         items: ingredients,
                         iconsByName: _recipe.ingredientIcons,
+                        amountsByName: _recipe.ingredientAmounts,
                       )
                     else
                       RecipeDetailsInstructionList(items: instructions),
@@ -266,10 +269,57 @@ class _RecipeDetailsPageState extends ConsumerState<RecipeDetailsPage> {
             if (_isDeleting)
               Positioned.fill(
                 child: ColoredBox(
-                  color: Colors.black.withValues(alpha: 0.16),
-                  child: const Center(
-                    child: CircularProgressIndicator(
-                      color: kRecipeDetailsPrimaryBlue,
+                  color: Colors.black.withValues(alpha: 0.24),
+                  child: Center(
+                    child: Container(
+                      width: 230,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 18,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x33000000),
+                            blurRadius: 24,
+                            offset: Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Image.asset(
+                            _kLogoAssetPath,
+                            width: 56,
+                            height: 56,
+                            fit: BoxFit.contain,
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Deleting your recipe...',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Color(0xFF2E4E69),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(999),
+                            child: const LinearProgressIndicator(
+                              minHeight: 7,
+                              backgroundColor: Color(0xFFD7E6F1),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                kRecipeDetailsPrimaryBlue,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

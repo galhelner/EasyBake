@@ -5,6 +5,9 @@ import '../../features/auth/presentation/providers/auth_notifier.dart';
 
 const _cloudRecipeServiceBaseUrl =
   'https://easybake-recipe-service-h7dtcrbhfbdthmcz.israelcentral-01.azurewebsites.net';
+const _connectTimeout = Duration(seconds: 30);
+const _sendTimeout = Duration(seconds: 30);
+const _receiveTimeout = Duration(seconds: 90);
 
 // Inject via --dart-define=INTERNAL_APP_SECRET=... for non-hardcoded secret management.
 const _internalAppSecret = String.fromEnvironment(
@@ -20,9 +23,9 @@ final dioProvider = Provider<Dio>((ref) {
     BaseOptions(
       // Use the cloud endpoint for all devices.
       baseUrl: _cloudRecipeServiceBaseUrl,
-      connectTimeout: const Duration(seconds: 10),
-      sendTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 15),
+      connectTimeout: _connectTimeout,
+      sendTimeout: _sendTimeout,
+      receiveTimeout: _receiveTimeout,
       headers: {
         'X-App-Secret': _internalAppSecret,
       },

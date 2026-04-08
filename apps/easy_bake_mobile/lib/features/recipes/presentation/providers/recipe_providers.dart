@@ -24,7 +24,7 @@ final recipesListProvider = FutureProvider.autoDispose<List<RecipeModel>>((
   try {
     return await service
         .fetchRecipes(cancelToken: cancelToken)
-        .timeout(const Duration(seconds: 12));
+      .timeout(const Duration(seconds: 45));
   } on TimeoutException {
     if (!cancelToken.isCancelled) {
       cancelToken.cancel('Timed out while loading recipes');
