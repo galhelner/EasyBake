@@ -139,7 +139,7 @@ const createRecipeSchema = z.object({
   title: z.string().min(1),
   instructions: z.preprocess(
     parseInstructionSteps,
-    z.array(z.string().min(1)).min(1),
+    z.array(z.string().min(1)).default([]),
   ),
   ingredients: z.preprocess(parseIngredients, z.array(ingredientSchema).default([])),
 }).strict();
