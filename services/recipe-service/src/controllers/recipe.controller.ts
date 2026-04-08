@@ -80,6 +80,7 @@ const saveRecipeEmbedding = async (recipeId: string, embedding: number[]): Promi
 
 const ingredientSchema = z.object({
   name: z.string().min(1),
+  amount: z.string().trim().min(1).optional(),
 });
 
 const parseIngredients = (value: unknown): unknown => {
@@ -154,6 +155,7 @@ const ingredientLookupSchema = z.object({
 export interface IngredientDTO {
   name: string;
   icon: string;
+  amount?: string;
 }
 
 export interface IngredientSuggestionDTO {
@@ -182,11 +184,45 @@ const mapRecipeToDTO = (recipe: any): RecipeDTO => ({
     recipe.ingredients?.map((ri: any) => ({
       name: ri.ingredient.name,
       icon: ri.ingredient.icon ?? '',
+      amount:
+        typeof ri.amount === 'string' && ri.amount.trim().length > 0
+          ? ri.amount.trim()
+          : undefined,
     })) ?? [],
 });
 
-const normalizeIngredientNames = (ingredients: { name: string }[]): string[] =>
-  Array.from(new Set(ingredients.map((i) => i.name.toLowerCase().trim()).filter(Boolean)));
+interface NormalizedIngredient {
+  name: string;
+  amount?: string;
+}
+
+const normalizeIngredients = (ingredients: { name: string; amount?: string }[]): NormalizedIngredient[] => {
+  const byName = new Map<string, NormalizedIngredient>();
+
+  for (const ingredient of ingredients) {
+    const normalizedName = ingredient.name.toLowerCase().trim();
+    if (!normalizedName) {
+      continue;
+    }
+
+    const normalizedAmount = ingredient.amount?.trim();
+    const existing = byName.get(normalizedName);
+
+    if (!existing) {
+      byName.set(normalizedName, {
+        name: normalizedName,
+        amount: normalizedAmount && normalizedAmount.length > 0 ? normalizedAmount : undefined,
+      });
+      continue;
+    }
+
+    if (!existing.amount && normalizedAmount && normalizedAmount.length > 0) {
+      existing.amount = normalizedAmount;
+    }
+  }
+
+  return Array.from(byName.values());
+};
 
 const cleanupTempUpload = async (file?: Express.Multer.File): Promise<void> => {
   if (!file?.path) {
@@ -231,7 +267,8 @@ export const createRecipe = async (
     const { title, instructions, ingredients } = parsed.data;
     const imageUrl = req.file ? await uploadImage(req.file) : DEFAULT_RECIPE_IMAGE_URL;
 
-    const ingredientNames = normalizeIngredientNames(ingredients);
+    const normalizedIngredients = normalizeIngredients(ingredients);
+    const ingredientNames = normalizedIngredients.map((ingredient) => ingredient.name);
     const healthScore = await requestAiHealthScore(title, ingredientNames, instructions);
 
     const createData: any = {
@@ -247,11 +284,12 @@ export const createRecipe = async (
         },
       },
       ingredients: {
-        create: ingredientNames.map((name) => ({
+        create: normalizedIngredients.map((ingredient) => ({
+          amount: ingredient.amount,
           ingredient: {
             connectOrCreate: {
-              where: { name },
-              create: { name },
+              where: { name: ingredient.name },
+              create: { name: ingredient.name },
             },
           },
         })),
@@ -542,7 +580,8 @@ export const updateRecipe = async (
     }
 
     const { title, instructions, ingredients } = parsed.data;
-    const ingredientNames = normalizeIngredientNames(ingredients);
+    const normalizedIngredients = normalizeIngredients(ingredients);
+    const ingredientNames = normalizedIngredients.map((ingredient) => ingredient.name);
     const healthScore = await requestAiHealthScore(title, ingredientNames, instructions);
     const imageUrl = req.file
       ? await uploadImage(req.file)
@@ -559,11 +598,12 @@ export const updateRecipe = async (
         imageUrl,
         ingredients: {
           deleteMany: {},
-          create: ingredientNames.map((name) => ({
+          create: normalizedIngredients.map((ingredient) => ({
+            amount: ingredient.amount,
             ingredient: {
               connectOrCreate: {
-                where: { name },
-                create: { name },
+                where: { name: ingredient.name },
+                create: { name: ingredient.name },
               },
             },
           })),

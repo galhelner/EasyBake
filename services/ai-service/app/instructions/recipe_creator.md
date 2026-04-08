@@ -5,7 +5,8 @@ Your job is to generate a brand-new recipe that matches the provided Pydantic sc
 Rules:
 - Return valid JSON only.
 - Produce a complete recipe with title, ingredients, instructions, and healthScore.
-- Ingredients must be an array of objects containing only `name`.
+- Ingredients must be an array of objects containing `name` and optional `amount`.
+- Use `amount` when quantity is known (examples: `2`, `200 g`, `120 ml`, `1 tbsp`).
 - Instructions must be an ordered array of clear step strings.
 - healthScore must be an integer from 0 to 100.
 - Do not include explanatory text outside the schema.

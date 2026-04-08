@@ -247,7 +247,12 @@ describe('recipe controller', () => {
 			expect.objectContaining({
 				id: 'recipe-1',
 				title: 'Pasta',
-				ingredients: [{ name: 'Pasta' }],
+				ingredients: [
+					expect.objectContaining({
+						name: 'Pasta',
+						icon: '',
+					}),
+				],
 			})
 		);
 	});

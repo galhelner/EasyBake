@@ -43,6 +43,7 @@ interface RecipeContextPayload {
   title: string;
   instructions: string[];
   ingredients: Array<{
+    amount?: string | null;
     ingredient: {
       name: string;
     };
@@ -55,7 +56,12 @@ const AI_SERVICE_API_BASE_URL = `${AI_SERVICE_BASE_URL}/api`;
 
 const buildRecipeContext = (recipe: RecipeContextPayload): string => {
   const ingredients = recipe.ingredients.length
-    ? recipe.ingredients.map(({ ingredient }) => `- ${ingredient.name}`).join('\n')
+    ? recipe.ingredients
+      .map(({ ingredient, amount }) => {
+        const normalizedAmount = typeof amount === 'string' ? amount.trim() : '';
+        return normalizedAmount ? `- ${ingredient.name} (${normalizedAmount})` : `- ${ingredient.name}`;
+      })
+      .join('\n')
     : '- No ingredients listed';
 
   const instructions = recipe.instructions.length
