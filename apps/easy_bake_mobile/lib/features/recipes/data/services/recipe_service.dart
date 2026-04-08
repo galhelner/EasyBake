@@ -39,8 +39,15 @@ class RecipeService {
     return RecipeModel.fromJson(response.data as Map<String, dynamic>);
   }
 
-  Future<RecipeModel> updateRecipe(String id, RecipeModel recipe) async {
+  Future<RecipeModel> updateRecipe(
+    String id,
+    RecipeModel recipe, {
+    bool removeExistingImage = false,
+  }) async {
     final updateData = recipe.toCreateJson();
+    if (removeExistingImage) {
+      updateData['remove_image'] = true;
+    }
     final response = await _dio.put(
       '/recipes/$id',
       data: updateData,
@@ -94,14 +101,23 @@ class RecipeService {
     String id,
     RecipeModel recipe, {
     String? imageFilePath,
+    bool removeExistingImage = false,
   }) async {
     if (imageFilePath == null || imageFilePath.isEmpty) {
-      return updateRecipe(id, recipe);
+      return updateRecipe(
+        id,
+        recipe,
+        removeExistingImage: removeExistingImage,
+      );
     }
 
     final imageFile = File(imageFilePath);
     if (!await imageFile.exists()) {
-      return updateRecipe(id, recipe);
+      return updateRecipe(
+        id,
+        recipe,
+        removeExistingImage: removeExistingImage,
+      );
     }
 
     final updateData = recipe.toCreateJson();
@@ -114,6 +130,7 @@ class RecipeService {
       // Backend preprocessors accept JSON strings in multipart fields.
       'instructions': jsonEncode(instructions),
       'ingredients': jsonEncode(ingredients),
+      if (removeExistingImage) 'remove_image': 'true',
       'image': await MultipartFile.fromFile(imageFile.path, filename: fileName),
     });
 

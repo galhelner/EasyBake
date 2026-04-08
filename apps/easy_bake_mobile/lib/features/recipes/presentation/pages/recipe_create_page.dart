@@ -61,6 +61,8 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
   bool _isLoading = false;
   Uint8List? _selectedImageBytes;
   XFile? _selectedImageFile;
+  String? _existingImageUrl;
+  bool _removeExistingImage = false;
   String? _titleError;
   String? _ingredientError;
 
@@ -107,6 +109,17 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
       initialRecipe.instructions,
     );
     _applyInitialIngredientIcons(initialRecipe);
+    _existingImageUrl = _hasCustomImageUrl(initialRecipe.imageUrl)
+        ? initialRecipe.imageUrl
+        : null;
+    _removeExistingImage = false;
+  }
+
+  bool _hasCustomImageUrl(String? url) {
+    if (url == null || url.trim().isEmpty) {
+      return false;
+    }
+    return !url.toLowerCase().contains('default-recipe.jpg');
   }
 
   void _applyInitialIngredientIcons(RecipeModel initialRecipe) {
@@ -237,6 +250,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
               existingId,
               recipe,
               imageFilePath: _selectedImageFile?.path,
+              removeExistingImage: _removeExistingImage,
             )
           : await service.createRecipeWithOptionalImage(
               recipe,
@@ -933,6 +947,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
       setState(() {
         _selectedImageFile = picked;
         _selectedImageBytes = bytes;
+        _removeExistingImage = false;
       });
     } catch (e) {
       if (!mounted) return;
@@ -940,6 +955,17 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
         'We could not open your camera or gallery. Please try again.',
       );
     }
+  }
+
+  void _removeRecipeImage() {
+    setState(() {
+      _selectedImageFile = null;
+      _selectedImageBytes = null;
+      if (_existingImageUrl != null && _existingImageUrl!.isNotEmpty) {
+        _removeExistingImage = true;
+      }
+      _existingImageUrl = null;
+    });
   }
 
   String _friendlyErrorMessage(Object error) {
@@ -1062,7 +1088,15 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                       primaryColor: _kButtonBlue,
                       backgroundColor: _kUploadCardBackground,
                       imageBytes: _selectedImageBytes,
-                      onTap: _showImageSourceOptions,
+                      imageUrl: _selectedImageBytes == null
+                          ? _existingImageUrl
+                          : null,
+                      onReplace: _showImageSourceOptions,
+                      onDelete: (_selectedImageBytes != null ||
+                              (_existingImageUrl != null &&
+                                  _existingImageUrl!.isNotEmpty))
+                          ? _removeRecipeImage
+                          : null,
                     ),
                     const SizedBox(height: 28),
                     RecipeCreateInputField(
