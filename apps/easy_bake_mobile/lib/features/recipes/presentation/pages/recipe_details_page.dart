@@ -76,6 +76,7 @@ class _RecipeDetailsPageState extends ConsumerState<RecipeDetailsPage> {
   Future<void> _handleRecipeAction(_RecipeAction action) async {
     switch (action) {
       case _RecipeAction.edit:
+        await _openEditRecipePage();
         return;
       case _RecipeAction.delete:
         await _confirmAndDelete();
@@ -84,11 +85,30 @@ class _RecipeDetailsPageState extends ConsumerState<RecipeDetailsPage> {
 
   Future<void> _handleMenuAction(String action) async {
     if (action == 'edit') {
+      await _handleRecipeAction(_RecipeAction.edit);
       return;
     }
     if (action == 'delete') {
       await _handleRecipeAction(_RecipeAction.delete);
     }
+  }
+
+  Future<void> _openEditRecipePage() async {
+    final updatedRecipe = await Navigator.of(context).push<RecipeModel>(
+      MaterialPageRoute(
+        builder: (_) => RecipeCreatePage(initialRecipe: _recipe),
+      ),
+    );
+
+    if (!mounted || updatedRecipe == null) {
+      return;
+    }
+
+    setState(() {
+      _recipe = updatedRecipe;
+    });
+
+    ref.invalidate(recipesListProvider);
   }
 
   Future<void> _confirmAndDelete() async {

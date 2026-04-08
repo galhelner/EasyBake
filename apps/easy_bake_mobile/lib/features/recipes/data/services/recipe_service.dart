@@ -31,6 +31,12 @@ class RecipeService {
     return RecipeModel.fromJson(response.data as Map<String, dynamic>);
   }
 
+  Future<RecipeModel> updateRecipe(String id, RecipeModel recipe) async {
+    final updateData = recipe.toCreateJson();
+    final response = await _dio.put('/recipes/$id', data: updateData);
+    return RecipeModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
   Future<RecipeModel> createRecipeWithOptionalImage(
     RecipeModel recipe, {
     String? imageFilePath,
@@ -59,6 +65,41 @@ class RecipeService {
 
     final response = await _dio.post(
       '/recipes',
+      data: formData,
+      options: Options(contentType: 'multipart/form-data'),
+    );
+    return RecipeModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<RecipeModel> updateRecipeWithOptionalImage(
+    String id,
+    RecipeModel recipe, {
+    String? imageFilePath,
+  }) async {
+    if (imageFilePath == null || imageFilePath.isEmpty) {
+      return updateRecipe(id, recipe);
+    }
+
+    final imageFile = File(imageFilePath);
+    if (!await imageFile.exists()) {
+      return updateRecipe(id, recipe);
+    }
+
+    final updateData = recipe.toCreateJson();
+    final instructions = (updateData['instructions'] as List<dynamic>?) ?? [];
+    final ingredients = (updateData['ingredients'] as List<dynamic>?) ?? [];
+    final fileName = imageFile.path.split(RegExp(r'[\\/]')).last;
+
+    final formData = FormData.fromMap({
+      'title': updateData['title'],
+      // Backend preprocessors accept JSON strings in multipart fields.
+      'instructions': jsonEncode(instructions),
+      'ingredients': jsonEncode(ingredients),
+      'image': await MultipartFile.fromFile(imageFile.path, filename: fileName),
+    });
+
+    final response = await _dio.put(
+      '/recipes/$id',
       data: formData,
       options: Options(contentType: 'multipart/form-data'),
     );

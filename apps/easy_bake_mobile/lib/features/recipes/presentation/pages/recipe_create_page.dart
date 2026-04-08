@@ -61,6 +61,24 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
   String? _titleError;
   String? _ingredientError;
 
+  bool get _isEditMode {
+    final initialRecipe =
+        widget.initialRecipe ??
+        (widget.initialRecipeJson != null
+            ? RecipeModel.fromJson(widget.initialRecipeJson!)
+            : null);
+
+    final id = initialRecipe?.id;
+    return id != null && id.isNotEmpty;
+  }
+
+  RecipeModel? get _resolvedInitialRecipe {
+    return widget.initialRecipe ??
+        (widget.initialRecipeJson != null
+            ? RecipeModel.fromJson(widget.initialRecipeJson!)
+            : null);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -68,11 +86,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
   }
 
   void _applyInitialRecipe() {
-    final initialRecipe =
-        widget.initialRecipe ??
-        (widget.initialRecipeJson != null
-            ? RecipeModel.fromJson(widget.initialRecipeJson!)
-            : null);
+    final initialRecipe = _resolvedInitialRecipe;
 
     if (initialRecipe == null) {
       return;
@@ -84,6 +98,23 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
       _instructionControllers,
       initialRecipe.instructions,
     );
+    _applyInitialIngredientIcons(initialRecipe);
+  }
+
+  void _applyInitialIngredientIcons(RecipeModel initialRecipe) {
+    if (_ingredientControllers.isEmpty || initialRecipe.ingredientIcons.isEmpty) {
+      return;
+    }
+
+    final normalizedIconByName = <String, String>{
+      for (final entry in initialRecipe.ingredientIcons.entries)
+        entry.key.trim().toLowerCase(): entry.value,
+    };
+
+    for (var i = 0; i < _ingredientControllers.length; i++) {
+      final ingredientName = _ingredientControllers[i].text.trim().toLowerCase();
+      _ingredientSelectedIcons[i] = normalizedIconByName[ingredientName] ?? '';
+    }
   }
 
   void _replaceControllerValues(
@@ -154,7 +185,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
     }
   }
 
-  Future<void> _createRecipe() async {
+  Future<void> _saveRecipe() async {
     if (!_validateRequiredFields()) return;
 
     setState(() {
@@ -173,14 +204,22 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
       );
 
       final service = ref.read(recipeServiceProvider);
-      await service.createRecipeWithOptionalImage(
-        recipe,
-        imageFilePath: _selectedImageFile?.path,
-      );
+      final existingId = _resolvedInitialRecipe?.id;
+      final savedRecipe =
+          _isEditMode && existingId != null && existingId.isNotEmpty
+          ? await service.updateRecipeWithOptionalImage(
+              existingId,
+              recipe,
+              imageFilePath: _selectedImageFile?.path,
+            )
+          : await service.createRecipeWithOptionalImage(
+              recipe,
+              imageFilePath: _selectedImageFile?.path,
+            );
       ref.invalidate(recipesListProvider);
 
       if (mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(savedRecipe);
       }
     } catch (e) {
       if (mounted) {
@@ -641,18 +680,60 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
   String _friendlyErrorMessage(Object error) {
     if (error is DioException) {
       final statusCode = error.response?.statusCode;
+      final serverData = error.response?.data;
+
+      String? extractServerMessage() {
+        if (serverData is! Map) {
+          return null;
+        }
+
+        final message = serverData['message']?.toString().trim();
+        if (message != null && message.isNotEmpty) {
+          return message;
+        }
+
+        final errorText = serverData['error']?.toString().trim();
+        if (errorText != null && errorText.isNotEmpty) {
+          return errorText;
+        }
+
+        final details = serverData['details'];
+        if (details is Map) {
+          final fieldErrors = details['fieldErrors'];
+          if (fieldErrors is Map) {
+            for (final value in fieldErrors.values) {
+              if (value is List && value.isNotEmpty) {
+                final first = value.first?.toString().trim();
+                if (first != null && first.isNotEmpty) {
+                  return first;
+                }
+              }
+            }
+          }
+
+          final formErrors = details['formErrors'];
+          if (formErrors is List && formErrors.isNotEmpty) {
+            final first = formErrors.first?.toString().trim();
+            if (first != null && first.isNotEmpty) {
+              return first;
+            }
+          }
+        }
+
+        return null;
+      }
+
+      final serverMessage = extractServerMessage();
+
       if (statusCode == 400) {
-        final serverMessage = error.response?.data is Map
-            ? (error.response?.data['message'] as String?)
-            : null;
         return serverMessage ??
             'Some recipe details are invalid. Please review your inputs and try again.';
       }
       if (statusCode == 401 || statusCode == 403) {
-        return 'Your session has expired. Please sign in again.';
+        return serverMessage ?? 'Your session has expired. Please sign in again.';
       }
       if (statusCode == 409) {
-        return 'This recipe already exists. Try a different title.';
+        return serverMessage ?? 'This recipe already exists. Try a different title.';
       }
       if (statusCode != null && statusCode >= 500) {
         return 'The server is having trouble right now. Please try again in a moment.';
@@ -662,6 +743,10 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
           error.type == DioExceptionType.receiveTimeout ||
           error.type == DioExceptionType.connectionError) {
         return 'We could not reach the server. Check your internet connection and try again.';
+      }
+
+      if (serverMessage != null && serverMessage.isNotEmpty) {
+        return serverMessage;
       }
     }
     return 'Something went wrong. Please try again.';
@@ -699,6 +784,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                   onBack: () => Navigator.of(context).maybePop(),
                   primaryColor: _kPrimaryBlue,
                   logoAssetPath: _kLogoAssetPath,
+                  isEditMode: _isEditMode,
                 ),
                 const SizedBox(height: 28),
                 RecipeCreateUploadCard(
@@ -758,7 +844,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _isLoading ? null : _createRecipe,
+                    onPressed: _isLoading ? null : _saveRecipe,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _kButtonBlue,
                       foregroundColor: Colors.white,

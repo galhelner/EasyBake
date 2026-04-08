@@ -4,12 +4,14 @@ class RecipeCreateHeader extends StatelessWidget {
   final VoidCallback onBack;
   final Color primaryColor;
   final String logoAssetPath;
+  final bool isEditMode;
 
   const RecipeCreateHeader({
     super.key,
     required this.onBack,
     required this.primaryColor,
     required this.logoAssetPath,
+    this.isEditMode = false,
   });
 
   @override
@@ -69,7 +71,7 @@ class RecipeCreateHeader extends StatelessWidget {
         const SizedBox(height: 12),
         // Title
         Text(
-          'Create New Recipe',
+          isEditMode ? 'Edit Recipe' : 'Create New Recipe',
           textAlign: TextAlign.center,
           style: TextStyle(
             color: primaryColor,
@@ -81,7 +83,9 @@ class RecipeCreateHeader extends StatelessWidget {
         const SizedBox(height: 4),
         // Subtitle
         Text(
-          'Share your culinary creation',
+          isEditMode
+              ? 'Update your culinary creation'
+              : 'Share your culinary creation',
           textAlign: TextAlign.center,
           style: TextStyle(
             color: primaryColor.withValues(alpha: 0.6),
