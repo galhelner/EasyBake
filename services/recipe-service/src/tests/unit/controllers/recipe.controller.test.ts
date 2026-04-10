@@ -25,6 +25,7 @@ type RecipeModuleLoad = {
 	mockPrismaRecipeFindMany: ReturnType<typeof jest.fn>;
 	mockPrismaRecipeUpdate: ReturnType<typeof jest.fn>;
 	mockPrismaRecipeDelete: ReturnType<typeof jest.fn>;
+	mockPrismaIngredientUpdateMany: ReturnType<typeof jest.fn>;
 	mockPrismaRecipeIngredientDeleteMany: ReturnType<typeof jest.fn>;
 	mockPrismaTransaction: ReturnType<typeof jest.fn>;
 	mockPrismaExecuteRaw: ReturnType<typeof jest.fn>;
@@ -57,6 +58,7 @@ async function loadRecipeControllerModule(): Promise<RecipeModuleLoad> {
 	const mockPrismaRecipeFindMany = jest.fn();
 	const mockPrismaRecipeUpdate = jest.fn();
 	const mockPrismaRecipeDelete = jest.fn();
+	const mockPrismaIngredientUpdateMany = jest.fn();
 	const mockPrismaRecipeIngredientDeleteMany = jest.fn();
 	const mockPrismaTransaction = jest.fn(async (operations: unknown[]) => operations);
 	const mockPrismaExecuteRaw = jest.fn();
@@ -84,6 +86,9 @@ async function loadRecipeControllerModule(): Promise<RecipeModuleLoad> {
 				findMany: mockPrismaRecipeFindMany,
 				update: mockPrismaRecipeUpdate,
 				delete: mockPrismaRecipeDelete,
+			},
+			ingredient: {
+				updateMany: mockPrismaIngredientUpdateMany,
 			},
 			recipeIngredient: {
 				deleteMany: mockPrismaRecipeIngredientDeleteMany,
@@ -119,6 +124,7 @@ async function loadRecipeControllerModule(): Promise<RecipeModuleLoad> {
 		mockPrismaRecipeFindMany,
 		mockPrismaRecipeUpdate,
 		mockPrismaRecipeDelete,
+		mockPrismaIngredientUpdateMany,
 		mockPrismaRecipeIngredientDeleteMany,
 		mockPrismaTransaction,
 		mockPrismaExecuteRaw,
@@ -162,6 +168,7 @@ describe('recipe controller', () => {
 			controller,
 			mockAxiosPost,
 			mockPrismaRecipeCreate,
+			mockPrismaIngredientUpdateMany,
 			mockPrismaExecuteRaw,
 			mockUploadImage,
 			mockLoggerInfo,
@@ -180,6 +187,7 @@ describe('recipe controller', () => {
 			authorId: 'author-1',
 			ingredients: [{ ingredient: { name: 'Pasta' } }],
 		});
+		mockPrismaIngredientUpdateMany.mockResolvedValue({ count: 1 });
 
 		const req = {
 			method: 'POST',
@@ -187,7 +195,7 @@ describe('recipe controller', () => {
 			body: {
 				title: 'Pasta',
 				instructions: ['Boil water', 'Cook pasta'],
-				ingredients: [{ name: 'Pasta' }],
+				ingredients: [{ name: 'Eggs', icon: '🥚' }],
 			},
 			user: { id: 'auth-1' },
 			file: undefined,
@@ -207,6 +215,10 @@ describe('recipe controller', () => {
 			})
 		);
 		expect(mockPrismaExecuteRaw).toHaveBeenCalled();
+		expect(mockPrismaIngredientUpdateMany).toHaveBeenCalledWith({
+			where: { name: 'eggs', icon: '' },
+			data: { icon: '🥚' },
+		});
 		expect(mockLoggerInfo).toHaveBeenCalledWith('Incoming request: POST /recipes');
 		expect(res.status).toHaveBeenCalledWith(201);
 		expect(res.json).toHaveBeenCalledWith(

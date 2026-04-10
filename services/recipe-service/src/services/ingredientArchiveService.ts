@@ -32,14 +32,21 @@ export const loadIngredientsArchive = async (): Promise<number> => {
     ingredientsByName.set(normalizedName, normalizeIngredientIcon(ingredient.icon));
   }
 
-  const result = await prisma.ingredient.createMany({
-    data: Array.from(ingredientsByName.entries()).map(([name, icon]) => ({ name, icon })),
-    skipDuplicates: true,
-  });
+  const ingredients = Array.from(ingredientsByName.entries());
 
-  logger.info(
-    `Ingredient archive loaded. Saved ${result.count} new ingredients from ${archive.length} generated records.`,
+  await Promise.all(
+    ingredients.map(([name, icon]) =>
+      prisma.ingredient.upsert({
+        where: { name },
+        create: { name, icon },
+        update: { icon },
+      }),
+    ),
   );
 
-  return result.count;
+  logger.info(
+    `Ingredient archive loaded. Saved or refreshed ${ingredients.length} ingredients from ${archive.length} generated records.`,
+  );
+
+  return ingredients.length;
 };

@@ -314,7 +314,7 @@ def _generate_ingredients_archive_sync() -> list[IngredientSchema]:
         model=MODEL_NAME,
         contents="Generate the ingredient archive now.",
         config=types.GenerateContentConfig(
-            system_instruction=_load_instruction("ingredient_generator.txt"),
+            system_instruction=_load_instruction("ingredient_generator.md"),
         ),
     )
     raw_text = _extract_text_from_generative_response(response)

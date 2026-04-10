@@ -352,6 +352,22 @@ export const createRecipe = async (
       },
     });
 
+    await Promise.all(
+      normalizedIngredients
+        .filter((ingredient) => Boolean(ingredient.icon))
+        .map((ingredient) =>
+          prisma.ingredient.updateMany({
+            where: {
+              name: ingredient.name,
+              icon: '',
+            },
+            data: {
+              icon: ingredient.icon,
+            },
+          }),
+        ),
+    );
+
     try {
       const embeddingText = buildRecipeEmbeddingText(title, ingredientNames, instructions);
       const embedding = await generateEmbedding(embeddingText);
