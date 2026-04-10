@@ -43,7 +43,21 @@ final recipesListProvider = FutureProvider.autoDispose<List<RecipeModel>>((
       throw Exception(
         'Cannot reach the server. Please start recipe-service and refresh.',
       );
+    }    // Convert HTTP status errors to user-friendly messages
+    final statusCode = error.response?.statusCode;
+    if (statusCode == 401 || statusCode == 403) {
+      throw Exception('Your session has expired. Please sign in again.');
     }
-    rethrow;
+    if (statusCode == 404) {
+      throw Exception('Recipes not found.');
+    }
+    if (statusCode == 500 || statusCode == 502 || statusCode == 503) {
+      throw Exception('Server error. Please try again later.');
+    }
+    if (statusCode != null) {
+      throw Exception(
+        'An error occurred while loading recipes. Please try again.',
+      );
+    }    rethrow;
   }
 });
