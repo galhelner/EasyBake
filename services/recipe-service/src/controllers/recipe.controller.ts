@@ -81,6 +81,7 @@ const saveRecipeEmbedding = async (recipeId: string, embedding: number[]): Promi
 const ingredientSchema = z.object({
   name: z.string().min(1),
   amount: z.string().trim().min(1).optional(),
+  icon: z.string().trim().optional(),
 });
 
 const parseIngredients = (value: unknown): unknown => {
@@ -227,9 +228,10 @@ const mapRecipeToDTO = (recipe: any): RecipeDTO => ({
 interface NormalizedIngredient {
   name: string;
   amount?: string;
+  icon?: string;
 }
 
-const normalizeIngredients = (ingredients: { name: string; amount?: string }[]): NormalizedIngredient[] => {
+const normalizeIngredients = (ingredients: { name: string; amount?: string; icon?: string }[]): NormalizedIngredient[] => {
   const byName = new Map<string, NormalizedIngredient>();
 
   for (const ingredient of ingredients) {
@@ -239,18 +241,24 @@ const normalizeIngredients = (ingredients: { name: string; amount?: string }[]):
     }
 
     const normalizedAmount = ingredient.amount?.trim();
+    const normalizedIcon = ingredient.icon?.trim();
     const existing = byName.get(normalizedName);
 
     if (!existing) {
       byName.set(normalizedName, {
         name: normalizedName,
         amount: normalizedAmount && normalizedAmount.length > 0 ? normalizedAmount : undefined,
+        icon: normalizedIcon && normalizedIcon.length > 0 ? normalizedIcon : undefined,
       });
       continue;
     }
 
     if (!existing.amount && normalizedAmount && normalizedAmount.length > 0) {
       existing.amount = normalizedAmount;
+    }
+
+    if (!existing.icon && normalizedIcon && normalizedIcon.length > 0) {
+      existing.icon = normalizedIcon;
     }
   }
 
@@ -322,7 +330,10 @@ export const createRecipe = async (
           ingredient: {
             connectOrCreate: {
               where: { name: ingredient.name },
-              create: { name: ingredient.name },
+              create: { 
+                name: ingredient.name,
+                ...(ingredient.icon && { icon: ingredient.icon }),
+              },
             },
           },
         })),
