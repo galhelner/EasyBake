@@ -1227,6 +1227,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                               color: Color(0xFF2E4E69),
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.none,
                             ),
                           ),
                           const SizedBox(height: 12),

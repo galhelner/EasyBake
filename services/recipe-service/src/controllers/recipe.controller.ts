@@ -1,4 +1,4 @@
-import { unlink } from 'fs/promises';
+import { readFile, unlink } from 'fs/promises';
 import { Response } from 'express';
 import axios from 'axios';
 import { resolve } from 'path';
@@ -283,6 +283,85 @@ const cleanupTempUpload = async (file?: Express.Multer.File): Promise<void> => {
       // eslint-disable-next-line no-console
       console.warn(`Temporary file not found at ${absolutePath} (may have been deleted already)`);
     }
+  }
+};
+
+const getAiServiceErrorMessage = (error: unknown): string => {
+  if (axios.isAxiosError(error)) {
+    const detail = error.response?.data?.detail;
+    if (typeof detail === 'string' && detail.trim().length > 0) {
+      return detail;
+    }
+
+    const errorMessage = error.response?.data?.error;
+    if (typeof errorMessage === 'string' && errorMessage.trim().length > 0) {
+      return errorMessage;
+    }
+
+    if (typeof error.message === 'string' && error.message.trim().length > 0) {
+      return error.message;
+    }
+  }
+
+  if (error instanceof Error && error.message.trim().length > 0) {
+    return error.message;
+  }
+
+  return 'Failed to create recipe from image';
+};
+
+export const createRecipeFromImage = async (
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    logger.info(`Incoming request: ${req.method} ${req.originalUrl}`);
+
+    if (!req.user?.id) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    if (!req.file?.path) {
+      res.status(400).json({ error: 'Image file is required' });
+      return;
+    }
+
+    if (!req.file.mimetype || !req.file.mimetype.toLowerCase().startsWith('image/')) {
+      res.status(400).json({ error: 'Uploaded file must be an image' });
+      return;
+    }
+
+    const imageBytes = await readFile(resolve(req.file.path));
+    const imageBase64 = imageBytes.toString('base64');
+
+    logger.info('Calling AI Service for: generate recipe from image');
+    const response = await axios.post(
+      `${AI_SERVICE_BASE_URL}/generate-recipe-from-image`,
+      {
+        image_base64: imageBase64,
+        mime_type: req.file.mimetype,
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        timeout: 90000,
+      },
+    );
+
+    res.status(200).json(response.data);
+  } catch (error) {
+    const statusCode = axios.isAxiosError(error)
+      ? (error.response?.status ?? 500)
+      : 500;
+
+    const userFacingStatus = statusCode >= 400 && statusCode < 500 ? statusCode : 500;
+    res.status(userFacingStatus).json({
+      error: getAiServiceErrorMessage(error),
+    });
+  } finally {
+    await cleanupTempUpload(req.file);
   }
 };
 

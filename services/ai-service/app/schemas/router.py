@@ -57,6 +57,11 @@ class MessageRequest(BaseModel):
     )
 
 
+class ImageRecipeRequest(BaseModel):
+    image_base64: str = Field(..., min_length=1, description="Base64 encoded recipe image")
+    mime_type: str = Field(..., min_length=1, description="Image MIME type, e.g. image/jpeg")
+
+
 class AssistantResponse(BaseModel):
     answer: str = Field(..., description="Helpful kitchen assistant response")
     suggested_swaps: list[str] = Field(default_factory=list, description="Ingredient swap suggestions when relevant")

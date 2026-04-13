@@ -1,4 +1,6 @@
 import json
+import base64
+import binascii
 import re
 from collections.abc import Iterator
 
@@ -9,6 +11,7 @@ from app.schemas.ingredient import IngredientSchema
 from app.schemas.recipe import RecipeSchema
 from app.schemas.router import (
     MessageRequest,
+    ImageRecipeRequest,
     RouterRequest,
     RouterResponse,
     SearchFiltersResponse,
@@ -25,6 +28,7 @@ from app.services.gemini_service import (
     generate_ingredients_archive,
     generate_embedding,
     generate_recipe,
+    generate_recipe_from_image,
     parse_search_filters,
     stream_generate_content,
 )
@@ -194,6 +198,32 @@ async def generate_recipe_endpoint(payload: MessageRequest):
         return await generate_recipe(
             _build_specialist_prompt(payload.prompt, payload.recipe_context)
         )
+    except Exception as e:
+        raise _http_exception_from_error(e)
+
+
+@router.post("/generate-recipe-from-image", response_model=RecipeSchema)
+async def generate_recipe_from_image_endpoint(payload: ImageRecipeRequest):
+    logger.info("Received request for: /api/generate-recipe-from-image")
+    try:
+        image_bytes = base64.b64decode(payload.image_base64, validate=True)
+    except binascii.Error:
+        raise HTTPException(status_code=400, detail="Invalid image payload")
+
+    if not image_bytes:
+        raise HTTPException(status_code=400, detail="Image payload is empty")
+
+    try:
+        image_recipe = await generate_recipe_from_image(image_bytes, payload.mime_type)
+        if not image_recipe.can_create or image_recipe.recipe is None:
+            raise HTTPException(
+                status_code=422,
+                detail=image_recipe.error_message or "Unable to create a recipe from this image.",
+            )
+
+        return image_recipe.recipe
+    except HTTPException:
+        raise
     except Exception as e:
         raise _http_exception_from_error(e)
 

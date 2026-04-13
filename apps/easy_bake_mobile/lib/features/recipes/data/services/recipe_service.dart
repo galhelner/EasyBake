@@ -97,6 +97,30 @@ class RecipeService {
     return RecipeModel.fromJson(response.data as Map<String, dynamic>);
   }
 
+  Future<RecipeModel> createRecipeFromImage(String imageFilePath) async {
+    final imageFile = File(imageFilePath);
+    if (!await imageFile.exists()) {
+      throw Exception('Image file not found');
+    }
+
+    final fileName = imageFile.path.split(RegExp(r'[\\/]')).last;
+    final formData = FormData.fromMap({
+      'image': await MultipartFile.fromFile(imageFile.path, filename: fileName),
+    });
+
+    final response = await _dio.post(
+      '/recipes/create-from-image',
+      data: formData,
+      options: Options(
+        contentType: 'multipart/form-data',
+        sendTimeout: _saveRequestTimeout,
+        receiveTimeout: _saveRequestTimeout,
+      ),
+    );
+
+    return RecipeModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
   Future<RecipeModel> updateRecipeWithOptionalImage(
     String id,
     RecipeModel recipe, {

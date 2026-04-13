@@ -13,7 +13,7 @@ from pydantic import BaseModel, TypeAdapter
 
 from app.core.logger import get_logger
 from app.schemas.ingredient import IngredientSchema
-from app.schemas.recipe import RecipeSchema
+from app.schemas.recipe import ImageRecipeExtractionSchema, RecipeSchema
 from app.schemas.router import (
     AssistantResponse,
     HealthScoreResponse,
@@ -195,6 +195,38 @@ async def generate_recipe(prompt: str) -> RecipeSchema:
     score = await calculate_health_score(recipe.title, ingredient_names, recipe.instructions)
     recipe.healthScore = score
     return recipe
+
+
+def _generate_recipe_from_image_sync(
+    image_bytes: bytes,
+    mime_type: str,
+) -> ImageRecipeExtractionSchema:
+    response = client.models.generate_content(
+        model=MODEL_NAME,
+        contents=[types.Part.from_bytes(data=image_bytes, mime_type=mime_type)],
+        config=types.GenerateContentConfig(
+            system_instruction=_load_instruction("image_recipe_creator.md"),
+            response_mime_type="application/json",
+            response_schema=ImageRecipeExtractionSchema,
+        ),
+    )
+
+    parsed_response = response.parsed
+    if parsed_response is None:
+        raise ValueError("Gemini returned an unparseable image recipe response")
+
+    return parsed_response
+
+
+async def generate_recipe_from_image(
+    image_bytes: bytes,
+    mime_type: str,
+) -> ImageRecipeExtractionSchema:
+    return await asyncio.to_thread(
+        _generate_recipe_from_image_sync,
+        image_bytes,
+        mime_type,
+    )
 
 
 async def generate_assistant_response(prompt: str) -> AssistantResponse:

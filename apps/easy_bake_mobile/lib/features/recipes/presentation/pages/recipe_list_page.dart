@@ -2,13 +2,16 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../ai-chat/data/services/chat_service.dart';
 import '../../../ai-chat/presentation/widgets/ai_chef_chat_popup_dialog.dart';
+import '../../data/services/recipe_service.dart';
 import '../../presentation/providers/recipe_providers.dart';
 import '../widgets/bottom_actions.dart';
 import '../widgets/load_error_sliver.dart';
 import '../widgets/recipe_creation_modal.dart';
+import '../widgets/recipe_create_loading_dialog.dart';
 import '../widgets/recipe_list/recipe_list_content.dart';
 import '../widgets/recipe_list/recipe_list_header.dart';
 import '../widgets/recipe_list/recipe_list_skeleton_sliver.dart';
@@ -27,8 +30,105 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
   static const _loadingWatchdogDuration = Duration(seconds: 50);
 
   final TextEditingController _searchController = TextEditingController();
+  final ImagePicker _imagePicker = ImagePicker();
   Timer? _loadingWatchdog;
   bool _requiresManualRetry = false;
+
+  Future<void> _showCreateFromImageErrorDialog() {
+    return showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Could not create recipe'),
+        content: const Text(
+          'We could not create a recipe from this image. Please try again or use another image.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<ImageSource?> _selectImageSource() {
+    return showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: const Text('Upload from Gallery'),
+                onTap: () => Navigator.of(sheetContext).pop(ImageSource.gallery),
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt_outlined),
+                title: const Text('Take a Picture'),
+                onTap: () => Navigator.of(sheetContext).pop(ImageSource.camera),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _createRecipeFromImage() async {
+    final source = await _selectImageSource();
+    if (!mounted || source == null) {
+      return;
+    }
+
+    var loadingDialogShown = false;
+    try {
+      final picked = await _imagePicker.pickImage(
+        source: source,
+        imageQuality: 90,
+        maxWidth: 1600,
+      );
+      if (!mounted || picked == null) {
+        return;
+      }
+
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const RecipeCreateLoadingDialog(
+          message: 'Creating your recipe...',
+        ),
+      );
+      loadingDialogShown = true;
+
+      final recipe = await ref.read(recipeServiceProvider).createRecipeFromImage(picked.path);
+
+      if (!mounted) {
+        return;
+      }
+
+      if (loadingDialogShown) {
+        Navigator.of(context, rootNavigator: true).pop();
+        loadingDialogShown = false;
+      }
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => RecipeCreatePage(initialRecipe: recipe),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      if (loadingDialogShown) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+      await _showCreateFromImageErrorDialog();
+    }
+  }
 
   void _armLoadingWatchdog() {
     if (_loadingWatchdog != null || _requiresManualRetry) {
@@ -106,7 +206,7 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
                       ),
                     );
                   },
-                  onCreateFromImage: null,
+                  onCreateFromImage: _createRecipeFromImage,
                 );
               },
               onAiCreate: () {

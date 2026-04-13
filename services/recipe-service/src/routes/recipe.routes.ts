@@ -2,6 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import { authMiddleware } from '../middleware/authMiddleware';
 import {
+  createRecipeFromImage,
   createRecipe,
   deleteRecipe,
   getRecipeById,
@@ -22,6 +23,7 @@ const upload = multer({
 router.use(authMiddleware);
 
 router.post('/', upload.single('image'), createRecipe);
+router.post('/create-from-image', upload.single('image'), createRecipeFromImage);
 router.post('/search', searchRecipes);
 router.get('/ingredients/search', searchIngredients);
 router.get('/', getRecipes);
