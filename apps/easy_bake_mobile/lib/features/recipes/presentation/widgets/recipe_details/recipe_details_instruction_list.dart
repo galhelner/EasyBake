@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'recipe_details_timer_card.dart';
+
 class RecipeDetailsInstructionList extends StatelessWidget {
   const RecipeDetailsInstructionList({super.key, required this.items});
 
@@ -17,6 +19,7 @@ class RecipeDetailsInstructionList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        RecipeDetailsTimerCard(instructions: items),
         const Text(
           'Cooking Steps',
           style: TextStyle(
