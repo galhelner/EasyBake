@@ -23,14 +23,17 @@ jobs:
 
       - name: Force Patch device_info_plus
         run: |
-          echo "Searching for FPPDeviceInfoPlusPlugin.m..."
-          # Find the file anywhere in the pub cache and replace the problematic selector
-          # We use a broader regex to ensure it catches the line regardless of spacing
-          find /Users/runner/.pub-cache -name "FPPDeviceInfoPlusPlugin.m" -exec sed -i '' 's/isiOSAppOnVision/processInfo.isiOSAppOnVision/g' {} +
-          find /Users/runner/.pub-cache -name "FPPDeviceInfoPlusPlugin.m" -exec sed -i '' 's/\[\[NSProcessInfo processInfo\] isiOSAppOnVision\]/NO/g' {} +
+          echo "Applying Clean Patch to FPPDeviceInfoPlusPlugin.m..."
           
-          echo "Patching complete. Verifying file content (first 40 lines):"
-          find /Users/runner/.pub-cache -name "FPPDeviceInfoPlusPlugin.m" -exec head -n 40 {} +
+          # Target file path
+          TARGET_FILE=$(find /Users/runner/.pub-cache -name "FPPDeviceInfoPlusPlugin.m" | head -n 1)
+          
+          # We replace the problematic lines with simple, valid Objective-C logic
+          # This replaces the declaration and the assignment to avoid the "selector" error
+          sed -i '' 's/.*isiOSAppOnVision.*/    NSNumber *isiOSAppOnVision = [NSNumber numberWithBool:NO];/g' "$TARGET_FILE"
+          
+          echo "Patching complete. Verifying lines 30-40:"
+          sed -n '30,40p' "$TARGET_FILE"
 
       - name: Build Frameworks
         run: flutter build ios --release --no-codesign
