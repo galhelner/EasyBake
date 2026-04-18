@@ -26,7 +26,6 @@ jobs:
       - name: Patch device_info_plus
         run: |
           TARGET_FILE=$(find /Users/runner/.pub-cache -name "FPPDeviceInfoPlusPlugin.m" | head -n 1)
-          # Replace the broken Vision Pro calls with the boolean NO
           sed -i '' 's/\[\[NSProcessInfo processInfo\] isiOSAppOnVision\]/NO/g' "$TARGET_FILE"
           sed -i '' 's/\[info isiOSAppOnVision\]/NO/g' "$TARGET_FILE"
 
@@ -37,10 +36,11 @@ jobs:
         run: |
           mkdir -p Payload
           cp -r build/ios/iphoneos/Runner.app Payload/
-          zip -r ../../../EasyBake.ipa Payload
+          zip -r EasyBake.ipa Payload
           
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ios-ipa
-          path: EasyBake.ipa
+          # This tells GitHub to look inside your app folder for the file
+          path: apps/easy_bake_mobile/EasyBake.ipa
