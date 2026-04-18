@@ -21,20 +21,18 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
-      - name: Fix device_info_plus (Header Patch)
+      - name: Fix device_info_plus (Direct Source Patch)
         run: |
           TARGET_FILE=$(find /Users/runner/.pub-cache -name "FPPDeviceInfoPlusPlugin.m" | head -n 1)
           echo "Patching file: $TARGET_FILE"
           
-          # We add a macro at the top of the file. 
-          # This tells the compiler: "If you see isiOSAppOnVision, just treat it as 0 (false)"
-          # This is non-destructive and won't break your dictionaries.
-          sed -i '' '1i\
-          #define isiOSAppOnVision isiOSAppOnMac
-          ' "$TARGET_FILE"
+          # This replaces the logic [[info isiOSAppOnVision]] (the source of the error) 
+          # with @NO directly so the compiler never even sees the problematic word.
+          sed -i '' 's/\[info isiOSAppOnVision\]/@NO/g' "$TARGET_FILE"
+          sed -i '' 's/\[\[NSProcessInfo processInfo\] isiOSAppOnVision\]/@NO/g' "$TARGET_FILE"
           
-          echo "Verification (First 15 lines):"
-          head -n 15 "$TARGET_FILE"
+          echo "Verification (Lines 30-55):"
+          sed -n '30,55p' "$TARGET_FILE"
 
       - name: Build Frameworks
         run: flutter build ios --release --no-codesign
