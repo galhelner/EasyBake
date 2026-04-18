@@ -29,9 +29,14 @@ jobs:
           sed -i '' 's/\[\[NSProcessInfo processInfo\] isiOSAppOnVision\]/NO/g' "$TARGET_FILE"
           sed -i '' 's/\[info isiOSAppOnVision\]/NO/g' "$TARGET_FILE"
 
+      # Passing the secret from GitHub Secrets into the Flutter Build
       - name: Build Frameworks
-        run: flutter build ios --release --no-codesign
-        
+        env:
+          MY_APP_SECRET: ${{ secrets.INTERNAL_APP_SECRET }}
+        run: |
+          flutter build ios --release --no-codesign \
+            --dart-define="INTERNAL_APP_SECRET=$MY_APP_SECRET"
+
       - name: Create IPA
         run: |
           mkdir -p Payload
@@ -42,5 +47,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ios-ipa
-          # This tells GitHub to look inside your app folder for the file
           path: apps/easy_bake_mobile/EasyBake.ipa
