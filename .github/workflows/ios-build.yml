@@ -23,17 +23,18 @@ jobs:
 
       - name: Force Patch device_info_plus
         run: |
-          echo "Applying Clean Patch to FPPDeviceInfoPlusPlugin.m..."
-          
-          # Target file path
           TARGET_FILE=$(find /Users/runner/.pub-cache -name "FPPDeviceInfoPlusPlugin.m" | head -n 1)
+          echo "Patching file: $TARGET_FILE"
           
-          # We replace the problematic lines with simple, valid Objective-C logic
-          # This replaces the declaration and the assignment to avoid the "selector" error
-          sed -i '' 's/.*isiOSAppOnVision.*/    NSNumber *isiOSAppOnVision = [NSNumber numberWithBool:NO];/g' "$TARGET_FILE"
+          # 1. Replace the actual problematic method call with a hardcoded NO
+          sed -i '' 's/\[\[NSProcessInfo processInfo\] isiOSAppOnVision\]/NO/g' "$TARGET_FILE"
           
-          echo "Patching complete. Verifying lines 30-40:"
-          sed -n '30,40p' "$TARGET_FILE"
+          # 2. Fix the line where the variable is assigned to the results dictionary
+          # We search for the specific key assignment and ensure it uses a valid variable
+          sed -i '' 's/.*isiOSAppOnVision\]\];/      @"isiOSAppOnVision": @NO\n    \};/g' "$TARGET_FILE"
+
+          echo "Verification (Lines 60-80):"
+          sed -n '60,80p' "$TARGET_FILE"
 
       - name: Build Frameworks
         run: flutter build ios --release --no-codesign
