@@ -21,13 +21,21 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
+      - name: Patch broken device_info_plus
+        run: |
+          # This command finds the file and replaces the problematic Vision Pro check with a hardcoded 'NO'
+          # since we aren't targeting VisionOS right now anyway.
+          find /Users/runner/.pub-cache/hosted/pub.dev/device_info_plus-13.0.0/ -name "FPPDeviceInfoPlusPlugin.m" -exec sed -i '' 's/\[\[NSProcessInfo processInfo\] isiOSAppOnVision\]/NO/g' {} +
+
       - name: Build Frameworks
         run: flutter build ios --release --no-codesign
         
       - name: Create IPA
         run: |
           mkdir -p Payload
+          # Move the compiled .app into the Payload folder
           cp -r build/ios/iphoneos/Runner.app Payload/
+          # Zip it into an .ipa and move it to the root for the upload step
           zip -r ../../../EasyBake.ipa Payload
           
       - name: Upload IPA Artifact
