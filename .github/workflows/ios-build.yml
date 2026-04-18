@@ -1,23 +1,37 @@
 name: Build iOS IPA
-on: [workflow_dispatch] # Allows you to start the build manually
+on: [workflow_dispatch]
 
 jobs:
   build:
     runs-on: macos-latest
+    # Set the default directory for all 'run' steps in this job
+    defaults:
+      run:
+        working-directory: apps/easy_bake_mobile
+
     steps:
       - uses: actions/checkout@v4
+      
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-      - run: flutter pub get
-      - run: flutter build ios --release --no-codesign
-      - name: Create IPA
+          cache: true # Optional: speeds up future builds
+      
+      - name: Install Dependencies
+        run: flutter pub get
+        
+      - name: Build Frameworks
+        run: flutter build ios --release --no-codesign
+        
+      - name: Create IPA (Manual Payload Wrapper)
         run: |
           mkdir -p Payload
-          mv build/ios/iphoneos/Runner.app Payload
-          zip -r EasyBake.ipa Payload
-      - name: Upload IPA
+          # Note: The path below is relative to your working-directory
+          cp -r build/ios/iphoneos/Runner.app Payload/
+          zip -r ../../../EasyBake.ipa Payload
+          
+      - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ios-ipa
-          path: EasyBake.ipa
+          path: EasyBake.ipa # This path is relative to the root, so ../../../ brings it there
