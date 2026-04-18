@@ -3,7 +3,7 @@ on: [workflow_dispatch]
 
 jobs:
   build:
-    runs-on: macos-14 # Downgraded to a stable macOS environment
+    runs-on: macos-14
     defaults:
       run:
         working-directory: apps/easy_bake_mobile
@@ -11,8 +11,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      # Pin to the "Golden" Xcode version. 
-      # New enough for VisionOS, old enough to avoid Xcode 16 bugs.
       - name: Set Xcode Version
         run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
 
@@ -20,13 +18,18 @@ jobs:
         with:
           channel: 'stable'
           
-      # Wipe the slate clean of our previous cache hacks
       - name: Clean Cache and Install Dependencies
         run: |
           flutter clean
           flutter pub get
 
-      # Build exclusively for the physical iPhone architecture
+      - name: Patch device_info_plus
+        run: |
+          TARGET_FILE=$(find /Users/runner/.pub-cache -name "FPPDeviceInfoPlusPlugin.m" | head -n 1)
+          # Replace the broken Vision Pro calls with the boolean NO
+          sed -i '' 's/\[\[NSProcessInfo processInfo\] isiOSAppOnVision\]/NO/g' "$TARGET_FILE"
+          sed -i '' 's/\[info isiOSAppOnVision\]/NO/g' "$TARGET_FILE"
+
       - name: Build Frameworks
         run: flutter build ios --release --no-codesign
         
