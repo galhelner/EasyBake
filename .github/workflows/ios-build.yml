@@ -3,7 +3,7 @@ on: [workflow_dispatch]
 
 jobs:
   build:
-    runs-on: macos-15 # Updated from macos-latest
+    runs-on: macos-15
     defaults:
       run:
         working-directory: apps/easy_bake_mobile
@@ -11,34 +11,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-          
-      - name: Install Dependencies
-        run: flutter pub get
-
-      # Adding this helps resolve plugin version conflicts
-      - name: Update CocoaPods
-        run: |
-          cd ios
-          pod repo update
-          pod installname: Build iOS IPA
-on: [workflow_dispatch]
-
-jobs:
-  build:
-    runs-on: macos-latest
-    defaults:
-      run:
-        working-directory: apps/easy_bake_mobile
-
-    steps:
-      - uses: actions/checkout@v4
-      
-      # 1. Force the Mac to use Xcode 15.4 or 16.0
       - name: Set Xcode Version
-        run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+        run: sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer
 
       - uses: subosito/flutter-action@v2
         with:
@@ -47,21 +21,6 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
-      - name: Build Frameworks
-        run: flutter build ios --release --no-codesign
-        
-      - name: Create IPA
-        run: |
-          mkdir -p Payload
-          cp -r build/ios/iphoneos/Runner.app Payload/
-          zip -r ../../../EasyBake.ipa Payload
-          
-      - name: Upload IPA Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-ipa
-          path: EasyBake.ipa
-        
       - name: Build Frameworks
         run: flutter build ios --release --no-codesign
         
