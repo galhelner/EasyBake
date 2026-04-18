@@ -3,7 +3,7 @@ on: [workflow_dispatch]
 
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: macos-14 # Downgraded to a stable macOS environment
     defaults:
       run:
         working-directory: apps/easy_bake_mobile
@@ -11,29 +11,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      # Pin to the "Golden" Xcode version. 
+      # New enough for VisionOS, old enough to avoid Xcode 16 bugs.
       - name: Set Xcode Version
-        run: sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
 
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           
-      - name: Install Dependencies
-        run: flutter pub get
-
-      - name: Fix device_info_plus (Direct Source Patch)
+      # Wipe the slate clean of our previous cache hacks
+      - name: Clean Cache and Install Dependencies
         run: |
-          TARGET_FILE=$(find /Users/runner/.pub-cache -name "FPPDeviceInfoPlusPlugin.m" | head -n 1)
-          echo "Patching file: $TARGET_FILE"
-          
-          # This replaces the logic [[info isiOSAppOnVision]] (the source of the error) 
-          # with @NO directly so the compiler never even sees the problematic word.
-          sed -i '' 's/\[info isiOSAppOnVision\]/@NO/g' "$TARGET_FILE"
-          sed -i '' 's/\[\[NSProcessInfo processInfo\] isiOSAppOnVision\]/@NO/g' "$TARGET_FILE"
-          
-          echo "Verification (Lines 30-55):"
-          sed -n '30,55p' "$TARGET_FILE"
+          flutter clean
+          flutter pub get
 
+      # Build exclusively for the physical iPhone architecture
       - name: Build Frameworks
         run: flutter build ios --release --no-codesign
         
