@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  authId    String   @unique
+  email     String?  @unique
+  fullName  String?
+  recipes   Recipe[]
+  messages  Message[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Recipe {
+  id           String             @id @default(uuid())
+  title        String
+  instructions String[]
+  healthScore  Int
+  imageUrl     String?            @default("https://cdmkszvzdkromgqzexec.supabase.co/storage/v1/object/public/recipe-images/default-recipe.jpg")
+  authorId     String
+  author       User               @relation(fields: [authorId], references: [id])
+  ingredients  RecipeIngredient[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Ingredient {
+  id        String             @id @default(uuid())
+  name      String             @unique
+  icon      String             @default("")
+  recipes   RecipeIngredient[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RecipeIngredient {
+  id           String     @id @default(uuid())
+  recipeId     String
+  ingredientId String
+  amount       String?
+
+  recipe       Recipe     @relation(fields: [recipeId], references: [id])
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+
+  @@unique([recipeId, ingredientId])
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([createdAt])
+}

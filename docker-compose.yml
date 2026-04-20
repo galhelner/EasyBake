@@ -36,3 +36,22 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+
+  chat-service:
+    container_name: easybake-chat-service
+    build:
+      context: ./services/chat-service
+    env_file:
+      - ./services/chat-service/.env
+    environment:
+      PORT: 4001
+    depends_on:
+      recipe-service:
+        condition: service_healthy
+    ports:
+      - "4001:4001"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4001/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

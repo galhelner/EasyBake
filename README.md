@@ -150,6 +150,7 @@ flutter run
 
 - AI Service: `http://localhost:8000`
 - Recipe Service: `http://localhost:4000`
+- Chat Service: `http://localhost:4001`
 
 ## 🧪 Development Notes
 

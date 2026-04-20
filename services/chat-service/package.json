@@ -1,0 +1,43 @@
+{
+  "name": "easybake-chat-service",
+  "version": "1.0.0",
+  "description": "EasyBake community chat service - Node.js WebSocket server with Socket.IO and TypeScript.",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "nodemon --watch src --ext ts --exec ts-node src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "jest",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.5.0",
+    "@prisma/client": "^7.5.0",
+    "@prisma/internals": "^7.5.0",
+    "@supabase/supabase-js": "^2.99.2",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "pg": "^8.20.0",
+    "socket.io": "^4.7.2",
+    "winston": "^3.19.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.19.15",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.14",
+    "prisma": "^7.5.0",
+    "ts-jest": "^29.2.5",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.6.3"
+  }
+}

@@ -35,7 +35,7 @@ if ($LASTEXITCODE -ne $null -and $LASTEXITCODE -ne 0) {
 
 Push-Location $mobileAppPath
 try {
-  flutter run --dart-define "INTERNAL_APP_SECRET=$internalAppSecret" --dart-define "DEV_MODE=true" --dart-define "LOCAL_API_BASE_URL=http://10.231.1.139:4000" @FlutterArgs
+  flutter run --dart-define "INTERNAL_APP_SECRET=$internalAppSecret" --dart-define "DEV_MODE=true" --dart-define "LOCAL_API_BASE_URL=http://10.231.1.139:4000" --dart-define "LOCAL_CHAT_BASE_URL=http://10.231.1.139:4001" @FlutterArgs
 }
 finally {
   Pop-Location

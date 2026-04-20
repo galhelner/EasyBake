@@ -76,6 +76,13 @@ class _AuthPageState extends ConsumerState<AuthPage> {
             email: authState.email,
             displayName: authState.displayName,
           );
+
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const HomeTabsPage()),
+          (route) => false,
+        );
+      }
     } catch (error) {
       if (mounted) {
         await _showAuthErrorDialog(_authErrorDialogData(error));

@@ -139,18 +139,21 @@ class _TabIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: IconButton(
-        tooltip: tooltip,
-        onPressed: onTap,
-        padding: EdgeInsets.zero,
-        constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-        splashRadius: 22,
-        icon: Icon(
-          icon,
-          size: 22,
-          color: selected
-              ? Colors.transparent
-              : const Color(0xFFEEF6FC).withValues(alpha: 0.94),
+      child: Semantics(
+        button: true,
+        label: tooltip,
+        child: IconButton(
+          onPressed: onTap,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+          splashRadius: 22,
+          icon: Icon(
+            icon,
+            size: 22,
+            color: selected
+                ? Colors.transparent
+                : const Color(0xFFEEF6FC).withValues(alpha: 0.94),
+          ),
         ),
       ),
     );

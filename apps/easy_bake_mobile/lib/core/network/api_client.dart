@@ -8,6 +8,9 @@ const _cloudRecipeServiceBaseUrl =
   'https://easybake-recipe-service-h7dtcrbhfbdthmcz.israelcentral-01.azurewebsites.net';
 const _localRecipeServiceBaseUrlDefault = 'http://localhost:4000';
 const _localRecipeServiceBaseUrlAndroidEmulator = 'http://10.0.2.2:4000';
+const _cloudChatServiceBaseUrl = 'https://easybake-chat-service-url.example.com';
+const _localChatServiceBaseUrlDefault = 'http://localhost:4001';
+const _localChatServiceBaseUrlAndroidEmulator = 'http://10.0.2.2:4001';
 const _connectTimeout = Duration(seconds: 30);
 const _sendTimeout = Duration(seconds: 30);
 const _receiveTimeout = Duration(seconds: 90);
@@ -19,6 +22,13 @@ const _devMode = bool.fromEnvironment('DEV_MODE', defaultValue: false);
 // Example: --dart-define=LOCAL_API_BASE_URL=http://192.168.1.20:4000
 const _localApiBaseUrlOverride = String.fromEnvironment(
   'LOCAL_API_BASE_URL',
+  defaultValue: '',
+);
+
+// Optional override for local testing on physical devices or custom host IP.
+// Example: --dart-define=LOCAL_CHAT_BASE_URL=http://192.168.1.20:4001
+const _localChatBaseUrlOverride = String.fromEnvironment(
+  'LOCAL_CHAT_BASE_URL',
   defaultValue: '',
 );
 
@@ -42,6 +52,19 @@ String _resolveLocalBaseUrl() {
   }
 
   return _localRecipeServiceBaseUrlDefault;
+}
+
+String _resolveLocalChatBaseUrl() {
+  final override = _localChatBaseUrlOverride.trim();
+  if (override.isNotEmpty) {
+    return override;
+  }
+
+  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+    return _localChatServiceBaseUrlAndroidEmulator;
+  }
+
+  return _localChatServiceBaseUrlDefault;
 }
 
 final dioProvider = Provider<Dio>((ref) {
@@ -85,4 +108,10 @@ final dioProvider = Provider<Dio>((ref) {
   );
 
   return dio;
+});
+
+final chatServiceBaseUrlProvider = Provider<String>((ref) {
+  final resolvedBaseUrl = _devMode ? _resolveLocalChatBaseUrl() : _cloudChatServiceBaseUrl;
+  debugPrint('[EasyBake] Chat baseUrl: $resolvedBaseUrl (DEV_MODE=$_devMode)');
+  return resolvedBaseUrl;
 });
