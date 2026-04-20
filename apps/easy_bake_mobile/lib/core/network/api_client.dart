@@ -9,7 +9,7 @@ const _cloudRecipeServiceBaseUrl =
 const _localRecipeServiceBaseUrlDefault = 'http://localhost:4000';
 const _localRecipeServiceBaseUrlAndroidEmulator = 'http://10.0.2.2:4000';
 const _cloudChatServiceBaseUrl = 
-  'https://easybake-chat-service-hbh2ehahebd0b3au.israelcentral-01.azurewebsites.net';
+  'https://easybake-chat-service-hbh2ehahebd0b3au.germanywestcentral-01.azurewebsites.net';
 const _localChatServiceBaseUrlDefault = 'http://localhost:4001';
 const _localChatServiceBaseUrlAndroidEmulator = 'http://10.0.2.2:4001';
 const _connectTimeout = Duration(seconds: 30);
