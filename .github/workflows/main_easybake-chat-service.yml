@@ -59,9 +59,9 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          # Use the exact name of your Germany-based Web App here
+          # Use the exact name of your Sweden-based Web App here
           app-name: 'easybake-chat-service' 
           slot-name: 'Production'
           package: .
           # Swap the secret name below to match what you create in GitHub
-          publish-profile: ${{ secrets.AZURE_CHAT_SERVICE_GERMANY_PUBLISH_PROFILE }}
+          publish-profile: ${{ secrets.AZURE_CHAT_SERVICE_SWEDEN_PUBLISH_PROFILE }}
