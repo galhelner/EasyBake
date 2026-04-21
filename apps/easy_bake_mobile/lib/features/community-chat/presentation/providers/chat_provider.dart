@@ -110,6 +110,13 @@ class ChatErrorNotifier extends Notifier<String?> {
   }
 }
 
+const _chatUnavailableMessage =
+    'Community chat is temporarily unavailable. Please refresh or try again later.';
+const _chatRefreshFailedMessage =
+    'We could not refresh community chat right now. Please try again later.';
+const _chatIdentityMessage = 'We could not identify your account for chat.';
+const _chatSendFailedMessage = 'Could not send your message right now. Please try again later.';
+
 // Connection status
 final chatConnectionStateProvider =
     NotifierProvider<ChatConnectionNotifier, ChatConnectionState>(
@@ -157,8 +164,7 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
     final token = authState.accessToken;
 
     if (token == null || token.isEmpty) {
-      ref.read(chatErrorProvider.notifier).setError('Auth token not found');
-      return;
+      throw StateError('Missing chat auth token');
     }
 
     final chatServerUrl = ref.read(chatServiceBaseUrlProvider);
@@ -196,13 +202,7 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
         state = null;
       }
 
-      try {
-        await _loadMessageHistory();
-      } catch (historyError) {
-        ref
-            .read(chatErrorProvider.notifier)
-            .setError('Loaded chat with stale history. Pull to refresh.');
-      }
+      await _loadMessageHistory();
 
       final authState = ref.read(authNotifierProvider);
       final token = authState.accessToken;
@@ -230,7 +230,7 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
       };
 
       chatService.onError = (error) {
-        ref.read(chatErrorProvider.notifier).setError(error);
+        ref.read(chatErrorProvider.notifier).setError(_chatUnavailableMessage);
       };
 
       chatService.onConnectionStateChanged = (isConnected) {
@@ -255,7 +255,7 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
         await chatService.disconnect();
       }
       ref.read(chatConnectionStateProvider.notifier).setState(ChatConnectionState.disconnected);
-      ref.read(chatErrorProvider.notifier).setError('Failed to connect: $e');
+      ref.read(chatErrorProvider.notifier).setError(_chatUnavailableMessage);
       state = null;
     }
   }
@@ -265,15 +265,14 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
       await _loadMessageHistory();
       ref.read(chatErrorProvider.notifier).setError(null);
     } catch (e) {
-      ref.read(chatErrorProvider.notifier).setError('Failed to refresh messages: $e');
-      rethrow;
+      ref.read(chatErrorProvider.notifier).setError(_chatRefreshFailedMessage);
     }
   }
 
   void sendMessage(String content) {
     final chatService = state;
     if (chatService == null) {
-      ref.read(chatErrorProvider.notifier).setError('Chat service not initialized');
+      ref.read(chatErrorProvider.notifier).setError(_chatUnavailableMessage);
       return;
     }
 
@@ -281,7 +280,7 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
     final userId = authState.userId?.trim() ?? '';
     final userEmail = authState.email?.trim() ?? '';
     if (userId.isEmpty && userEmail.isEmpty) {
-      ref.read(chatErrorProvider.notifier).setError('User identity not found');
+      ref.read(chatErrorProvider.notifier).setError(_chatIdentityMessage);
       return;
     }
 
@@ -304,6 +303,7 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
 
     final sent = chatService.sendMessage(trimmedContent);
     if (!sent) {
+      ref.read(chatErrorProvider.notifier).setError(_chatSendFailedMessage);
       ref.read(chatMessagesProvider.notifier).removePendingMessage(localId);
     }
   }

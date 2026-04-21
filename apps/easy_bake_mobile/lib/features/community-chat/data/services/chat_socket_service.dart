@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
+import 'dart:async';
 
 import '../../domain/models/models.dart';
 
@@ -11,9 +12,15 @@ typedef OnUserLeftCallback = void Function(String userId);
 typedef OnConnectionStateChangedCallback = void Function(bool isConnected);
 
 class ChatSocketService {
+  static const _unavailableMessage =
+      'Community chat is temporarily unavailable. Please refresh or try again later.';
+  static const _sendFailedMessage =
+      'Could not send your message right now. Please try again later.';
+
   late io.Socket _socket;
   final String _serverUrl;
   final String _token;
+  Completer<void>? _connectCompleter;
 
   OnMessageCallback? onMessage;
   OnMessageHistoryCallback? onMessageHistory;
@@ -38,8 +45,8 @@ class ChatSocketService {
         _serverUrl,
         io.OptionBuilder()
             .setTransports(['websocket'])
-        .enableForceNew()
-        .disableMultiplex()
+            .enableForceNew()
+            .disableMultiplex()
             .disableAutoConnect()
             .setAuth({'token': _token})
             .build(),
@@ -47,21 +54,28 @@ class ChatSocketService {
 
       _setupListeners();
 
+      // Create a completer to wait for actual connection
+      _connectCompleter = Completer<void>();
+
       _socket.connect();
 
-      // Wait for connection or timeout after 10 seconds
-      await Future.delayed(const Duration(seconds: 10));
-      if (!_socket.connected) {
-        onConnectionStateChanged?.call(false);
-        throw Exception('Failed to connect to chat server');
+      // Wait for connection with 10-second timeout
+      try {
+        await _connectCompleter!.future.timeout(
+          const Duration(seconds: 10),
+          onTimeout: () {
+            throw TimeoutException('Socket connection timeout');
+          },
+        );
+      } finally {
+        _connectCompleter = null;
       }
 
-      onConnectionStateChanged?.call(true);
       debugPrint('[Chat] Connected successfully');
     } catch (e) {
       debugPrint('[Chat] Connection error: $e');
       onConnectionStateChanged?.call(false);
-      onError?.call('Connection failed: $e');
+      onError?.call(_unavailableMessage);
       rethrow;
     }
   }
@@ -70,6 +84,8 @@ class ChatSocketService {
     _socket.on('connect', (_) {
       debugPrint('[Chat] Socket connected');
       onConnectionStateChanged?.call(true);
+      // Complete the connection future if waiting
+      _connectCompleter?.complete();
     });
 
     _socket.on('message_history', (data) {
@@ -81,7 +97,7 @@ class ChatSocketService {
         onMessageHistory?.call(messages);
       } catch (e) {
         debugPrint('[Chat] Error parsing message history: $e');
-        onError?.call('Failed to load message history');
+        onError?.call(_unavailableMessage);
       }
     });
 
@@ -92,7 +108,7 @@ class ChatSocketService {
         onMessage?.call(message);
       } catch (e) {
         debugPrint('[Chat] Error parsing message: $e');
-        onError?.call('Failed to receive message');
+        onError?.call(_unavailableMessage);
       }
     });
 
@@ -120,7 +136,7 @@ class ChatSocketService {
     _socket.on('error', (data) {
       final message = data is Map ? data['message'] as String? : data.toString();
       debugPrint('[Chat] Socket error: $message');
-      onError?.call(message ?? 'Unknown error');
+      onError?.call(_unavailableMessage);
     });
 
     _socket.on('disconnect', (_) {
@@ -131,7 +147,11 @@ class ChatSocketService {
     _socket.onConnectError((data) {
       debugPrint('[Chat] Connection error: $data');
       onConnectionStateChanged?.call(false);
-      onError?.call('Connection error: $data');
+      onError?.call(_unavailableMessage);
+      // Fail the completer if still waiting
+      if (_connectCompleter != null && !_connectCompleter!.isCompleted) {
+        _connectCompleter!.completeError('Connection error: $data');
+      }
     });
   }
 
@@ -147,7 +167,7 @@ class ChatSocketService {
       return true;
     } catch (e) {
       debugPrint('[Chat] Error sending message: $e');
-      onError?.call('Failed to send message');
+      onError?.call(_sendFailedMessage);
       return false;
     }
   }
