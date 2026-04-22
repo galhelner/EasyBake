@@ -40,6 +40,9 @@ flutter_launcher_icons:
   android: true
   ios: true
   image_path: assets/app_logo.png
+  image_path_ios: assets/app_logo.png
+  background_color_ios: "#F6FAFF"
+  remove_alpha_ios: true
 
 dependency_overrides: 
   device_info_plus: ^13.0.0
