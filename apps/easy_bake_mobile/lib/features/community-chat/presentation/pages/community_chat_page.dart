@@ -206,68 +206,73 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
           ),
         ],
       ),
-      body: DecoratedBox(
-        decoration: const BoxDecoration(color: Colors.white),
-        child: Column(
-          children: [
-            if (isConnecting)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                child: StatusBanner(
-                  icon: const SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 1.8,
-                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2A5A7D)),
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: DecoratedBox(
+          decoration: const BoxDecoration(color: Colors.white),
+          child: Column(
+            children: [
+              if (isConnecting)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  child: StatusBanner(
+                    icon: const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 1.8,
+                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2A5A7D)),
+                      ),
                     ),
+                    text: 'Connecting...',
+                    backgroundColor: const Color(0xFFE3F2FD),
+                    textColor: const Color(0xFF1565C0),
                   ),
-                  text: 'Connecting...',
-                  backgroundColor: const Color(0xFFE3F2FD),
-                  textColor: const Color(0xFF1565C0),
                 ),
-              ),
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: _refreshChat,
-                color: const Color(0xFF1565C0),
-                backgroundColor: Colors.white,
-                child: ListView.builder(
-                  controller: _scrollController,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-                  itemCount: messages.isEmpty ? 1 : messages.length,
-                  itemBuilder: (context, index) {
-                    if (messages.isEmpty) {
-                      return SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.5,
-                        child: const EmptyState(),
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: _refreshChat,
+                  color: const Color(0xFF1565C0),
+                  backgroundColor: Colors.white,
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+                    itemCount: messages.isEmpty ? 1 : messages.length,
+                    itemBuilder: (context, index) {
+                      if (messages.isEmpty) {
+                        return SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.5,
+                          child: const EmptyState(),
+                        );
+                      }
+
+                      final message = messages[index];
+                      final isCurrentUser =
+                          (currentUserId.isNotEmpty && message.userId == currentUserId) ||
+                          (currentUserEmail.isNotEmpty &&
+                              message.userEmail.isNotEmpty &&
+                              message.userEmail == currentUserEmail);
+
+                      return MessageTile(
+                        message: message,
+                        isCurrentUser: isCurrentUser,
                       );
-                    }
-
-                    final message = messages[index];
-                    final isCurrentUser =
-                        (currentUserId.isNotEmpty && message.userId == currentUserId) ||
-                        (currentUserEmail.isNotEmpty &&
-                            message.userEmail.isNotEmpty &&
-                            message.userEmail == currentUserEmail);
-
-                    return MessageTile(
-                      message: message,
-                      isCurrentUser: isCurrentUser,
-                    );
-                  },
+                    },
+                  ),
                 ),
               ),
-            ),
-            Composer(
-              controller: _messageController,
-              isConnected: isConnected,
-              isConnecting: isConnecting,
-              onSend: _sendMessage,
-              onChanged: (_) => setState(() {}),
-            ),
-          ],
+              Composer(
+                controller: _messageController,
+                isConnected: isConnected,
+                isConnecting: isConnecting,
+                onSend: _sendMessage,
+                onChanged: (_) => setState(() {}),
+              ),
+            ],
+          ),
         ),
       ),
     );
