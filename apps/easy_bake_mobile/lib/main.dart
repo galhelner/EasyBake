@@ -9,7 +9,6 @@ Future<void> main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   final container = ProviderContainer();
-  await container.read(authNotifierProvider.notifier).restoreFromStorage();
   runApp(UncontrolledProviderScope(container: container, child: const MyApp()));
 }
 
@@ -45,6 +44,17 @@ class _AppBootstrapPageState extends ConsumerState<AppBootstrapPage>
   static const _logoAsset = 'assets/app_logo.png';
   late final AnimationController _controller;
   bool _showSplash = true;
+  bool _isBootstrapped = false;
+
+  Future<void> _bootstrapAuthState() async {
+    await ref.read(authNotifierProvider.notifier).restoreFromStorage();
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _isBootstrapped = true;
+    });
+  }
 
   @override
   void initState() {
@@ -54,14 +64,10 @@ class _AppBootstrapPageState extends ConsumerState<AppBootstrapPage>
       duration: const Duration(milliseconds: 1400),
     );
 
-    _controller.addListener(() {
-      if (_controller.value > 0.001) {
-        // Remove the native splash only when movement begins
-        FlutterNativeSplash.remove();
-      }
-    });
+    _bootstrapAuthState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      FlutterNativeSplash.remove();
       await precacheImage(const AssetImage(_logoAsset), context);
       if (!mounted) {
         return;
@@ -90,7 +96,7 @@ class _AppBootstrapPageState extends ConsumerState<AppBootstrapPage>
   Widget build(BuildContext context) {
     final isAuthenticated = ref.watch(authNotifierProvider).isAuthenticated;
 
-    if (_showSplash) {
+    if (_showSplash || !_isBootstrapped) {
       return _AnimatedSplash(animation: _controller, logoAsset: _logoAsset);
     }
 
