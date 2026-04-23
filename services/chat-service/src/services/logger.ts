@@ -1,28 +1,35 @@
+import { existsSync, mkdirSync } from 'fs';
+import { resolve } from 'path';
 import { createLogger, format, transports } from 'winston';
 
-const logger = createLogger({
-  level: process.env.LOG_LEVEL || 'info',
-  format: format.combine(
-    format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-    format.errors({ stack: true }),
-    format.json()
-  ),
-  defaultMeta: { service: 'chat-service' },
-  transports: [
-    new transports.File({ filename: 'logs/error.log', level: 'error' }),
-    new transports.File({ filename: 'logs/combined.log' })
-  ]
+const logsDir = resolve(process.cwd(), 'logs');
+
+if (!existsSync(logsDir)) {
+  mkdirSync(logsDir, { recursive: true });
+}
+
+const baseFormat = format.printf(({ timestamp, level, message }) => {
+  return `${timestamp} [${level.toUpperCase()}] ${message}`;
 });
 
-if (process.env.NODE_ENV !== 'production') {
-  logger.add(new transports.Console({
-    format: format.combine(
-      format.colorize(),
-      format.printf(({ level, message, timestamp }) => {
-        return `${timestamp} [${level}]: ${message}`;
-      })
-    )
-  }));
-}
+const logger = createLogger({
+  level: process.env.LOG_LEVEL ?? 'info',
+  transports: [
+    new transports.Console({
+      format: format.combine(
+        format.timestamp(),
+        baseFormat,
+        format.colorize({ all: true })
+      ),
+    }),
+    new transports.File({
+      filename: resolve(logsDir, 'chat-service.log'),
+      format: format.combine(
+        format.timestamp(),
+        baseFormat,
+      ),
+    }),
+  ],
+});
 
 export default logger;
