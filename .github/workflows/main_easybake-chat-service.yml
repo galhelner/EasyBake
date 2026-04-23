@@ -42,11 +42,8 @@ jobs:
         with:
           name: chat-app
           path: |
-            services/chat-service/dist/
-            services/chat-service/package.json
-            services/chat-service/package-lock.json
-            services/chat-service/node_modules/
-            services/chat-service/prisma/
+            services/chat-service/
+            !services/chat-service/antenv/
 
   deploy:
     runs-on: ubuntu-latest
