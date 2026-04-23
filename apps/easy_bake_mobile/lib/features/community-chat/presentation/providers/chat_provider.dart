@@ -261,6 +261,16 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
   }
 
   Future<void> refreshMessages() async {
+    final service = state;
+    final connectionState = ref.read(chatConnectionStateProvider);
+    final shouldReconnect =
+        service == null || !service.isConnected || connectionState != ChatConnectionState.connected;
+
+    if (shouldReconnect) {
+      await initializeChat();
+      return;
+    }
+
     try {
       await _loadMessageHistory();
       ref.read(chatErrorProvider.notifier).setError(null);
