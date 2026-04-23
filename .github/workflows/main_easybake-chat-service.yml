@@ -36,14 +36,13 @@ jobs:
           npm install
           npx prisma generate
           npm run build --if-present
+          chmod -R +x ./node_modules/.bin
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: chat-app
-          path: |
-            services/chat-service/
-            !services/chat-service/antenv/
+          path: services/chat-service/
 
   deploy:
     runs-on: ubuntu-latest
@@ -54,6 +53,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: chat-app
+          path: .
 
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
