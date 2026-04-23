@@ -106,6 +106,9 @@ class ChatErrorNotifier extends Notifier<String?> {
   String? build() => null;
 
   void setError(String? error) {
+    if (state == error) {
+      return;
+    }
     state = error;
   }
 }

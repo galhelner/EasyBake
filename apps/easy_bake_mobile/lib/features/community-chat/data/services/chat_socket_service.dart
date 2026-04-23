@@ -136,6 +136,7 @@ class ChatSocketService {
     _socket.on('error', (data) {
       final message = data is Map ? data['message'] as String? : data.toString();
       debugPrint('[Chat] Socket error: $message');
+      onConnectionStateChanged?.call(false);
       onError?.call(_unavailableMessage);
     });
 
@@ -157,6 +158,7 @@ class ChatSocketService {
 
   bool sendMessage(String content) {
     if (!_socket.connected) {
+      onConnectionStateChanged?.call(false);
       onError?.call('Not connected to chat server');
       return false;
     }
@@ -167,6 +169,7 @@ class ChatSocketService {
       return true;
     } catch (e) {
       debugPrint('[Chat] Error sending message: $e');
+      onConnectionStateChanged?.call(false);
       onError?.call(_sendFailedMessage);
       return false;
     }

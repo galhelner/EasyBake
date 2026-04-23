@@ -6,10 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/chat_provider.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
 import '../widgets/connection_pill.dart';
-import '../widgets/status_banner.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/message_tile.dart';
 import '../widgets/composer.dart';
+import '../widgets/share_recipe_dialog.dart';
 
 class CommunityChat extends ConsumerStatefulWidget {
   const CommunityChat({super.key});
@@ -21,6 +21,7 @@ class CommunityChat extends ConsumerStatefulWidget {
 class _CommunityChatState extends ConsumerState<CommunityChat> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
+  bool _isFailureDialogOpen = false;
 
   @override
   void initState() {
@@ -31,61 +32,82 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
   }
 
   Future<void> _initializeChat() async {
+    ref.read(chatErrorProvider.notifier).setError(null);
     await ref.read(chatServiceProvider.notifier).initializeChat();
   }
 
   Future<void> _refreshChat() async {
+    ref.read(chatErrorProvider.notifier).setError(null);
     await ref.read(chatServiceProvider.notifier).refreshMessages();
   }
 
-  Future<void> _showChatFailureDialog(String message) async {
+  Future<void> _showShareRecipeDialog() async {
     if (!mounted) {
       return;
     }
 
-    final shouldRefresh = ref.read(chatConnectionStateProvider) == ChatConnectionState.connected;
-
     await showDialog<void>(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.cloud_off_outlined, color: Color(0xFFB43B3B)),
-              const SizedBox(width: 10),
-              const Expanded(
-                child: Text(
-                  'Community chat is unavailable',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+      barrierDismissible: true,
+      builder: (dialogContext) => const ShareRecipeDialog(),
+    );
+  }
+
+  Future<void> _showChatFailureDialog(String message) async {
+    if (!mounted || _isFailureDialogOpen) {
+      return;
+    }
+
+    _isFailureDialogOpen = true;
+
+    final shouldRefresh =
+        ref.read(chatConnectionStateProvider) == ChatConnectionState.connected;
+
+    try {
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) {
+          return AlertDialog(
+            title: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.cloud_off_outlined, color: Color(0xFFB43B3B)),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Text(
+                    'Community chat is unavailable',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
+              ],
+            ),
+            content: Text(
+              '$message\n\nYou can try again later or refresh the chat.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('Later'),
+              ),
+              FilledButton(
+                onPressed: () {
+                  Navigator.of(dialogContext).pop();
+                  if (shouldRefresh) {
+                    unawaited(_refreshChat());
+                  } else {
+                    unawaited(_initializeChat());
+                  }
+                },
+                child: Text(shouldRefresh ? 'Refresh' : 'Try again'),
               ),
             ],
-          ),
-          content: Text(
-            '$message\n\nYou can try again later or refresh the chat.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Later'),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                if (shouldRefresh) {
-                  unawaited(_refreshChat());
-                } else {
-                  unawaited(_initializeChat());
-                }
-              },
-              child: Text(shouldRefresh ? 'Refresh' : 'Try again'),
-            ),
-          ],
-        );
-      },
-    );
+          );
+        },
+      );
+    } finally {
+      _isFailureDialogOpen = false;
+    }
   }
 
   @override
@@ -106,18 +128,15 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
   }
 
   void _scrollToBottom() {
-    Future.delayed(
-      const Duration(milliseconds: 100),
-      () {
-        if (_scrollController.hasClients) {
-          _scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-          );
-        }
-      },
-    );
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   @override
@@ -141,33 +160,39 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
         }
 
         _showChatFailureDialog(next);
-        ref.read(chatErrorProvider.notifier).setError(null);
       });
     });
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF4F7FB),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        centerTitle: false,
+        backgroundColor: const Color(0xFFFCFDFE),
         elevation: 0,
-        scrolledUnderElevation: 1,
-        surfaceTintColor: Colors.grey.shade50,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.black.withValues(alpha: 0.08),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Divider(
+            height: 1,
+            color: const Color(0xFFCFDBE8).withValues(alpha: 0.7),
+          ),
+        ),
         titleSpacing: 16,
         title: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                image: const DecorationImage(
-                  image: AssetImage('assets/app_logo.png'),
-                  fit: BoxFit.cover,
-                ),
+            SizedBox(
+              height: 36,
+              child: Image.asset(
+                'assets/app_logo_full.png',
+                fit: BoxFit.fitHeight,
+                alignment: Alignment.centerLeft,
               ),
             ),
-            const SizedBox(width: 14),
-            const Expanded(
+            const SizedBox(width: 6),
+            const Flexible(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -210,26 +235,15 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
         behavior: HitTestBehavior.translucent,
         onTap: () => FocusScope.of(context).unfocus(),
         child: DecoratedBox(
-          decoration: const BoxDecoration(color: Colors.white),
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFFF2F6FB), Color(0xFFEAF1F9)],
+            ),
+          ),
           child: Column(
             children: [
-              if (isConnecting)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                  child: StatusBanner(
-                    icon: const SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 1.8,
-                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2A5A7D)),
-                      ),
-                    ),
-                    text: 'Connecting...',
-                    backgroundColor: const Color(0xFFE3F2FD),
-                    textColor: const Color(0xFF1565C0),
-                  ),
-                ),
               Expanded(
                 child: RefreshIndicator(
                   onRefresh: _refreshChat,
@@ -237,9 +251,10 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
                   backgroundColor: Colors.white,
                   child: ListView.builder(
                     controller: _scrollController,
-                    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
                     physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+                    padding: const EdgeInsets.fromLTRB(12, 14, 12, 14),
                     itemCount: messages.isEmpty ? 1 : messages.length,
                     itemBuilder: (context, index) {
                       if (messages.isEmpty) {
@@ -251,7 +266,8 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
 
                       final message = messages[index];
                       final isCurrentUser =
-                          (currentUserId.isNotEmpty && message.userId == currentUserId) ||
+                          (currentUserId.isNotEmpty &&
+                              message.userId == currentUserId) ||
                           (currentUserEmail.isNotEmpty &&
                               message.userEmail.isNotEmpty &&
                               message.userEmail == currentUserEmail);
@@ -269,7 +285,7 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
                 isConnected: isConnected,
                 isConnecting: isConnecting,
                 onSend: _sendMessage,
-                onChanged: (_) => setState(() {}),
+                onShareRecipe: _showShareRecipeDialog,
               ),
             ],
           ),
