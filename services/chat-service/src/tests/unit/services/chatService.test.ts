@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { saveMessage, getRecentMessages, userExists } from '../../../services/chatService';
 import getPrismaClient from '../../../services/prismaClient';
 
@@ -7,17 +8,17 @@ jest.mock('../../../services/logger');
 describe('chatService', () => {
   const mockPrisma = {
     message: {
-      create: jest.fn(),
-      findMany: jest.fn()
+      create: jest.fn<() => Promise<unknown>>(),
+      findMany: jest.fn<() => Promise<unknown[]>>()
     },
     user: {
-      findUnique: jest.fn()
+      findUnique: jest.fn<() => Promise<unknown>>()
     }
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (getPrismaClient as jest.Mock).mockReturnValue(mockPrisma);
+    (getPrismaClient as ReturnType<typeof jest.fn>).mockReturnValue(mockPrisma);
   });
 
   describe('saveMessage', () => {
