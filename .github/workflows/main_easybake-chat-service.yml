@@ -55,18 +55,6 @@ jobs:
         with:
           name: chat-app
 
-      - name: Disable remote build on App Service
-        uses: azure/appservice-settings@v1
-        with:
-          app-name: 'easybake-chat-service'
-          slot-name: 'Production'
-          publish-profile: ${{ secrets.AZURE_CHAT_SERVICE_SWEDEN_PUBLISH_PROFILE }}
-          app-settings-json: |
-            [
-              { "name": "SCM_DO_BUILD_DURING_DEPLOYMENT", "value": "false", "slotSetting": false },
-              { "name": "ENABLE_ORYX_BUILD", "value": "false", "slotSetting": false }
-            ]
-      
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
