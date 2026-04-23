@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "nodemon --watch src --ext ts --exec ts-node src/index.ts",
     "build": "tsc",
+    "prestart": "prisma generate",
     "start": "node dist/index.js",
     "test": "jest",
     "prisma:generate": "prisma generate",
