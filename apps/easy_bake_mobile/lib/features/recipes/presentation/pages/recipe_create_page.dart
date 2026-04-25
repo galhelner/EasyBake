@@ -123,7 +123,8 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
   }
 
   void _applyInitialIngredientIcons(RecipeModel initialRecipe) {
-    if (_ingredientControllers.isEmpty || initialRecipe.ingredientIcons.isEmpty) {
+    if (_ingredientControllers.isEmpty ||
+        initialRecipe.ingredientIcons.isEmpty) {
       return;
     }
 
@@ -133,7 +134,9 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
     };
 
     for (var i = 0; i < _ingredientControllers.length; i++) {
-      final ingredientName = _ingredientControllers[i].text.trim().toLowerCase();
+      final ingredientName = _ingredientControllers[i].text
+          .trim()
+          .toLowerCase();
       _ingredientSelectedIcons[i] = normalizedIconByName[ingredientName] ?? '';
     }
   }
@@ -145,17 +148,15 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
     };
 
     return recipe.ingredients
-        .map(
-          (name) => normalizedAmountByName[name.trim().toLowerCase()] ?? '',
-        )
+        .map((name) => normalizedAmountByName[name.trim().toLowerCase()] ?? '')
         .toList();
   }
 
   void _replaceControllerValues(
     List<TextEditingController> target,
-    List<String> values,
-    {bool preserveEmptyEntries = false}
-  ) {
+    List<String> values, {
+    bool preserveEmptyEntries = false,
+  }) {
     if (identical(target, _ingredientControllers)) {
       for (final timer in _ingredientSearchDebouncers) {
         timer?.cancel();
@@ -183,11 +184,11 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
     target.clear();
 
     final normalized = preserveEmptyEntries
-      ? values.map((value) => value.trim()).toList()
-      : values
-          .map((value) => value.trim())
-          .where((value) => value.isNotEmpty)
-          .toList();
+        ? values.map((value) => value.trim()).toList()
+        : values
+              .map((value) => value.trim())
+              .where((value) => value.isNotEmpty)
+              .toList();
 
     if (normalized.isEmpty) {
       target.add(TextEditingController());
@@ -574,7 +575,8 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
 
   Map<String, String> _collectIngredientAmountsByName() {
     final result = <String, String>{};
-    final rowCount = _ingredientControllers.length < _ingredientAmountControllers.length
+    final rowCount =
+        _ingredientControllers.length < _ingredientAmountControllers.length
         ? _ingredientControllers.length
         : _ingredientAmountControllers.length;
 
@@ -1021,10 +1023,12 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
             'Some recipe details are invalid. Please review your inputs and try again.';
       }
       if (statusCode == 401 || statusCode == 403) {
-        return serverMessage ?? 'Your session has expired. Please sign in again.';
+        return serverMessage ??
+            'Your session has expired. Please sign in again.';
       }
       if (statusCode == 409) {
-        return serverMessage ?? 'This recipe already exists. Try a different title.';
+        return serverMessage ??
+            'This recipe already exists. Try a different title.';
       }
       if (statusCode != null && statusCode >= 500) {
         return 'The server is having trouble right now. Please try again in a moment.';
@@ -1067,187 +1071,201 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _kPageBackground,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    RecipeCreateHeader(
-                      onBack: () => Navigator.of(context).maybePop(),
-                      primaryColor: _kPrimaryBlue,
-                      logoAssetPath: _kLogoAssetPath,
-                      isEditMode: _isEditMode,
-                    ),
-                    const SizedBox(height: 28),
-                    RecipeCreateUploadCard(
-                      primaryColor: _kButtonBlue,
-                      backgroundColor: _kUploadCardBackground,
-                      imageBytes: _selectedImageBytes,
-                      imageUrl: _selectedImageBytes == null
-                          ? _existingImageUrl
-                          : null,
-                      onReplace: _showImageSourceOptions,
-                      onDelete: (_selectedImageBytes != null ||
-                              (_existingImageUrl != null &&
-                                  _existingImageUrl!.isNotEmpty))
-                          ? _removeRecipeImage
-                          : null,
-                    ),
-                    const SizedBox(height: 28),
-                    RecipeCreateInputField(
-                      controller: _titleController,
-                      hintText: 'Recipe Title',
-                      primaryColor: _kPrimaryBlue,
-                      hintColor: _kHintText,
-                      hasError: _titleError != null,
-                      onChanged: _handleTitleChanged,
-                    ),
-                    if (_titleError != null) ...[
-                      const SizedBox(height: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFF3B30).withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: const Color(0xFFFF3B30).withValues(alpha: 0.2),
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SafeArea(
+          child: Stack(
+            children: [
+              SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      RecipeCreateHeader(
+                        onBack: () => Navigator.of(context).maybePop(),
+                        primaryColor: _kPrimaryBlue,
+                        logoAssetPath: _kLogoAssetPath,
+                        isEditMode: _isEditMode,
+                      ),
+                      const SizedBox(height: 28),
+                      RecipeCreateUploadCard(
+                        primaryColor: _kButtonBlue,
+                        backgroundColor: _kUploadCardBackground,
+                        imageBytes: _selectedImageBytes,
+                        imageUrl: _selectedImageBytes == null
+                            ? _existingImageUrl
+                            : null,
+                        onReplace: _showImageSourceOptions,
+                        onDelete:
+                            (_selectedImageBytes != null ||
+                                (_existingImageUrl != null &&
+                                    _existingImageUrl!.isNotEmpty))
+                            ? _removeRecipeImage
+                            : null,
+                      ),
+                      const SizedBox(height: 28),
+                      RecipeCreateInputField(
+                        controller: _titleController,
+                        hintText: 'Recipe Title',
+                        primaryColor: _kPrimaryBlue,
+                        hintColor: _kHintText,
+                        hasError: _titleError != null,
+                        onChanged: _handleTitleChanged,
+                      ),
+                      if (_titleError != null) ...[
+                        const SizedBox(height: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(
+                              0xFFFF3B30,
+                            ).withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: const Color(
+                                0xFFFF3B30,
+                              ).withValues(alpha: 0.2),
+                            ),
+                          ),
+                          child: Text(
+                            _titleError!,
+                            style: const TextStyle(
+                              color: Color(0xFFFF3B30),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
-                        child: Text(
-                          _titleError!,
-                          style: const TextStyle(
-                            color: Color(0xFFFF3B30),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
+                      ],
+                      const SizedBox(height: 28),
+                      _buildIngredientsSection(),
+                      const SizedBox(height: 28),
+                      RecipeCreateDynamicSection(
+                        title: 'Instructions',
+                        fieldHint: 'Instruction Step',
+                        controllers: _instructionControllers,
+                        onAdd: _addInstructionField,
+                        onRemove: _removeInstructionField,
+                        primaryColor: _kPrimaryBlue,
+                        hintColor: _kHintText,
+                        minLines: 2,
+                        maxLines: 4,
+                      ),
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _saveRecipe,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _kButtonBlue,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 2,
+                            disabledBackgroundColor: _kButtonBlue.withValues(
+                              alpha: 0.5,
+                            ),
                           ),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text(
+                                  'Save Recipe',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
                         ),
                       ),
+                      const SizedBox(height: 24),
                     ],
-                    const SizedBox(height: 28),
-                    _buildIngredientsSection(),
-                    const SizedBox(height: 28),
-                    RecipeCreateDynamicSection(
-                      title: 'Instructions',
-                      fieldHint: 'Instruction Step',
-                      controllers: _instructionControllers,
-                      onAdd: _addInstructionField,
-                      onRemove: _removeInstructionField,
-                      primaryColor: _kPrimaryBlue,
-                      hintColor: _kHintText,
-                      minLines: 2,
-                      maxLines: 4,
-                    ),
-                    const SizedBox(height: 32),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _saveRecipe,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _kButtonBlue,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 2,
-                          disabledBackgroundColor: _kButtonBlue.withValues(
-                            alpha: 0.5,
-                          ),
-                        ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Text(
-                                'Save Recipe',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.3,
-                                ),
-                              ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
+                  ),
                 ),
               ),
-            ),
-            if (_isLoading)
-              Positioned.fill(
-                child: ColoredBox(
-                  color: Colors.black.withValues(alpha: 0.24),
-                  child: Center(
-                    child: Container(
-                      width: 230,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 18,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x33000000),
-                            blurRadius: 24,
-                            offset: Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Image.asset(
-                            _kLogoAssetPath,
-                            width: 56,
-                            height: 56,
-                            fit: BoxFit.contain,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            _isEditMode
-                                ? 'Saving your changes...'
-                                : 'Creating your recipe...',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Color(0xFF2E4E69),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              decoration: TextDecoration.none,
+              if (_isLoading)
+                Positioned.fill(
+                  child: ColoredBox(
+                    color: Colors.black.withValues(alpha: 0.24),
+                    child: Center(
+                      child: Container(
+                        width: 230,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 18,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x33000000),
+                              blurRadius: 24,
+                              offset: Offset(0, 10),
                             ),
-                          ),
-                          const SizedBox(height: 12),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(999),
-                            child: const LinearProgressIndicator(
-                              minHeight: 7,
-                              backgroundColor: Color(0xFFD7E6F1),
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                _kPrimaryBlue,
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Image.asset(
+                              _kLogoAssetPath,
+                              width: 56,
+                              height: 56,
+                              fit: BoxFit.contain,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              _isEditMode
+                                  ? 'Saving your changes...'
+                                  : 'Creating your recipe...',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Color(0xFF2E4E69),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                decoration: TextDecoration.none,
                               ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 12),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(999),
+                              child: const LinearProgressIndicator(
+                                minHeight: 7,
+                                backgroundColor: Color(0xFFD7E6F1),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  _kPrimaryBlue,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

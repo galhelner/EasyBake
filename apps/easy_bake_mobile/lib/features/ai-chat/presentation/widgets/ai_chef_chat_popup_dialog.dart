@@ -358,281 +358,298 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      child: Center(
-        child: Container(
-          width: dialogWidth,
-          constraints: BoxConstraints(
-            maxHeight: mediaQuery.size.height * 0.82,
-            minHeight: 460,
-          ),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF2F7F7),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x80000000),
-                blurRadius: 24,
-                offset: Offset(0, 14),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.fromLTRB(14, 12, 8, 10),
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFFEAF2F5), Color(0xFFDCE8EE)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                  border: Border(bottom: BorderSide(color: Color(0xFFD0DCE3))),
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Center(
+          child: Container(
+            width: dialogWidth,
+            constraints: BoxConstraints(
+              maxHeight: mediaQuery.size.height * 0.82,
+              minHeight: 460,
+            ),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF2F7F7),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x80000000),
+                  blurRadius: 24,
+                  offset: Offset(0, 14),
                 ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: const Color(0xFFBFD0D9)),
-                      ),
-                      child: Image.asset(
-                        'assets/ai_chef_logo.png',
-                        fit: BoxFit.contain,
-                      ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.fromLTRB(14, 12, 8, 10),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFFEAF2F5), Color(0xFFDCE8EE)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    const SizedBox(width: 10),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'EasyBake AI Chef',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF253852),
-                              letterSpacing: 0.1,
-                            ),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            'Chat assistant',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF557089),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(16),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: _isCheckingInitialConnection
-                              ? const Color(0xFFD3DADF)
-                              : _isServiceOnline
-                              ? const Color(0xFFBDD0DC)
-                              : const Color(0xFFE8B8B8),
+                    border: Border(
+                      bottom: BorderSide(color: Color(0xFFD0DCE3)),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: const Color(0xFFBFD0D9)),
+                        ),
+                        child: Image.asset(
+                          'assets/ai_chef_logo.png',
+                          fit: BoxFit.contain,
                         ),
                       ),
-                      child: Text(
-                        _isCheckingInitialConnection
-                            ? 'Checking...'
-                            : _isServiceOnline
-                            ? 'Online'
-                            : 'Offline',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: _isCheckingInitialConnection
-                              ? const Color(0xFF6A7884)
-                              : _isServiceOnline
-                              ? const Color(0xFF2D6680)
-                              : const Color(0xFFB93838),
-                          fontWeight: FontWeight.w600,
+                      const SizedBox(width: 10),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'EasyBake AI Chef',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF253852),
+                                letterSpacing: 0.1,
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'Chat assistant',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF557089),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    if (!_isServiceOnline && !_isCheckingInitialConnection) ...[
-                      const SizedBox(width: 4),
-                      SizedBox(
-                        height: 30,
-                        child: OutlinedButton.icon(
-                          onPressed: _isRefreshingConnection
-                              ? null
-                              : _refreshConnectionStatus,
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Color(0xFFDAA4A4)),
-                            foregroundColor: const Color(0xFFB93838),
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: _isCheckingInitialConnection
+                                ? const Color(0xFFD3DADF)
+                                : _isServiceOnline
+                                ? const Color(0xFFBDD0DC)
+                                : const Color(0xFFE8B8B8),
                           ),
-                          icon: _isRefreshingConnection
-                              ? const SizedBox(
-                                  width: 12,
-                                  height: 12,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 1.8,
-                                    color: Color(0xFFB93838),
-                                  ),
-                                )
-                              : const Icon(Icons.refresh_rounded, size: 14),
-                          label: const Text(
-                            'Refresh',
-                            style: TextStyle(fontSize: 11),
+                        ),
+                        child: Text(
+                          _isCheckingInitialConnection
+                              ? 'Checking...'
+                              : _isServiceOnline
+                              ? 'Online'
+                              : 'Offline',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: _isCheckingInitialConnection
+                                ? const Color(0xFF6A7884)
+                                : _isServiceOnline
+                                ? const Color(0xFF2D6680)
+                                : const Color(0xFFB93838),
+                            fontWeight: FontWeight.w600,
                           ),
+                        ),
+                      ),
+                      if (!_isServiceOnline &&
+                          !_isCheckingInitialConnection) ...[
+                        const SizedBox(width: 4),
+                        SizedBox(
+                          height: 30,
+                          child: OutlinedButton.icon(
+                            onPressed: _isRefreshingConnection
+                                ? null
+                                : _refreshConnectionStatus,
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Color(0xFFDAA4A4)),
+                              foregroundColor: const Color(0xFFB93838),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
+                            ),
+                            icon: _isRefreshingConnection
+                                ? const SizedBox(
+                                    width: 12,
+                                    height: 12,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 1.8,
+                                      color: Color(0xFFB93838),
+                                    ),
+                                  )
+                                : const Icon(Icons.refresh_rounded, size: 14),
+                            label: const Text(
+                              'Refresh',
+                              style: TextStyle(fontSize: 11),
+                            ),
+                          ),
+                        ),
+                      ],
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        tooltip: 'Close',
+                        icon: const Icon(
+                          Icons.close_rounded,
+                          color: Color(0xFF3C536B),
                         ),
                       ),
                     ],
-                    IconButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      tooltip: 'Close',
-                      icon: const Icon(
-                        Icons.close_rounded,
-                        color: Color(0xFF3C536B),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  child: ListView.separated(
-                    controller: _scrollController,
-                    itemCount: _messages.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: 14),
-                    itemBuilder: (context, index) {
-                      final message = _messages[index];
-                      final isAi = message.sender == _ChatSender.ai;
-
-                      return Align(
-                        alignment: isAi
-                            ? Alignment.centerLeft
-                            : Alignment.centerRight,
-                        child: Row(
-                          mainAxisAlignment: isAi
-                              ? MainAxisAlignment.start
-                              : MainAxisAlignment.end,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (isAi)
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  right: 8,
-                                  top: 4,
-                                ),
-                                child: Image.asset(
-                                  'assets/ai_chef_logo.png',
-                                  width: 22,
-                                  height: 22,
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                            Flexible(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 10,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  border: Border.all(
-                                    color: const Color(0xFF2B3D5A),
-                                  ),
-                                  borderRadius: BorderRadius.only(
-                                    topLeft: Radius.circular(isAi ? 3 : 12),
-                                    topRight: Radius.circular(isAi ? 12 : 3),
-                                    bottomLeft: const Radius.circular(12),
-                                    bottomRight: const Radius.circular(12),
-                                  ),
-                                ),
-                                child: _buildMessageBody(message),
-                              ),
-                            ),
-                            if (!isAi)
-                              const Padding(
-                                padding: EdgeInsets.only(left: 8, top: 2),
-                                child: Icon(
-                                  Icons.person,
-                                  color: Color(0xFF2B3D5A),
-                                  size: 22,
-                                ),
-                              ),
-                          ],
-                        ),
-                      );
-                    },
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 10, 12, 14),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxHeight: 140),
-                        child: TextField(
-                          controller: _questionController,
-                          enabled:
-                              !_isAwaitingResponse &&
-                              !_isCheckingInitialConnection,
-                          keyboardType: TextInputType.multiline,
-                          textInputAction: TextInputAction.newline,
-                          minLines: 1,
-                          maxLines: 4,
-                          decoration: const InputDecoration(
-                            hintText: 'Ask a Question',
-                            hintStyle: TextStyle(color: Color(0xFF706C6C)),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.zero,
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.zero,
-                              borderSide: BorderSide(color: Color(0xFF2B3D5A)),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.zero,
-                              borderSide: BorderSide(color: Color(0xFF2B3D5A)),
-                            ),
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
+                const SizedBox(height: 12),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    child: ListView.separated(
+                      controller: _scrollController,
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      itemCount: _messages.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 14),
+                      itemBuilder: (context, index) {
+                        final message = _messages[index];
+                        final isAi = message.sender == _ChatSender.ai;
+
+                        return Align(
+                          alignment: isAi
+                              ? Alignment.centerLeft
+                              : Alignment.centerRight,
+                          child: Row(
+                            mainAxisAlignment: isAi
+                                ? MainAxisAlignment.start
+                                : MainAxisAlignment.end,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (isAi)
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    right: 8,
+                                    top: 4,
+                                  ),
+                                  child: Image.asset(
+                                    'assets/ai_chef_logo.png',
+                                    width: 22,
+                                    height: 22,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                              Flexible(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 10,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    border: Border.all(
+                                      color: const Color(0xFF2B3D5A),
+                                    ),
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(isAi ? 3 : 12),
+                                      topRight: Radius.circular(isAi ? 12 : 3),
+                                      bottomLeft: const Radius.circular(12),
+                                      bottomRight: const Radius.circular(12),
+                                    ),
+                                  ),
+                                  child: _buildMessageBody(message),
+                                ),
+                              ),
+                              if (!isAi)
+                                const Padding(
+                                  padding: EdgeInsets.only(left: 8, top: 2),
+                                  child: Icon(
+                                    Icons.person,
+                                    color: Color(0xFF2B3D5A),
+                                    size: 22,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 14),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxHeight: 140),
+                          child: TextField(
+                            controller: _questionController,
+                            enabled:
+                                !_isAwaitingResponse &&
+                                !_isCheckingInitialConnection,
+                            keyboardType: TextInputType.multiline,
+                            textInputAction: TextInputAction.newline,
+                            minLines: 1,
+                            maxLines: 4,
+                            decoration: const InputDecoration(
+                              hintText: 'Ask a Question',
+                              hintStyle: TextStyle(color: Color(0xFF706C6C)),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.zero,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.zero,
+                                borderSide: BorderSide(
+                                  color: Color(0xFF2B3D5A),
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.zero,
+                                borderSide: BorderSide(
+                                  color: Color(0xFF2B3D5A),
+                                ),
+                              ),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      onPressed:
-                          _isAwaitingResponse || _isCheckingInitialConnection
-                          ? null
-                          : _sendMessage,
-                      icon: const Icon(
-                        Icons.send,
-                        color: Color(0xFF2B3D5A),
-                        size: 32,
+                      const SizedBox(width: 8),
+                      IconButton(
+                        onPressed:
+                            _isAwaitingResponse || _isCheckingInitialConnection
+                            ? null
+                            : _sendMessage,
+                        icon: const Icon(
+                          Icons.send,
+                          color: Color(0xFF2B3D5A),
+                          size: 32,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

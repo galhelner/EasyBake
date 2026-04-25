@@ -63,7 +63,8 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
               ListTile(
                 leading: const Icon(Icons.photo_library_outlined),
                 title: const Text('Upload from Gallery'),
-                onTap: () => Navigator.of(sheetContext).pop(ImageSource.gallery),
+                onTap: () =>
+                    Navigator.of(sheetContext).pop(ImageSource.gallery),
               ),
               ListTile(
                 leading: const Icon(Icons.camera_alt_outlined),
@@ -97,13 +98,14 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
       showDialog<void>(
         context: context,
         barrierDismissible: false,
-        builder: (_) => const RecipeCreateLoadingDialog(
-          message: 'Creating your recipe...',
-        ),
+        builder: (_) =>
+            const RecipeCreateLoadingDialog(message: 'Creating your recipe...'),
       );
       loadingDialogShown = true;
 
-      final recipe = await ref.read(recipeServiceProvider).createRecipeFromImage(picked.path);
+      final recipe = await ref
+          .read(recipeServiceProvider)
+          .createRecipeFromImage(picked.path);
 
       if (!mounted) {
         return;
@@ -194,7 +196,7 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
         ? Positioned(
             left: 20,
             right: 20,
-        bottom: fixedMediaQuery.padding.bottom + 12,
+            bottom: fixedMediaQuery.padding.bottom + 12,
             child: BottomActions(
               onCreate: () {
                 showRecipeCreationModal(
@@ -236,63 +238,71 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
       child: Scaffold(
         backgroundColor: const Color(0xFFEDF1F6),
         resizeToAvoidBottomInset: false,
-        body: Stack(
-          children: [
-            SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: RefreshIndicator(
-                  triggerMode: RefreshIndicatorTriggerMode.anywhere,
-                  color: const Color(0xFF8BB3D6),
-                  backgroundColor: Colors.white,
-                  onRefresh: () async {
-                    _retryLoad();
-                    try {
-                      await ref.read(recipesListProvider.future);
-                    } catch (_) {
-                      // Keep RefreshIndicator stable when request fails.
-                    }
-                  },
-                  child: CustomScrollView(
-                    physics: allowPageScroll
-                        ? const AlwaysScrollableScrollPhysics()
-                        : const NeverScrollableScrollPhysics(),
-                    slivers: [
-                      SliverToBoxAdapter(
-                        child: RecipeListHeader(
-                          searchController: _searchController,
-                          onSearchChanged: (_) => setState(() {}),
-                          showSearch: hasAnyRecipes,
-                        ),
-                      ),
-                      if (_requiresManualRetry)
-                        LoadErrorSliver(
-                          error:
-                              'Server appears offline or unreachable. Start recipe-service and tap Try again.',
-                          onRetry: _retryLoad,
-                        )
-                      else
-                        recipesAsync!.when(
-                          data: (recipes) => RecipeListContent(
-                            recipes: recipes,
-                            query: _searchController.text,
+        body: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: Stack(
+            children: [
+              SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: RefreshIndicator(
+                    triggerMode: RefreshIndicatorTriggerMode.anywhere,
+                    color: const Color(0xFF8BB3D6),
+                    backgroundColor: Colors.white,
+                    onRefresh: () async {
+                      _retryLoad();
+                      try {
+                        await ref.read(recipesListProvider.future);
+                      } catch (_) {
+                        // Keep RefreshIndicator stable when request fails.
+                      }
+                    },
+                    child: CustomScrollView(
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      physics: allowPageScroll
+                          ? const AlwaysScrollableScrollPhysics()
+                          : const NeverScrollableScrollPhysics(),
+                      slivers: [
+                        SliverToBoxAdapter(
+                          child: RecipeListHeader(
+                            searchController: _searchController,
+                            onSearchChanged: (_) => setState(() {}),
+                            showSearch: hasAnyRecipes,
                           ),
-                          loading: () => const RecipeListSkeletonSliver(),
-                          error: (error, stack) => LoadErrorSliver(
-                            error: error.toString(),
+                        ),
+                        if (_requiresManualRetry)
+                          LoadErrorSliver(
+                            error:
+                                'Server appears offline or unreachable. Start recipe-service and tap Try again.',
                             onRetry: _retryLoad,
+                          )
+                        else
+                          recipesAsync!.when(
+                            data: (recipes) => RecipeListContent(
+                              recipes: recipes,
+                              query: _searchController.text,
+                            ),
+                            loading: () => const RecipeListSkeletonSliver(),
+                            error: (error, stack) => LoadErrorSliver(
+                              error: error.toString(),
+                              onRetry: _retryLoad,
+                            ),
                           ),
-                        ),
-                      if (allowPageScroll)
-                        const SliverToBoxAdapter(child: SizedBox(height: 110)),
-                    ],
+                        if (allowPageScroll)
+                          const SliverToBoxAdapter(
+                            child: SizedBox(height: 110),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-            bottomActions ?? const SizedBox.shrink(),
-          ],
+              bottomActions ?? const SizedBox.shrink(),
+            ],
+          ),
         ),
       ),
     );

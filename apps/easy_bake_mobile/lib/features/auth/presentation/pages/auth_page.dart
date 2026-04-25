@@ -158,179 +158,187 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     return Scaffold(
       backgroundColor: _kPageBackground,
       resizeToAvoidBottomInset: true,
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final isSmallScreen = constraints.maxHeight < 700;
-            final logoHeight = isSmallScreen ? 64.0 : 82.0;
-            final baseFormAreaHeight = isSmallScreen ? 350.0 : 382.0;
-            final sharedExtraHeight = isSmallScreen ? 56.0 : 64.0;
-            final keyboardExtraHeight = keyboardInset > 0 ? 24.0 : 0.0;
-            final formAreaHeight =
-              baseFormAreaHeight +
-              sharedExtraHeight +
-              keyboardExtraHeight;
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isSmallScreen = constraints.maxHeight < 700;
+              final logoHeight = isSmallScreen ? 64.0 : 82.0;
+              final baseFormAreaHeight = isSmallScreen ? 350.0 : 382.0;
+              final sharedExtraHeight = isSmallScreen ? 56.0 : 64.0;
+              final keyboardExtraHeight = keyboardInset > 0 ? 24.0 : 0.0;
+              final formAreaHeight =
+                  baseFormAreaHeight + sharedExtraHeight + keyboardExtraHeight;
 
-            return Stack(
-              children: [
-                Align(
-                  alignment: const Alignment(-1.2, -1.1),
-                  child: Container(
-                    width: 170,
-                    height: 170,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _kButtonBlue.withValues(alpha: 0.20),
-                    ),
-                  ),
-                ),
-                Align(
-                  alignment: const Alignment(1.2, -0.75),
-                  child: Container(
-                    width: 130,
-                    height: 130,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _kActionBlue.withValues(alpha: 0.14),
-                    ),
-                  ),
-                ),
-                Align(
-                  alignment: const Alignment(1.25, 1.15),
-                  child: Container(
-                    width: 210,
-                    height: 210,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _kButtonBlue.withValues(alpha: 0.18),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: SingleChildScrollView(
-                    physics: const ClampingScrollPhysics(),
-                    keyboardDismissBehavior:
-                        ScrollViewKeyboardDismissBehavior.onDrag,
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minHeight: constraints.maxHeight,
+              return Stack(
+                children: [
+                  Align(
+                    alignment: const Alignment(-1.2, -1.1),
+                    child: Container(
+                      width: 170,
+                      height: 170,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _kButtonBlue.withValues(alpha: 0.20),
                       ),
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                          top: 12,
-                          bottom: keyboardInset + 16,
+                    ),
+                  ),
+                  Align(
+                    alignment: const Alignment(1.2, -0.75),
+                    child: Container(
+                      width: 130,
+                      height: 130,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _kActionBlue.withValues(alpha: 0.14),
+                      ),
+                    ),
+                  ),
+                  Align(
+                    alignment: const Alignment(1.25, 1.15),
+                    child: Container(
+                      width: 210,
+                      height: 210,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _kButtonBlue.withValues(alpha: 0.18),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: SingleChildScrollView(
+                      physics: const ClampingScrollPhysics(),
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
                         ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Center(
-                              child: Container(
-                                constraints: const BoxConstraints(
-                                  maxWidth: 430,
-                                ),
-                                padding: EdgeInsets.fromLTRB(
-                                  18,
-                                  isSmallScreen ? 14 : 18,
-                                  18,
-                                  16,
-                                ),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(28),
-                                  gradient: const LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [_kCardBackground, Colors.white],
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            top: 12,
+                            bottom: keyboardInset + 16,
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Center(
+                                child: Container(
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 430,
                                   ),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.8),
-                                    width: 1.1,
+                                  padding: EdgeInsets.fromLTRB(
+                                    18,
+                                    isSmallScreen ? 14 : 18,
+                                    18,
+                                    16,
                                   ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: _kActionBlue.withValues(
-                                        alpha: 0.10,
-                                      ),
-                                      blurRadius: 32,
-                                      offset: const Offset(0, 16),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(28),
+                                    gradient: const LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [_kCardBackground, Colors.white],
                                     ),
-                                    BoxShadow(
-                                      color: Colors.black.withValues(
-                                        alpha: 0.04,
+                                    border: Border.all(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.8,
                                       ),
-                                      blurRadius: 20,
-                                      offset: const Offset(0, 10),
+                                      width: 1.1,
                                     ),
-                                  ],
-                                ),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    SizedBox(
-                                      height: logoHeight,
-                                      child: Image.asset(
-                                        _kLogoAssetPath,
-                                        fit: BoxFit.contain,
-                                      ),
-                                    ),
-                                    SizedBox(height: isSmallScreen ? 8 : 12),
-                                    Container(
-                                      padding: const EdgeInsets.all(4),
-                                      decoration: BoxDecoration(
-                                        color: _kButtonBlue.withValues(
-                                          alpha: 0.2,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: _kActionBlue.withValues(
+                                          alpha: 0.10,
                                         ),
-                                        borderRadius: BorderRadius.circular(
-                                          999,
+                                        blurRadius: 32,
+                                        offset: const Offset(0, 16),
+                                      ),
+                                      BoxShadow(
+                                        color: Colors.black.withValues(
+                                          alpha: 0.04,
+                                        ),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 10),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      SizedBox(
+                                        height: logoHeight,
+                                        child: Image.asset(
+                                          _kLogoAssetPath,
+                                          fit: BoxFit.contain,
                                         ),
                                       ),
-                                      child: AuthModeToggle(
-                                        isRegister: _authModeIndex == 1,
-                                        onSignInTap: _goToSignInTab,
-                                        onRegisterTap: _goToRegisterTab,
-                                      ),
-                                    ),
-                                    SizedBox(height: isSmallScreen ? 12 : 14),
-                                    SizedBox(
-                                      height: formAreaHeight,
-                                      child: PageView(
-                                        controller: _authModePageController,
-                                        physics:
-                                            const NeverScrollableScrollPhysics(),
-                                        onPageChanged: (page) {
-                                          setState(() => _authModeIndex = page);
-                                        },
-                                        children: [
-                                          SignInForm(
-                                            key: const ValueKey('sign_in_form'),
-                                            onSubmit: _handleSignIn,
+                                      SizedBox(height: isSmallScreen ? 8 : 12),
+                                      Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color: _kButtonBlue.withValues(
+                                            alpha: 0.2,
                                           ),
-                                          RegisterPage(
-                                            key: const ValueKey(
-                                              'register_page',
+                                          borderRadius: BorderRadius.circular(
+                                            999,
+                                          ),
+                                        ),
+                                        child: AuthModeToggle(
+                                          isRegister: _authModeIndex == 1,
+                                          onSignInTap: _goToSignInTab,
+                                          onRegisterTap: _goToRegisterTab,
+                                        ),
+                                      ),
+                                      SizedBox(height: isSmallScreen ? 12 : 14),
+                                      SizedBox(
+                                        height: formAreaHeight,
+                                        child: PageView(
+                                          controller: _authModePageController,
+                                          physics:
+                                              const NeverScrollableScrollPhysics(),
+                                          onPageChanged: (page) {
+                                            setState(
+                                              () => _authModeIndex = page,
+                                            );
+                                          },
+                                          children: [
+                                            SignInForm(
+                                              key: const ValueKey(
+                                                'sign_in_form',
+                                              ),
+                                              onSubmit: _handleSignIn,
                                             ),
-                                            onSubmit: _handleRegister,
-                                            onCheckEmailExists:
-                                                _checkEmailExists,
-                                            onEmailExists:
-                                                _showEmailExistsDialog,
-                                          ),
-                                        ],
+                                            RegisterPage(
+                                              key: const ValueKey(
+                                                'register_page',
+                                              ),
+                                              onSubmit: _handleRegister,
+                                              onCheckEmailExists:
+                                                  _checkEmailExists,
+                                              onEmailExists:
+                                                  _showEmailExistsDialog,
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            );
-          },
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
