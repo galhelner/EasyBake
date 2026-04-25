@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../home/presentation/pages/home_tabs_page.dart';
 import '../../data/services/auth_api_service.dart';
@@ -17,6 +19,8 @@ class AuthPage extends ConsumerStatefulWidget {
 }
 
 class _AuthPageState extends ConsumerState<AuthPage> {
+  static const _kNotificationsPromptedAfterLoginKey =
+      'notifications.promptedAfterLogin';
   static const _kPageBackground = Color(0xFFF2F7F7);
   static const _kButtonBlue = Color(0xFF8BB3D6);
   static const _kActionBlue = Color(0xFF1B75DD);
@@ -77,6 +81,8 @@ class _AuthPageState extends ConsumerState<AuthPage> {
             displayName: authState.displayName,
           );
 
+      await _requestNotificationPermissionAfterFirstLogin();
+
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const HomeTabsPage()),
@@ -112,6 +118,8 @@ class _AuthPageState extends ConsumerState<AuthPage> {
             displayName: authState.displayName,
           );
 
+      await _requestNotificationPermissionAfterFirstLogin();
+
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const HomeTabsPage()),
@@ -137,6 +145,39 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       }
       return true;
     }
+  }
+
+  Future<void> _requestNotificationPermissionAfterFirstLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    final alreadyPrompted =
+        prefs.getBool(_kNotificationsPromptedAfterLoginKey) ?? false;
+    if (alreadyPrompted) {
+      return;
+    }
+
+    final notificationsPlugin = FlutterLocalNotificationsPlugin();
+    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const ios = DarwinInitializationSettings(
+      defaultPresentAlert: true,
+      defaultPresentBadge: true,
+      defaultPresentSound: true,
+    );
+    const settings = InitializationSettings(android: android, iOS: ios);
+    await notificationsPlugin.initialize(settings: settings);
+
+    await notificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.requestNotificationsPermission();
+
+    await notificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >()
+        ?.requestPermissions(alert: true, badge: true, sound: true);
+
+    await prefs.setBool(_kNotificationsPromptedAfterLoginKey, true);
   }
 
   Future<void> _showEmailExistsDialog() {

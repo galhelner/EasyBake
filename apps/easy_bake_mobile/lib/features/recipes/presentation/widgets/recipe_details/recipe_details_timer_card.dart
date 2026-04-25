@@ -1,9 +1,12 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:flutter/services.dart';
+import 'package:timezone/data/latest_all.dart' as tz_data;
+import 'package:timezone/timezone.dart' as tz;
 import 'package:vibration/vibration.dart';
 
 import 'recipe_details_theme.dart';
@@ -17,15 +20,18 @@ class RecipeDetailsTimerCard extends StatefulWidget {
   State<RecipeDetailsTimerCard> createState() => _RecipeDetailsTimerCardState();
 }
 
-class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard> {
+class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
+    with WidgetsBindingObserver {
   static const List<int> _kFallbackMinutes = [15, 30, 45, 60];
   static const _kTimerNotificationId = 4001;
   static const _kTimerNotificationChannelId = 'easybake_timer_alerts';
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
   static bool _notificationsInitialized = false;
+  static bool _timeZoneInitialized = false;
 
   Timer? _ticker;
+  DateTime? _timerEndsAt;
   late List<int> _suggestedSeconds;
   late int _selectedDurationSeconds;
   int _remainingSeconds = 0;
@@ -35,10 +41,33 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _suggestedSeconds = _buildSuggestedDurations(widget.instructions);
     _selectedDurationSeconds = _suggestedSeconds.first;
     _remainingSeconds = _selectedDurationSeconds;
-    unawaited(_initializeNotifications());
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (!_isRunning) {
+      return;
+    }
+
+    if (state == AppLifecycleState.resumed) {
+      _syncRemainingWithClock(showCompletionDialogIfDone: true);
+      if (_isRunning) {
+        _startTicker();
+      }
+      return;
+    }
+
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+        _ticker?.cancel();
+      }
+    }
   }
 
   @override
@@ -68,6 +97,8 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard> {
   @override
   void dispose() {
     _ticker?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    unawaited(_cancelScheduledCompletionNotification());
     super.dispose();
   }
 
@@ -199,10 +230,21 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard> {
       return;
     }
 
+    _timerEndsAt = DateTime.now().add(Duration(seconds: _remainingSeconds));
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+      unawaited(
+        _scheduleCompletionNotification(secondsFromNow: _remainingSeconds),
+      );
+    }
+
     setState(() {
       _isRunning = true;
     });
 
+    _startTicker();
+  }
+
+  void _startTicker() {
     _ticker?.cancel();
     _ticker = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) {
@@ -210,20 +252,59 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard> {
         return;
       }
 
-      if (_remainingSeconds <= 1) {
-        timer.cancel();
-        setState(() {
-          _isRunning = false;
-          _remainingSeconds = _selectedDurationSeconds;
-        });
-        _showTimerCompleteDialog();
-        return;
-      }
-
-      setState(() {
-        _remainingSeconds -= 1;
-      });
+      _syncRemainingWithClock(showCompletionDialogIfDone: true);
     });
+  }
+
+  void _syncRemainingWithClock({required bool showCompletionDialogIfDone}) {
+    if (!_isRunning) {
+      return;
+    }
+
+    final endsAt = _timerEndsAt;
+    if (endsAt == null) {
+      return;
+    }
+
+    final millisLeft =
+        endsAt.millisecondsSinceEpoch - DateTime.now().millisecondsSinceEpoch;
+    if (millisLeft <= 0) {
+      _finishTimer(showCompletionDialog: showCompletionDialogIfDone);
+      return;
+    }
+
+    final nextRemaining = (millisLeft / 1000).ceil();
+    if (nextRemaining == _remainingSeconds) {
+      return;
+    }
+
+    if (mounted) {
+      setState(() {
+        _remainingSeconds = nextRemaining;
+      });
+    } else {
+      _remainingSeconds = nextRemaining;
+    }
+  }
+
+  void _finishTimer({required bool showCompletionDialog}) {
+    _ticker?.cancel();
+    _timerEndsAt = null;
+    unawaited(_cancelScheduledCompletionNotification());
+
+    if (mounted) {
+      setState(() {
+        _isRunning = false;
+        _remainingSeconds = _selectedDurationSeconds;
+      });
+    } else {
+      _isRunning = false;
+      _remainingSeconds = _selectedDurationSeconds;
+    }
+
+    if (showCompletionDialog) {
+      unawaited(_showTimerCompleteDialog());
+    }
   }
 
   Future<void> _showTimerCompleteDialog() async {
@@ -315,25 +396,65 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard> {
       return;
     }
 
+    if (!_timeZoneInitialized) {
+      tz_data.initializeTimeZones();
+      _timeZoneInitialized = true;
+    }
+
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const ios = DarwinInitializationSettings();
+    const ios = DarwinInitializationSettings(
+      defaultPresentAlert: true,
+      defaultPresentBadge: true,
+      defaultPresentSound: true,
+    );
     const settings = InitializationSettings(android: android, iOS: ios);
 
     await _notificationsPlugin.initialize(settings: settings);
 
-    await _notificationsPlugin
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >()
-        ?.requestNotificationsPermission();
-
-    await _notificationsPlugin
-        .resolvePlatformSpecificImplementation<
-          IOSFlutterLocalNotificationsPlugin
-        >()
-        ?.requestPermissions(alert: true, badge: true, sound: true);
-
     _notificationsInitialized = true;
+  }
+
+  Future<void> _scheduleCompletionNotification({
+    required int secondsFromNow,
+  }) async {
+    await _initializeNotifications();
+    await _cancelScheduledCompletionNotification();
+
+    if (secondsFromNow <= 0) {
+      return;
+    }
+
+    const android = AndroidNotificationDetails(
+      _kTimerNotificationChannelId,
+      'Timer Alerts',
+      channelDescription: 'Notifications when recipe timers complete',
+      importance: Importance.max,
+      priority: Priority.high,
+      playSound: true,
+      enableVibration: true,
+      category: AndroidNotificationCategory.alarm,
+    );
+    const ios = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+      interruptionLevel: InterruptionLevel.timeSensitive,
+    );
+
+    await _notificationsPlugin.zonedSchedule(
+      id: _kTimerNotificationId,
+      title: 'EasyBake Timer Done',
+      body: 'Your timer has finished. Check your recipe step.',
+      notificationDetails: const NotificationDetails(
+        android: android,
+        iOS: ios,
+      ),
+      scheduledDate: tz.TZDateTime.now(
+        tz.local,
+      ).add(Duration(seconds: secondsFromNow)),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      payload: 'recipe_timer_done',
+    );
   }
 
   Future<void> _showCompletionNotification() async {
@@ -353,6 +474,7 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard> {
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
+      interruptionLevel: InterruptionLevel.timeSensitive,
     );
 
     await _notificationsPlugin.show(
@@ -363,7 +485,12 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard> {
         android: android,
         iOS: ios,
       ),
+      payload: 'recipe_timer_done',
     );
+  }
+
+  Future<void> _cancelScheduledCompletionNotification() async {
+    await _notificationsPlugin.cancel(id: _kTimerNotificationId);
   }
 
   Future<void> _playCompletionFeedback() async {
@@ -399,6 +526,15 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard> {
 
   void _pause() {
     _ticker?.cancel();
+    final endsAt = _timerEndsAt;
+    if (endsAt != null) {
+      final millisLeft =
+          endsAt.millisecondsSinceEpoch - DateTime.now().millisecondsSinceEpoch;
+      final computedSeconds = millisLeft <= 0 ? 0 : (millisLeft / 1000).ceil();
+      _remainingSeconds = computedSeconds;
+    }
+    _timerEndsAt = null;
+    unawaited(_cancelScheduledCompletionNotification());
     setState(() {
       _isRunning = false;
     });
@@ -406,6 +542,8 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard> {
 
   void _reset() {
     _ticker?.cancel();
+    _timerEndsAt = null;
+    unawaited(_cancelScheduledCompletionNotification());
     setState(() {
       _isRunning = false;
       _remainingSeconds = _selectedDurationSeconds;
@@ -414,6 +552,8 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard> {
 
   void _pickSuggestion(int seconds) {
     _ticker?.cancel();
+    _timerEndsAt = null;
+    unawaited(_cancelScheduledCompletionNotification());
     setState(() {
       _isRunning = false;
       _selectedDurationSeconds = seconds;
@@ -557,6 +697,8 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard> {
     }
 
     _ticker?.cancel();
+    _timerEndsAt = null;
+    unawaited(_cancelScheduledCompletionNotification());
     setState(() {
       _isRunning = false;
       _selectedDurationSeconds = picked;
