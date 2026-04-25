@@ -4,6 +4,35 @@ import 'package:intl/intl.dart';
 import '../../domain/models/models.dart';
 import 'chat_avatar.dart';
 
+Color _resolveSenderAccentColor(ChatMessage message, {required bool isCurrentUser}) {
+  if (isCurrentUser) {
+    return const Color(0xFF1565C0);
+  }
+
+  // Keep color stable per sender so each participant is easy to recognize.
+  final senderKey = message.userId.trim().isNotEmpty
+      ? message.userId.trim()
+      : (message.userEmail.trim().isNotEmpty
+            ? message.userEmail.trim().toLowerCase()
+            : (message.userFullName?.trim().toLowerCase() ?? 'baker'));
+
+  const palette = <Color>[
+    Color(0xFF00897B),
+    Color(0xFF6D4C41),
+    Color(0xFF7B1FA2),
+    Color(0xFFC62828),
+    Color(0xFF2E7D32),
+    Color(0xFF5D4037),
+    Color(0xFFEF6C00),
+    Color(0xFFAD1457),
+    Color(0xFF455A64),
+    Color(0xFF9E9D24),
+  ];
+
+  final hash = senderKey.codeUnits.fold<int>(0, (value, unit) => value * 31 + unit);
+  return palette[hash.abs() % palette.length];
+}
+
 class MessageTile extends StatelessWidget {
   const MessageTile({
     super.key,
@@ -16,16 +45,18 @@ class MessageTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final avatarColor = isCurrentUser
-        ? const Color(0xFF1565C0)
-        : const Color(0xFFE65100);
+    final avatarColor = _resolveSenderAccentColor(
+      message,
+      isCurrentUser: isCurrentUser,
+    );
     final avatarIcon = isCurrentUser ? Icons.person : Icons.groups;
     final senderName = (message.userFullName?.trim().isNotEmpty ?? false)
         ? message.userFullName!.trim()
         : (message.userEmail.isNotEmpty ? message.userEmail : 'Baker');
     const avatarSlotWidth = 54.0;
     const avatarGap = 10.0;
-    const bubbleTopOffset = 24.0;
+    const incomingBubbleTopOffset = 6.0;
+    const currentUserBubbleTopOffset = 24.0;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -47,24 +78,16 @@ class MessageTile extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       ChatAvatar(color: avatarColor, icon: avatarIcon),
-                      const SizedBox(height: 4),
-                      Text(
-                        senderName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: Color(0xFF667C8E),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
                     ],
                   ),
                 ),
               if (!isCurrentUser) const SizedBox(width: avatarGap),
               Padding(
-                padding: const EdgeInsets.only(top: bubbleTopOffset),
+                padding: EdgeInsets.only(
+                  top: isCurrentUser
+                      ? currentUserBubbleTopOffset
+                      : incomingBubbleTopOffset,
+                ),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
                     maxWidth: MediaQuery.of(context).size.width * 0.68,
@@ -77,6 +100,21 @@ class MessageTile extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        if (!isCurrentUser) ...[
+                          Text(
+                            senderName,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              height: 1.2,
+                              color: avatarColor.withValues(alpha: 0.95),
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                        ],
                         Text(
                           message.content,
                           style: const TextStyle(
