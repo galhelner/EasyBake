@@ -19,32 +19,22 @@ class RecipeDetailsAiAssistantButton extends StatelessWidget {
           Positioned(right: 0, bottom: 72, child: const AiChefChatBubble()),
           Material(
             color: Colors.white,
-            shape: const CircleBorder(
-              side: BorderSide(color: Color(0xFF304466), width: 2),
+            shape: CircleBorder(
+              side: BorderSide(
+                color: const Color(0xFF2E4E69).withValues(alpha: 0.15),
+                width: 1.5,
+              ),
             ),
+            elevation: 4,
             child: InkWell(
               customBorder: const CircleBorder(),
-              onTap: onTap ?? () {},
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Center(
-                    child: Image.asset(
-                      kRecipeDetailsLogoAssetPath,
-                      width: 38,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                  const Positioned(
-                    right: 14,
-                    top: 10,
-                    child: Icon(
-                      Icons.auto_awesome,
-                      color: Color(0xFFFFC857),
-                      size: 14,
-                    ),
-                  ),
-                ],
+              onTap: onTap,
+              child: Center(
+                child: Image.asset(
+                  kRecipeDetailsLogoAssetPath,
+                  width: 32,
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
           ),
