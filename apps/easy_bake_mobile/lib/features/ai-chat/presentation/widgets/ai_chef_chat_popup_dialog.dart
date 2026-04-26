@@ -59,6 +59,7 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
   bool _isCheckingInitialConnection = true;
   int? _typingMessageIndex;
   int? _activeStreamingMessageIndex;
+  bool _recipeIntentAnnounced = false;
 
   String get _normalizedPageContext {
     final normalized = widget.pageContext.trim().toLowerCase();
@@ -145,6 +146,11 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
         ? 'home'
         : _normalizedPageContext;
 
+    _recipeIntentAnnounced = false;
+    _startChatRequest(message, contextForRequest);
+  }
+
+  void _startChatRequest(String message, String contextForRequest) {
     _chatSubscription = widget.chatService
         .sendPrompt(
           prompt: message,
@@ -179,23 +185,42 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
           _messages[index] = existing.copyWith(text: '${existing.text}$delta');
         });
         _scrollToBottom();
+      case ChatEventType.intentDetected:
+        final intent = event.intent;
+        if (intent == null) {
+          return;
+        }
+
+        if (intent == 'CREATE_RECIPE' && !_recipeIntentAnnounced) {
+          setState(() {
+            _isServiceOnline = true;
+            _removeTypingIndicator();
+            _messages.add(
+              const _ChatMessage.ai('Sure! I am creating the recipe for you'),
+            );
+            _messages.add(const _ChatMessage.typing());
+            _typingMessageIndex = _messages.length - 1;
+            _recipeIntentAnnounced = true;
+          });
+          _scrollToBottom();
+        }
       case ChatEventType.recipeCreated:
         final recipe = event.recipe;
         final recipeTitle = recipe?['title']?.toString() ?? 'your recipe';
+        const imageUrl = 'assets/default_recipe.jpg';
 
         setState(() {
           _isServiceOnline = true;
           _removeTypingIndicator();
           _activeStreamingMessageIndex = null;
           _messages.add(
-            _ChatMessage.ai('Your recipe "$recipeTitle" is ready.'),
-          );
-          _messages.add(
-            _ChatMessage.recipeCta(
+            _ChatMessage.recipePreview(
               recipeTitle: recipeTitle,
+              imageUrl: imageUrl,
               recipePayload: recipe,
             ),
           );
+          _recipeIntentAnnounced = false;
           _isAwaitingResponse = false;
         });
         _scrollToBottom();
@@ -230,6 +255,7 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
           _removeTypingIndicator();
           _activeStreamingMessageIndex = null;
           _messages.add(_ChatMessage.ai(errorMessage));
+          _recipeIntentAnnounced = false;
           _isAwaitingResponse = false;
         });
         _scrollToBottom();
@@ -256,6 +282,7 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
           _removeTypingIndicator();
           _normalizeActiveStreamingMessage();
           _activeStreamingMessageIndex = null;
+          _recipeIntentAnnounced = false;
           _isAwaitingResponse = false;
         });
         _scrollToBottom();
@@ -693,39 +720,104 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
     switch (message.kind) {
       case _ChatMessageKind.typing:
         return const _TypingDots();
-      case _ChatMessageKind.recipeCta:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Recipe created: ${message.recipeTitle ?? 'Untitled'}',
-              style: const TextStyle(
-                fontSize: 13,
-                color: Colors.black,
-                height: 1.3,
+      case _ChatMessageKind.recipePreview:
+        return Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFDCE8F0), width: 1.2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
               ),
-            ),
-            const SizedBox(height: 10),
-            OutlinedButton(
-              onPressed: () {
-                final payload = message.recipePayload;
-                if (payload == null) {
-                  return;
-                }
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (message.imageUrl != null && message.imageUrl!.isNotEmpty)
+                Container(
+                  width: double.infinity,
+                  height: 160,
+                  decoration: BoxDecoration(color: const Color(0xFFF5FAFE)),
+                  child: Image.asset(
+                    message.imageUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: const Color(0xFFF5FAFE),
+                      child: const Icon(
+                        Icons.restaurant_menu_rounded,
+                        color: Color(0xFFB0C7DB),
+                        size: 40,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                Container(
+                  width: double.infinity,
+                  height: 160,
+                  color: const Color(0xFFF5FAFE),
+                  child: const Icon(
+                    Icons.restaurant_menu_rounded,
+                    color: Color(0xFFB0C7DB),
+                    size: 40,
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      message.recipeTitle ?? 'Recipe',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1A2A3C),
+                        height: 1.3,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          final payload = message.recipePayload;
+                          if (payload == null) {
+                            return;
+                          }
 
-                Navigator.of(context).pop();
-                widget.onOpenRecipeCreated(payload);
-              },
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFF2B3D5A)),
-                foregroundColor: const Color(0xFF2B3D5A),
-                textStyle: const TextStyle(fontWeight: FontWeight.w600),
-                minimumSize: const Size(0, 36),
+                          widget.onOpenRecipeCreated(payload);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF1565C0),
+                          foregroundColor: Colors.white,
+                          textStyle: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                          minimumSize: const Size(0, 42),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text('View recipe'),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              child: const Text('View recipe created'),
-            ),
-          ],
+            ],
+          ),
         );
       case _ChatMessageKind.connectionChecking:
         return const Row(
@@ -1114,6 +1206,7 @@ class _ChatMessage {
     required this.kind,
     this.recipeTitle,
     this.recipePayload,
+    this.imageUrl,
     this.title,
     this.swaps,
     this.recipes,
@@ -1135,14 +1228,16 @@ class _ChatMessage {
         kind: _ChatMessageKind.connectionChecking,
       );
 
-  const _ChatMessage.recipeCta({
+  const _ChatMessage.recipePreview({
     required String recipeTitle,
+    String? imageUrl,
     Map<String, dynamic>? recipePayload,
   }) : this._(
          text: '',
          sender: _ChatSender.ai,
-         kind: _ChatMessageKind.recipeCta,
+         kind: _ChatMessageKind.recipePreview,
          recipeTitle: recipeTitle,
+         imageUrl: imageUrl,
          recipePayload: recipePayload,
        );
 
@@ -1170,6 +1265,7 @@ class _ChatMessage {
   final _ChatMessageKind kind;
   final String? recipeTitle;
   final Map<String, dynamic>? recipePayload;
+  final String? imageUrl;
   final String? title;
   final List<String>? swaps;
   final List<dynamic>? recipes;
@@ -1181,6 +1277,7 @@ class _ChatMessage {
       kind: kind,
       recipeTitle: recipeTitle,
       recipePayload: recipePayload,
+      imageUrl: imageUrl,
       title: title,
       swaps: swaps,
       recipes: recipes ?? this.recipes,
@@ -1192,7 +1289,7 @@ enum _ChatMessageKind {
   text,
   typing,
   connectionChecking,
-  recipeCta,
+  recipePreview,
   swapSummary,
   searchResults,
 }

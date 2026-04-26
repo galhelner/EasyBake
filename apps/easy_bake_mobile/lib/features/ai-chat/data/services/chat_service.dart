@@ -6,12 +6,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/network/api_client.dart';
 
-enum ChatEventType { textDelta, metadata, recipeCreated, searchResults, error, done }
+enum ChatEventType {
+  textDelta,
+  metadata,
+  intentDetected,
+  recipeCreated,
+  searchResults,
+  error,
+  done,
+}
 
 class ChatEvent {
   const ChatEvent._({
     required this.type,
     this.delta,
+    this.intent,
     this.metadata,
     this.recipe,
     this.searchResults,
@@ -21,6 +30,9 @@ class ChatEvent {
 
   const ChatEvent.textDelta(String delta)
     : this._(type: ChatEventType.textDelta, delta: delta);
+
+  const ChatEvent.intentDetected(String intent)
+    : this._(type: ChatEventType.intentDetected, intent: intent);
 
   const ChatEvent.metadata(Map<String, dynamic> metadata)
     : this._(type: ChatEventType.metadata, metadata: metadata);
@@ -42,6 +54,7 @@ class ChatEvent {
 
   final ChatEventType type;
   final String? delta;
+  final String? intent;
   final Map<String, dynamic>? metadata;
   final Map<String, dynamic>? recipe;
   final List<dynamic>? searchResults;
@@ -88,9 +101,7 @@ class ChatService {
           connectTimeout: _chatConnectTimeout,
           sendTimeout: _chatSendTimeout,
           receiveTimeout: _chatReceiveTimeout,
-          headers: const {
-            'Accept': 'text/event-stream, application/json',
-          },
+          headers: const {'Accept': 'text/event-stream, application/json'},
         ),
       );
     } on DioException catch (error) {
@@ -194,6 +205,22 @@ class ChatService {
             continue;
           }
 
+          if (type == 'intent') {
+            final intent = decoded['intent']?.toString();
+            if (intent != null && intent.isNotEmpty) {
+              yield ChatEvent.intentDetected(intent);
+            }
+            continue;
+          }
+
+          if (type == 'recipeCreated') {
+            final recipe = decoded['recipe'];
+            if (recipe is Map<String, dynamic>) {
+              yield ChatEvent.recipeCreated(recipe);
+            }
+            continue;
+          }
+
           if (type == 'searchResults') {
             final recipes = decoded['recipes'];
             if (recipes is List) {
@@ -221,7 +248,9 @@ class ChatService {
         collected.addAll(chunk);
       }
     } catch (_) {
-      yield const ChatEvent.error('Could not read server response. Please try again.');
+      yield const ChatEvent.error(
+        'Could not read server response. Please try again.',
+      );
       yield const ChatEvent.done();
       return;
     }
@@ -242,7 +271,9 @@ class ChatService {
         } else if (_looksLikeRecipe(decoded)) {
           yield ChatEvent.recipeCreated(decoded);
         } else {
-          yield const ChatEvent.error('Response received in an unsupported format.');
+          yield const ChatEvent.error(
+            'Response received in an unsupported format.',
+          );
         }
       } else {
         yield const ChatEvent.error('Unexpected response format from server.');
@@ -317,7 +348,9 @@ class ChatService {
   String _toFriendlyErrorMessage(String raw, {int? statusCode}) {
     final normalized = raw.toLowerCase();
 
-    if (statusCode == 401 || statusCode == 403 || normalized.contains('unauthorized')) {
+    if (statusCode == 401 ||
+        statusCode == 403 ||
+        normalized.contains('unauthorized')) {
       return 'Your session has expired. Please sign in again.';
     }
 
