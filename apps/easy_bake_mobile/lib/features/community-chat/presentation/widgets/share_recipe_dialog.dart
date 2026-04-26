@@ -184,12 +184,13 @@ class _RecipeShareTile extends StatelessWidget {
                 children: [
                   Text(
                     recipe.title,
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF111B26),
+                      height: 1.2,
                     ),
                   ),
                   const SizedBox(height: 5),
