@@ -129,7 +129,7 @@ class MessageTile extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             Text(
-                              DateFormat('HH:mm').format(message.createdAt),
+                              DateFormat('dd/MM/yyyy HH:mm').format(message.createdAt),
                               style: const TextStyle(
                                 fontSize: 11,
                                 color: Color(0xFF6E8298),
