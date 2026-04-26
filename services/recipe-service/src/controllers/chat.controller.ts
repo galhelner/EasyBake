@@ -243,6 +243,11 @@ const writeSseDelta = (res: FlushableResponse, content: string): void => {
   res.flush?.();
 };
 
+const writeSseEvent = (res: FlushableResponse, payload: Record<string, unknown>): void => {
+  res.write(`data: ${JSON.stringify(payload)}\n\n`);
+  res.flush?.();
+};
+
 /**
  * Forward already SSE-formatted stream from upstream.
  * This handles the new structured format where Python sends: data: {"delta": "...", "type": "text"}\n\n
@@ -459,6 +464,17 @@ export const streamChat = async (
       return;
     case 'CREATE_RECIPE': {
       try {
+        const streamingResponse = res as FlushableResponse;
+        streamingResponse.writeHead(200, {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          Connection: 'keep-alive',
+          'X-Accel-Buffering': 'no',
+        });
+        streamingResponse.flushHeaders();
+
+        writeSseEvent(streamingResponse, { type: 'intent', intent: 'CREATE_RECIPE' });
+
         logger.info('Calling AI Service for: generate recipe');
         const recipeResponse = await axios.post(
           `${AI_SERVICE_API_BASE_URL}/generate-recipe`,
@@ -470,19 +486,33 @@ export const streamChat = async (
             timeout: 60000,
           },
         );
-        res.status(200).json(recipeResponse.data);
+
+        writeSseEvent(streamingResponse, {
+          type: 'recipeCreated',
+          recipe: recipeResponse.data,
+        });
+        streamingResponse.write('data: [DONE]\n\n');
+        streamingResponse.end();
       } catch (error) {
         logAxiosFailure('AI recipe generation failed', error);
 
-        const statusCode = getAxiosStatusCode(error);
-        const retryAfter = getAxiosRetryAfter(error);
-        if (retryAfter) {
-          res.setHeader('Retry-After', retryAfter);
+        const streamingResponse = res as FlushableResponse;
+        if (!streamingResponse.headersSent) {
+          streamingResponse.writeHead(200, {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            Connection: 'keep-alive',
+            'X-Accel-Buffering': 'no',
+          });
+          streamingResponse.flushHeaders();
         }
 
-        res.status(statusCode).json({
-          error: getUserFacingAxiosErrorMessage(error),
+        writeSseEvent(streamingResponse, {
+          type: 'error',
+          message: getUserFacingAxiosErrorMessage(error),
         });
+        streamingResponse.write('data: [DONE]\n\n');
+        streamingResponse.end();
       }
       return;
     }
