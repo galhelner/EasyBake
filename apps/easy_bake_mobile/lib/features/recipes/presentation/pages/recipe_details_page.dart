@@ -35,6 +35,7 @@ class _RecipeDetailsPageState extends ConsumerState<RecipeDetailsPage> {
 
   late RecipeModel _recipe;
   _RecipeDetailTab _selectedTab = _RecipeDetailTab.ingredients;
+  double _ingredientScale = 1;
   bool _isRefreshing = false;
   bool _isDeleting = false;
 
@@ -233,12 +234,12 @@ class _RecipeDetailsPageState extends ConsumerState<RecipeDetailsPage> {
                       onMenuSelected: _handleMenuAction,
                       isMenuDisabled: _isDeleting,
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 10),
                     RecipeDetailsHero(
                       title: _recipe.title,
                       imageUrl: _recipe.imageUrl,
                     ),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 20),
                     RecipeDetailsTabBar(
                       isIngredientsSelected:
                           _selectedTab == _RecipeDetailTab.ingredients,
@@ -253,12 +254,18 @@ class _RecipeDetailsPageState extends ConsumerState<RecipeDetailsPage> {
                         });
                       },
                     ),
-                    const SizedBox(height: 22),
+                    const SizedBox(height: 16),
                     if (_selectedTab == _RecipeDetailTab.ingredients)
                       RecipeDetailsIngredientList(
                         items: ingredients,
                         iconsByName: _recipe.ingredientIcons,
                         amountsByName: _recipe.ingredientAmounts,
+                        scale: _ingredientScale,
+                        onScaleChanged: (value) {
+                          setState(() {
+                            _ingredientScale = value;
+                          });
+                        },
                       )
                     else
                       RecipeDetailsInstructionList(items: instructions),

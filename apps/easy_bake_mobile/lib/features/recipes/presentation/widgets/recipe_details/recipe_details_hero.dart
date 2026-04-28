@@ -34,7 +34,7 @@ class RecipeDetailsHero extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             child: SizedBox(
               width: double.infinity,
-              height: 160,
+              height: 132,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -79,12 +79,14 @@ class RecipeDetailsHero extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 10),
         Text(
           title,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
           style: const TextStyle(
             color: Color(0xFF172A3E),
-            fontSize: 29,
+            fontSize: 24,
             height: 1.1,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.25,
