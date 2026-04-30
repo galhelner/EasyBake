@@ -11,11 +11,42 @@
 </p>
 
 <p align="center">
-	<img alt="Flutter" src="https://img.shields.io/badge/Flutter-Mobile%20App-02569B?logo=flutter&logoColor=white" />
-	<img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-AI%20Service-009688?logo=fastapi&logoColor=white" />
-	<img alt="Node.js" src="https://img.shields.io/badge/Node.js-Recipe%20Service-339933?logo=node.js&logoColor=white" />
-	<img alt="Supabase" src="https://img.shields.io/badge/Supabase-Users%20%26%20Data-3ECF8E?logo=supabase&logoColor=white" />
-	<img alt="Docker" src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white" />
+	<table align="center">
+		<tr>
+			<td align="center" width="150">
+				<img src="docs/readme/logos/flutter_logo.png" alt="Flutter" width="42" height="42" /><br/>
+				<strong>Flutter</strong><br/>
+				<sub>Mobile App</sub>
+			</td>
+			<td align="center" width="150">
+				<img src="docs/readme/logos/fastapi_logo.png" alt="FastAPI" width="42" height="42" /><br/>
+				<strong>FastAPI</strong><br/>
+				<sub>AI Service</sub>
+			</td>
+			<td align="center" width="150">
+				<img src="docs/readme/logos/nodejs_logo.png" alt="Node.js" width="42" height="42" /><br/>
+				<strong>Node.js</strong><br/>
+				<sub>Recipe &amp; Chat Services</sub>
+			</td>
+		</tr>
+		<tr>
+			<td align="center" width="150">
+				<img src="docs/readme/logos/azure_logo.png" alt="Azure Cloud Web Apps" width="42" height="42" /><br/>
+				<strong>Azure</strong><br/>
+				<sub>Cloud Web Apps</sub>
+			</td>
+			<td align="center" width="150">
+				<img src="docs/readme/logos/supabase_logo.png" alt="Supabase" width="42" height="42" /><br/>
+				<strong>Supabase</strong><br/>
+				<sub>Users &amp; Data</sub>
+			</td>
+			<td align="center" width="150">
+				<img src="docs/readme/logos/docker_logo.png" alt="Docker" width="42" height="42" /><br/>
+				<strong>Docker</strong><br/>
+				<sub>Local Launch</sub>
+			</td>
+		</tr>
+	</table>
 </p>
 
 ---
@@ -44,13 +75,16 @@ Meet **AI Chef Assistant**: your smart kitchen partner designed to make cooking 
 
 ## 🧱 Product Modules
 
-EasyBake is a full-stack platform composed of one mobile app and two backend services:
+EasyBake is a full-stack platform composed of one mobile app and three backend services:
+
+Current capabilities include community chat and recipe creation from images, alongside the core recipe and AI orchestration flows.
 
 | Module | Purpose | Stack |
 | --- | --- | --- |
 | `apps/easy_bake_mobile` | User-facing app experience (Android, iOS, web, desktop) | Flutter, Dart |
 | `services/recipe-service` | Recipe orchestration and business API layer | Node.js, TypeScript, Express, Prisma |
 | `services/ai-service` | AI generation and assistant intelligence | Python, FastAPI, Google GenAI |
+| `services/chat-service` | Community chat, direct messaging, and chat room orchestration | Node.js, TypeScript, Express, Prisma |
 | `Supabase` | User management, relational data, and vector-powered retrieval | Supabase Auth, PostgreSQL, pgvector |
 
 ## 🗄️ Supabase Data Layer
@@ -67,11 +101,14 @@ EasyBake uses **Supabase** as the core data platform:
 flowchart TD
     U[👩‍🍳 User] --> M[📱 EasyBake Mobile App\nFlutter]
     M --> R[🧠 Recipe Service\nNode.js + TypeScript + Prisma]
+	M --> C[💬 Chat Service\nNode.js + TypeScript + Prisma]
     R --> A[🤖 AI Service\nFastAPI + GenAI]
 	R --> S[🗄️ Supabase\nAuth + PostgreSQL + pgvector]
+	C --> S
     A --> R
 	S --> R
     R --> M
+	C --> M
 ```
 
 ### 🔄 Request Flow (High Level)
@@ -90,55 +127,72 @@ flowchart TD
 - Recipe API: Node.js, Express, TypeScript, Prisma
 - AI API: Python, FastAPI, Google GenAI integration
 - Data Platform: Supabase Auth, PostgreSQL (relational), pgvector (vector DB)
-- DevOps: Docker Compose
+- Hosting: Azure Cloud Web Apps
+- DevOps: Dockerized local launch scripts
+
+## 💻 Programming Languages
+
+<p align="center">
+	<table align="center">
+		<tr>
+			<td align="center" width="170">
+				<img src="docs/readme/logos/dart_logo.png" alt="Dart" width="42" height="42" /><br/>
+				<strong>Dart</strong><br/>
+				<sub>Mobile app</sub>
+			</td>
+			<td align="center" width="170">
+				<img src="docs/readme/logos/python_logo.png" alt="Python" width="42" height="42" /><br/>
+				<strong>Python</strong><br/>
+				<sub>AI service</sub>
+			</td>
+			<td align="center" width="170">
+				<img src="docs/readme/logos/typescript_logo.png" alt="TypeScript" width="42" height="42" /><br/>
+				<strong>TypeScript</strong><br/>
+				<sub>Backend services</sub>
+			</td>
+		</tr>
+	</table>
+</p>
 
 ## 🚧 Coming Soon
 
-### 💬 EasyBake Community Chat
+### Kitchen Dashboard
 
-A shared space where EasyBake users can exchange cooking ideas, discuss techniques, and share favorite recipes.
+The current recipes home will be replaced by a kitchen dashboard that can navigate to recipes, pantry, shopping list, health auditor, and more.
 
-- 👥 Discover community tips and real kitchen experiences.
-- 🍽️ Share recipe variations and get feedback from other users.
-- 🤖 Call in the **AI Chef Assistant** directly in conversations for suggestions, substitutions, and quick guidance.
+- 📚 Centralize the most important cooking workflows in one home screen.
+- 🧺 Surface pantry and shopping list actions faster.
+- 🩺 Make health and nutrition checks easier to access.
 
-### 📸 Create Recipe from Image with AI
+### Private Chat Rooms
 
-Turn recipe images into a complete, structured recipe with AI support.
+Create chat rooms with specific users for focused cooking discussions.
 
-- 🖼️ Upload a recipe image (document photo, screenshot, or handwritten note).
-- 🧠 Let AI extract ingredients, quantities, and cooking steps from the image.
-- 📝 Receive a clean, structured recipe with optional health-aware adjustments.
+- 🔒 Start one-to-one or small-group conversations.
+- 🧑‍🍳 Coordinate recipe ideas and meal planning with selected people.
+- 💬 Keep community-wide chat and private chat separate.
 
 ## 🚀 Quick Start
 
 ### 1. Prerequisites
 
-- Docker + Docker Compose
+- Docker Desktop or Docker Engine
 - Flutter SDK
 - Node.js (for local service development)
 - Python 3.10+ (for local AI service development)
 
-### 2. Run Backend Services (Recommended)
+### 2. Run Locally (Recommended)
 
-From repository root:
+Use the script in the `dev` folder to build and start the containerized services, then launch the Flutter app:
 
-```bash
-docker compose up -d --build
-```
+- Local containers + app: `dev/run_local.ps1`
+- Cloud-backed app session: `dev/run_cloud.ps1`
 
-Or use helper scripts:
+`run_local.ps1` starts the containerized services and then runs the Flutter app with local API endpoints. `run_cloud.ps1` launches the Flutter app against the cloud environment while still passing the shared app secret.
 
-- Windows: `scripts/windows/start-services.ps1`
-- Linux/macOS: `scripts/linux/start-services.sh`
+### 3. Run Mobile App Manually
 
-Stop services:
-
-```bash
-docker compose down
-```
-
-### 3. Run Mobile App
+If you prefer to start the app without the helper script:
 
 ```bash
 cd apps/easy_bake_mobile
@@ -157,7 +211,7 @@ flutter run
 - Environment variables are loaded from service-level `.env` files.
 - `GEMINI_API_KEY` must be configured in `services/ai-service/.env`.
 - `INTERNAL_APP_SECRET` must be configured in `services/recipe-service/.env`.
-- `recipe-service` depends on `ai-service` health before startup in Docker.
+- The local launcher starts the backend containers before opening the Flutter app.
 - The mobile app is designed to consume the backend APIs as the single source of recipe intelligence.
 
 ## 📁 Repository Structure
@@ -172,11 +226,18 @@ flutter run
 │     ├─ assets
 │     ├─ android / ios / web
 │     └─ pubspec.yaml
+├─ 🧰 dev
+│  ├─ run_cloud.ps1
+│  └─ run_local.ps1
 ├─ 🧠 services
 │  ├─ ai-service
 │  │  ├─ app
 │  │  ├─ tests
 │  │  └─ requirements.txt
+│  ├─ chat-service
+│  │  ├─ src
+│  │  ├─ prisma
+│  │  └─ package.json
 │  └─ recipe-service
 │     ├─ src
 │     ├─ prisma
