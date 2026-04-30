@@ -2,13 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:flutter/services.dart';
-import 'package:timezone/data/latest_all.dart' as tz_data;
-import 'package:timezone/timezone.dart' as tz;
 import 'package:vibration/vibration.dart';
 
+import '../../../../../core/services/notification_service.dart';
 import 'recipe_details_theme.dart';
 
 class RecipeDetailsTimerCard extends StatefulWidget {
@@ -24,11 +22,6 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
     with WidgetsBindingObserver {
   static const List<int> _kFallbackMinutes = [15, 30, 45, 60];
   static const _kTimerNotificationId = 4001;
-  static const _kTimerNotificationChannelId = 'easybake_timer_alerts';
-  static final FlutterLocalNotificationsPlugin _notificationsPlugin =
-      FlutterLocalNotificationsPlugin();
-  static bool _notificationsInitialized = false;
-  static bool _timeZoneInitialized = false;
 
   Timer? _ticker;
   DateTime? _timerEndsAt;
@@ -61,12 +54,14 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
       return;
     }
 
+    // STRICTLY cancel ticker when app is not in foreground to prevent
+    // background CPU usage and system interference on iOS.
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.detached) {
-      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
-        _ticker?.cancel();
-      }
+        state == AppLifecycleState.detached ||
+        state == AppLifecycleState.hidden) {
+      _ticker?.cancel();
+      _ticker = null;
     }
   }
 
@@ -97,6 +92,7 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
   @override
   void dispose() {
     _ticker?.cancel();
+    _ticker = null;
     WidgetsBinding.instance.removeObserver(this);
     unawaited(_cancelScheduledCompletionNotification());
     super.dispose();
@@ -231,6 +227,9 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
     }
 
     _timerEndsAt = DateTime.now().add(Duration(seconds: _remainingSeconds));
+    
+    // On iOS, schedule the notification and let the OS handle background timing.
+    // Don't run the foreground ticker while app is in background.
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
       unawaited(
         _scheduleCompletionNotification(secondsFromNow: _remainingSeconds),
@@ -246,9 +245,11 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
 
   void _startTicker() {
     _ticker?.cancel();
+    _ticker = null;
     _ticker = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) {
         timer.cancel();
+        _ticker = null;
         return;
       }
 
@@ -289,6 +290,7 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
 
   void _finishTimer({required bool showCompletionDialog}) {
     _ticker?.cancel();
+    _ticker = null;
     _timerEndsAt = null;
     unawaited(_cancelScheduledCompletionNotification());
 
@@ -391,106 +393,34 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
     );
   }
 
-  Future<void> _initializeNotifications() async {
-    if (_notificationsInitialized) {
-      return;
-    }
-
-    if (!_timeZoneInitialized) {
-      tz_data.initializeTimeZones();
-      _timeZoneInitialized = true;
-    }
-
-    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const ios = DarwinInitializationSettings(
-      defaultPresentAlert: true,
-      defaultPresentBadge: true,
-      defaultPresentSound: true,
-    );
-    const settings = InitializationSettings(android: android, iOS: ios);
-
-    await _notificationsPlugin.initialize(settings: settings);
-
-    _notificationsInitialized = true;
-  }
-
   Future<void> _scheduleCompletionNotification({
     required int secondsFromNow,
   }) async {
-    await _initializeNotifications();
-    await _cancelScheduledCompletionNotification();
-
-    if (secondsFromNow <= 0) {
-      return;
-    }
-
-    const android = AndroidNotificationDetails(
-      _kTimerNotificationChannelId,
-      'Timer Alerts',
-      channelDescription: 'Notifications when recipe timers complete',
-      importance: Importance.max,
-      priority: Priority.high,
-      playSound: true,
-      enableVibration: true,
-      category: AndroidNotificationCategory.alarm,
-    );
-    const ios = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-      interruptionLevel: InterruptionLevel.timeSensitive,
-    );
-
-    await _notificationsPlugin.zonedSchedule(
+    // Notification plugin is now initialized globally in main().
+    // Simply delegate to NotificationService which uses InterruptionLevel.active
+    // to reduce system impact and prevent iOS apsd conflicts.
+    await NotificationService().scheduleNotification(
       id: _kTimerNotificationId,
       title: 'EasyBake Timer Done',
       body: 'Your timer has finished. Check your recipe step.',
-      notificationDetails: const NotificationDetails(
-        android: android,
-        iOS: ios,
-      ),
-      scheduledDate: tz.TZDateTime.now(
-        tz.local,
-      ).add(Duration(seconds: secondsFromNow)),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      secondsFromNow: secondsFromNow,
       payload: 'recipe_timer_done',
     );
   }
 
   Future<void> _showCompletionNotification() async {
-    await _initializeNotifications();
-
-    const android = AndroidNotificationDetails(
-      _kTimerNotificationChannelId,
-      'Timer Alerts',
-      channelDescription: 'Notifications when recipe timers complete',
-      importance: Importance.max,
-      priority: Priority.high,
-      playSound: true,
-      enableVibration: true,
-      category: AndroidNotificationCategory.alarm,
-    );
-    const ios = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-      interruptionLevel: InterruptionLevel.timeSensitive,
-    );
-
-    await _notificationsPlugin.show(
+    // Use the globally initialized NotificationService.
+    // InterruptionLevel.active is used to minimize system overhead.
+    await NotificationService().showNotification(
       id: _kTimerNotificationId,
       title: 'EasyBake Timer Done',
       body: 'Your timer has finished. Check your recipe step.',
-      notificationDetails: const NotificationDetails(
-        android: android,
-        iOS: ios,
-      ),
       payload: 'recipe_timer_done',
     );
   }
 
   Future<void> _cancelScheduledCompletionNotification() async {
-    await _notificationsPlugin.cancel(id: _kTimerNotificationId);
+    await NotificationService().cancelNotification(_kTimerNotificationId);
   }
 
   Future<void> _playCompletionFeedback() async {
@@ -526,6 +456,7 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
 
   void _pause() {
     _ticker?.cancel();
+    _ticker = null;
     final endsAt = _timerEndsAt;
     if (endsAt != null) {
       final millisLeft =
@@ -542,6 +473,7 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
 
   void _reset() {
     _ticker?.cancel();
+    _ticker = null;
     _timerEndsAt = null;
     unawaited(_cancelScheduledCompletionNotification());
     setState(() {
@@ -552,6 +484,7 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
 
   void _pickSuggestion(int seconds) {
     _ticker?.cancel();
+    _ticker = null;
     _timerEndsAt = null;
     unawaited(_cancelScheduledCompletionNotification());
     setState(() {
@@ -697,6 +630,7 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
     }
 
     _ticker?.cancel();
+    _ticker = null;
     _timerEndsAt = null;
     unawaited(_cancelScheduledCompletionNotification());
     setState(() {

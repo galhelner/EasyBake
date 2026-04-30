@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'core/services/notification_service.dart';
 import 'features/auth/presentation/pages/auth_page.dart';
 import 'features/auth/presentation/providers/auth_notifier.dart';
 import 'features/home/presentation/pages/home_tabs_page.dart';
@@ -8,6 +9,11 @@ import 'features/home/presentation/pages/home_tabs_page.dart';
 Future<void> main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
+  /// Initialize notifications ONCE at app startup to prevent iOS apsd conflicts.
+  /// This ensures the notification plugin is set up once globally, not per-widget.
+  await NotificationService().initialize();
+
   final container = ProviderContainer();
   runApp(UncontrolledProviderScope(container: container, child: const MyApp()));
 }
