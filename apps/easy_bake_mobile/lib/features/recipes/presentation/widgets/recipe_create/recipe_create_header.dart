@@ -65,7 +65,7 @@ class RecipeCreateHeader extends StatelessWidget {
         // Logo
         Image.asset(
           logoAssetPath,
-          width: 90,
+          width: 70,
           fit: BoxFit.contain,
         ),
         const SizedBox(height: 12),
@@ -75,7 +75,7 @@ class RecipeCreateHeader extends StatelessWidget {
           textAlign: TextAlign.center,
           style: TextStyle(
             color: primaryColor,
-            fontSize: 24,
+            fontSize: 20,
             fontWeight: FontWeight.w700,
             height: 1.3,
           ),
@@ -89,7 +89,7 @@ class RecipeCreateHeader extends StatelessWidget {
           textAlign: TextAlign.center,
           style: TextStyle(
             color: primaryColor.withValues(alpha: 0.6),
-            fontSize: 14,
+            fontSize: 13,
             fontWeight: FontWeight.w400,
           ),
         ),

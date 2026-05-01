@@ -685,207 +685,92 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
     );
   }
 
-  Widget _buildIngredientsSection() {
+  Widget _buildIngredientItem(BuildContext context, int index) {
     final isCompactLayout = MediaQuery.of(context).size.width < 420;
 
-    return Column(
+    if (isCompactLayout) {
+      return Column(
+        children: [
+          RecipeCreateInputField(
+            controller: _ingredientControllers[index],
+            hintText: 'Ingredient #${index + 1}',
+            primaryColor: _kPrimaryBlue,
+            hintColor: _kHintText,
+            hasError: _ingredientError != null,
+            prefixIcon: _ingredientSelectedIcons[index].isEmpty
+                ? null
+                : Text(
+                    _ingredientSelectedIcons[index],
+                    style: const TextStyle(fontSize: 18),
+                  ),
+            minLines: 1,
+            maxLines: 1,
+            onChanged: (value) => _handleIngredientChanged(value, index: index),
+          ),
+          _buildIngredientSuggestions(index),
+          const SizedBox(height: 8),
+          RecipeCreateInputField(
+            controller: _ingredientAmountControllers[index],
+            hintText: 'Amount (e.g. 200 g, 120 ml, 2)',
+            primaryColor: _kPrimaryBlue,
+            hintColor: _kHintText,
+            minLines: 1,
+            maxLines: 1,
+          ),
+        ],
+      );
+    }
+
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(bottom: 14),
-          child: Text(
-            'Ingredients',
-            style: TextStyle(
-              color: _kPrimaryBlue,
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              height: 1.2,
-            ),
+        Expanded(
+          child: Column(
+            children: [
+              RecipeCreateInputField(
+                controller: _ingredientControllers[index],
+                hintText: 'Ingredient #${index + 1}',
+                primaryColor: _kPrimaryBlue,
+                hintColor: _kHintText,
+                hasError: _ingredientError != null,
+                prefixIcon: _ingredientSelectedIcons[index].isEmpty
+                    ? null
+                    : Text(
+                        _ingredientSelectedIcons[index],
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                minLines: 1,
+                maxLines: 1,
+                onChanged: (value) => _handleIngredientChanged(value, index: index),
+              ),
+              _buildIngredientSuggestions(index),
+            ],
           ),
         ),
-        for (var i = 0; i < _ingredientControllers.length; i++) ...[
-          if (isCompactLayout)
-            Column(
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: RecipeCreateInputField(
-                        controller: _ingredientControllers[i],
-                        hintText: 'Ingredient #${i + 1}',
-                        primaryColor: _kPrimaryBlue,
-                        hintColor: _kHintText,
-                        hasError: _ingredientError != null,
-                        prefixIcon: _ingredientSelectedIcons[i].isEmpty
-                            ? null
-                            : Text(
-                                _ingredientSelectedIcons[i],
-                                style: const TextStyle(fontSize: 18),
-                              ),
-                        minLines: 1,
-                        maxLines: 1,
-                        onChanged: (value) =>
-                            _handleIngredientChanged(value, index: i),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    SizedBox(
-                      height: 48,
-                      child: _buildFieldActionButton(
-                        onTap: _addIngredientField,
-                        icon: Icons.add_rounded,
-                        isRemove: false,
-                      ),
-                    ),
-                    if (_ingredientControllers.length > 1) ...[
-                      const SizedBox(width: 8),
-                      SizedBox(
-                        height: 48,
-                        child: _buildFieldActionButton(
-                          onTap: () => _removeIngredientField(i),
-                          icon: Icons.remove_rounded,
-                          isRemove: true,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                _buildIngredientSuggestions(i),
-                const SizedBox(height: 8),
-                RecipeCreateInputField(
-                  controller: _ingredientAmountControllers[i],
-                  hintText: 'Amount (e.g. 200 g, 120 ml, 2)',
-                  primaryColor: _kPrimaryBlue,
-                  hintColor: _kHintText,
-                  minLines: 1,
-                  maxLines: 1,
-                ),
-              ],
-            )
-          else
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    children: [
-                      RecipeCreateInputField(
-                        controller: _ingredientControllers[i],
-                        hintText: 'Ingredient #${i + 1}',
-                        primaryColor: _kPrimaryBlue,
-                        hintColor: _kHintText,
-                        hasError: _ingredientError != null,
-                        prefixIcon: _ingredientSelectedIcons[i].isEmpty
-                            ? null
-                            : Text(
-                                _ingredientSelectedIcons[i],
-                                style: const TextStyle(fontSize: 18),
-                              ),
-                        minLines: 1,
-                        maxLines: 1,
-                        onChanged: (value) =>
-                            _handleIngredientChanged(value, index: i),
-                      ),
-                      _buildIngredientSuggestions(i),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                SizedBox(
-                  width: 110,
-                  child: RecipeCreateInputField(
-                    controller: _ingredientAmountControllers[i],
-                    hintText: 'Amount',
-                    primaryColor: _kPrimaryBlue,
-                    hintColor: _kHintText,
-                    minLines: 1,
-                    maxLines: 1,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                SizedBox(
-                  height: 48,
-                  child: _buildFieldActionButton(
-                    onTap: _addIngredientField,
-                    icon: Icons.add_rounded,
-                    isRemove: false,
-                  ),
-                ),
-                if (_ingredientControllers.length > 1) ...[
-                  const SizedBox(width: 8),
-                  SizedBox(
-                    height: 48,
-                    child: _buildFieldActionButton(
-                      onTap: () => _removeIngredientField(i),
-                      icon: Icons.remove_rounded,
-                      isRemove: true,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          if (i < _ingredientControllers.length - 1) const SizedBox(height: 10),
-        ],
-        if (_ingredientError != null) ...[
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFF3B30).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: const Color(0xFFFF3B30).withValues(alpha: 0.2),
-              ),
-            ),
-            child: Text(
-              _ingredientError!,
-              style: const TextStyle(
-                color: Color(0xFFFF3B30),
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+        const SizedBox(width: 8),
+        SizedBox(
+          width: 110,
+          child: RecipeCreateInputField(
+            controller: _ingredientAmountControllers[index],
+            hintText: 'Amount',
+            primaryColor: _kPrimaryBlue,
+            hintColor: _kHintText,
+            minLines: 1,
+            maxLines: 1,
           ),
-        ],
+        ),
       ],
     );
   }
 
-  Widget _buildFieldActionButton({
-    required VoidCallback onTap,
-    required IconData icon,
-    required bool isRemove,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
-        child: Container(
-          width: 48,
-          decoration: BoxDecoration(
-            color: isRemove
-                ? const Color(0xFFFF3B30).withValues(alpha: 0.08)
-                : const Color(0xFF8BB3D6).withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: isRemove
-                  ? const Color(0xFFFF3B30).withValues(alpha: 0.2)
-                  : const Color(0xFF8BB3D6).withValues(alpha: 0.2),
-            ),
-          ),
-          child: Center(
-            child: Icon(
-              icon,
-              size: 20,
-              color: isRemove
-                  ? const Color(0xFFFF3B30)
-                  : const Color(0xFF8BB3D6),
-            ),
-          ),
-        ),
-      ),
+  Widget _buildInstructionItem(BuildContext context, int index) {
+    return RecipeCreateInputField(
+      controller: _instructionControllers[index],
+      hintText: 'Instruction Step #${index + 1}',
+      primaryColor: _kPrimaryBlue,
+      hintColor: _kHintText,
+      minLines: 2,
+      maxLines: 4,
     );
   }
 
@@ -1096,22 +981,6 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                         isEditMode: _isEditMode,
                       ),
                       const SizedBox(height: 28),
-                      RecipeCreateUploadCard(
-                        primaryColor: _kButtonBlue,
-                        backgroundColor: _kUploadCardBackground,
-                        imageBytes: _selectedImageBytes,
-                        imageUrl: _selectedImageBytes == null
-                            ? _existingImageUrl
-                            : null,
-                        onReplace: _showImageSourceOptions,
-                        onDelete:
-                            (_selectedImageBytes != null ||
-                                (_existingImageUrl != null &&
-                                    _existingImageUrl!.isNotEmpty))
-                            ? _removeRecipeImage
-                            : null,
-                      ),
-                      const SizedBox(height: 28),
                       RecipeCreateInputField(
                         controller: _titleController,
                         hintText: 'Recipe Title',
@@ -1149,18 +1018,39 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                         ),
                       ],
                       const SizedBox(height: 28),
-                      _buildIngredientsSection(),
+                      RecipeCreateUploadCard(
+                        primaryColor: _kButtonBlue,
+                        backgroundColor: _kUploadCardBackground,
+                        imageBytes: _selectedImageBytes,
+                        imageUrl: _selectedImageBytes == null
+                            ? _existingImageUrl
+                            : null,
+                        onReplace: _showImageSourceOptions,
+                        onDelete:
+                            (_selectedImageBytes != null ||
+                                (_existingImageUrl != null &&
+                                    _existingImageUrl!.isNotEmpty))
+                            ? _removeRecipeImage
+                            : null,
+                      ),
+                      const SizedBox(height: 28),
+                      RecipeCreateDynamicSection(
+                        title: 'Ingredients',
+                        itemCount: _ingredientControllers.length,
+                        itemBuilder: _buildIngredientItem,
+                        onAdd: _addIngredientField,
+                        onRemove: _removeIngredientField,
+                        primaryColor: _kPrimaryBlue,
+                        errorText: _ingredientError,
+                      ),
                       const SizedBox(height: 28),
                       RecipeCreateDynamicSection(
                         title: 'Instructions',
-                        fieldHint: 'Instruction Step',
-                        controllers: _instructionControllers,
+                        itemCount: _instructionControllers.length,
+                        itemBuilder: _buildInstructionItem,
                         onAdd: _addInstructionField,
                         onRemove: _removeInstructionField,
                         primaryColor: _kPrimaryBlue,
-                        hintColor: _kHintText,
-                        minLines: 2,
-                        maxLines: 4,
                       ),
                       const SizedBox(height: 32),
                       SizedBox(

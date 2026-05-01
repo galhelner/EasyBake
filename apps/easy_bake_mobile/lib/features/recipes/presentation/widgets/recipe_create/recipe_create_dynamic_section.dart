@@ -1,86 +1,108 @@
 import 'package:flutter/material.dart';
 
-import 'recipe_create_input_field.dart';
 
-class RecipeCreateDynamicSection extends StatelessWidget {
+
+class RecipeCreateDynamicSection extends StatefulWidget {
   final String title;
-  final String fieldHint;
-  final List<TextEditingController> controllers;
+  final int itemCount;
+  final Widget Function(BuildContext context, int index) itemBuilder;
   final VoidCallback onAdd;
   final ValueChanged<int> onRemove;
   final Color primaryColor;
-  final Color hintColor;
-  final bool hasError;
   final String? errorText;
-  final ValueChanged<String>? onFieldChanged;
-  final int minLines;
-  final int maxLines;
 
   const RecipeCreateDynamicSection({
     super.key,
     required this.title,
-    required this.fieldHint,
-    required this.controllers,
+    required this.itemCount,
+    required this.itemBuilder,
     required this.onAdd,
     required this.onRemove,
     required this.primaryColor,
-    required this.hintColor,
-    this.hasError = false,
     this.errorText,
-    this.onFieldChanged,
-    this.minLines = 1,
-    this.maxLines = 1,
   });
 
   @override
+  State<RecipeCreateDynamicSection> createState() => _RecipeCreateDynamicSectionState();
+}
+
+class _RecipeCreateDynamicSectionState extends State<RecipeCreateDynamicSection> {
+  bool _isEditing = false;
+
+  @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
+    final isEditingActive = _isEditing && widget.itemCount > 1;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: widget.primaryColor.withValues(alpha: 0.08),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: widget.primaryColor.withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
           padding: const EdgeInsets.only(bottom: 14),
-          child: Text(
-            title,
-            style: TextStyle(
-              color: primaryColor,
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              height: 1.2,
-            ),
+          child: Row(
+            children: [
+              Text(
+                widget.title,
+                style: TextStyle(
+                  color: widget.primaryColor,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  height: 1.2,
+                ),
+              ),
+              const Spacer(),
+              SizedBox(
+                height: 48,
+                child: _FieldActionButton(
+                  onTap: widget.itemCount > 1
+                      ? () {
+                          setState(() {
+                            _isEditing = !_isEditing;
+                          });
+                        }
+                      : () {},
+                  icon: isEditingActive ? Icons.check_rounded : Icons.edit_rounded,
+                ),
+              ),
+              const SizedBox(width: 8),
+              SizedBox(
+                height: 48,
+                child: _FieldActionButton(
+                  onTap: widget.onAdd,
+                  icon: Icons.add_rounded,
+                ),
+              ),
+            ],
           ),
         ),
-        for (var i = 0; i < controllers.length; i++) ...[
+        for (var i = 0; i < widget.itemCount; i++) ...[
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: RecipeCreateInputField(
-                  controller: controllers[i],
-                  hintText: '$fieldHint #${i + 1}',
-                  primaryColor: primaryColor,
-                  hintColor: hintColor,
-                  hasError: hasError,
-                  onChanged: onFieldChanged,
-                  minLines: minLines,
-                  maxLines: maxLines,
-                ),
+                child: widget.itemBuilder(context, i),
               ),
-              const SizedBox(width: 10),
-              // Add button
-              SizedBox(
-                height: 48,
-                child: _FieldActionButton(
-                  onTap: onAdd,
-                  icon: Icons.add_rounded,
-                ),
-              ),
-              // Remove button
-              if (controllers.length > 1) ...[
+              if (isEditingActive) ...[
                 const SizedBox(width: 8),
                 SizedBox(
                   height: 48,
                   child: _FieldActionButton(
-                    onTap: () => onRemove(i),
+                    onTap: () => widget.onRemove(i),
                     icon: Icons.remove_rounded,
                     isRemove: true,
                   ),
@@ -88,9 +110,9 @@ class RecipeCreateDynamicSection extends StatelessWidget {
               ],
             ],
           ),
-          if (i < controllers.length - 1) const SizedBox(height: 10),
+          if (i < widget.itemCount - 1) const SizedBox(height: 10),
         ],
-        if (errorText != null) ...[
+        if (widget.errorText != null) ...[
           const SizedBox(height: 10),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -102,7 +124,7 @@ class RecipeCreateDynamicSection extends StatelessWidget {
               ),
             ),
             child: Text(
-              errorText!,
+              widget.errorText!,
               style: const TextStyle(
                 color: Color(0xFFFF3B30),
                 fontSize: 13,
@@ -112,6 +134,7 @@ class RecipeCreateDynamicSection extends StatelessWidget {
           ),
         ],
       ],
+    ),
     );
   }
 }
