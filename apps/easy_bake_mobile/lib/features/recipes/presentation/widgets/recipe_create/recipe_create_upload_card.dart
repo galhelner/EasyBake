@@ -26,60 +26,112 @@ class RecipeCreateUploadCard extends StatelessWidget {
     final hasImage = hasImageBytes || hasImageUrl;
 
     if (!hasImage) {
-      return Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          gradient: LinearGradient(
-            colors: [
-              primaryColor.withValues(alpha: 0.05),
-              primaryColor.withValues(alpha: 0.15),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          border: Border.all(
-            color: primaryColor.withValues(alpha: 0.2),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: primaryColor.withValues(alpha: 0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onReplace,
+          borderRadius: BorderRadius.circular(16),
+          splashColor: primaryColor.withValues(alpha: 0.08),
+          highlightColor: primaryColor.withValues(alpha: 0.04),
+          child: Container(
+            width: double.infinity,
+            constraints: const BoxConstraints(minHeight: 92),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: LinearGradient(
+                colors: [backgroundColor, primaryColor.withValues(alpha: 0.07)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              border: Border.all(
+                color: primaryColor.withValues(alpha: 0.18),
+                width: 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: primaryColor.withValues(alpha: 0.08),
+                  blurRadius: 14,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onReplace,
-            borderRadius: BorderRadius.circular(12),
-            splashColor: primaryColor.withValues(alpha: 0.1),
-            highlightColor: primaryColor.withValues(alpha: 0.05),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.camera_alt_outlined,
-                    color: primaryColor.withValues(alpha: 0.8),
-                    size: 24,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Upload Recipe Image',
-                    style: TextStyle(
-                      color: primaryColor.withValues(alpha: 0.9),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 0.3,
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.82),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: primaryColor.withValues(alpha: 0.12),
+                      ),
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Icon(
+                          Icons.photo_library_outlined,
+                          size: 22,
+                          color: primaryColor.withValues(alpha: 0.88),
+                        ),
+                        Positioned(
+                          right: 7,
+                          bottom: 7,
+                          child: Container(
+                            width: 14,
+                            height: 14,
+                            decoration: BoxDecoration(
+                              color: primaryColor,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.add_rounded,
+                              size: 9,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const Spacer(),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Upload Recipe Image',
+                          style: TextStyle(
+                            color: primaryColor,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            height: 1.15,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Gallery or camera',
+                          style: TextStyle(
+                            color: primaryColor.withValues(alpha: 0.7),
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
                   Icon(
                     Icons.chevron_right_rounded,
-                    color: primaryColor.withValues(alpha: 0.5),
+                    color: primaryColor.withValues(alpha: 0.6),
                     size: 24,
                   ),
                 ],
