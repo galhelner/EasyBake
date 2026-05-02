@@ -16,7 +16,7 @@ class RegisterPage extends StatefulWidget {
     required String password,
   })
   onSubmit;
-  final Future<bool> Function(String email) onCheckEmailExists;
+  final Future<bool?> Function(String email) onCheckEmailExists;
   final Future<void> Function() onEmailExists;
 
   @override
@@ -126,6 +126,10 @@ class _RegisterPageState extends State<RegisterPage> {
         final exists = await widget.onCheckEmailExists(
           _emailController.text.trim(),
         );
+
+        if (exists == null) {
+          return;
+        }
 
         if (exists) {
           if (mounted) {

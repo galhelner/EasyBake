@@ -135,7 +135,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     }
   }
 
-  Future<bool> _checkEmailExists(String email) async {
+  Future<bool?> _checkEmailExists(String email) async {
     try {
       final authService = ref.read(authApiServiceProvider);
       return await authService.emailExists(email: email);
@@ -143,7 +143,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       if (mounted) {
         await _showAuthErrorDialog(_authErrorDialogData(error));
       }
-      return true;
+      return null;
     }
   }
 
