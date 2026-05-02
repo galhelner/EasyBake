@@ -19,6 +19,7 @@ class _SignInFormState extends State<SignInForm> {
 
   bool _obscurePassword = true;
   bool _isLoading = false;
+  bool _showErrors = false;
 
   @override
   void dispose() {
@@ -28,6 +29,7 @@ class _SignInFormState extends State<SignInForm> {
   }
 
   Future<void> _handleSubmit() async {
+    setState(() => _showErrors = true);
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
@@ -40,6 +42,13 @@ class _SignInFormState extends State<SignInForm> {
       if (mounted) {
         setState(() => _isLoading = false);
       }
+    }
+  }
+
+  void _onFieldChanged() {
+    if (_showErrors) {
+      setState(() => _showErrors = false);
+      _formKey.currentState?.validate();
     }
   }
 
@@ -69,9 +78,10 @@ class _SignInFormState extends State<SignInForm> {
                   hint: 'Email',
                   hintFontSize: 15,
                   keyboardType: TextInputType.emailAddress,
+                  onChanged: (_) => _onFieldChanged(),
                   validator: (value) {
                     if (value == null || !value.contains('@')) {
-                      return 'Enter a valid email';
+                      return _showErrors ? 'Enter a valid email' : null;
                     }
                     return null;
                   },
@@ -86,9 +96,10 @@ class _SignInFormState extends State<SignInForm> {
                   onToggleObscure: () {
                     setState(() => _obscurePassword = !_obscurePassword);
                   },
+                  onChanged: (_) => _onFieldChanged(),
                   validator: (value) {
                     if (value == null || value.length < 8) {
-                      return 'Min 8 characters';
+                      return _showErrors ? 'Min 8 characters' : null;
                     }
                     return null;
                   },
