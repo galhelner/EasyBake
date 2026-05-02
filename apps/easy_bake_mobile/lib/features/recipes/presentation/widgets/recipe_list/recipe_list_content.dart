@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../domain/models/recipe_model.dart';
+import '../../providers/recipe_providers.dart';
 import 'recipe_card.dart';
+import 'recipe_draggable_list.dart';
 
-class RecipeListContent extends StatelessWidget {
+class RecipeListContent extends ConsumerWidget {
   final List<RecipeModel> recipes;
   final String query;
 
@@ -13,23 +16,53 @@ class RecipeListContent extends StatelessWidget {
     required this.query,
   });
 
-  List<RecipeModel> get _filteredRecipes {
-    if (query.isEmpty) {
+  List<RecipeModel> _sortBySavedOrder(
+    List<RecipeModel> recipes,
+    List<String> savedOrder,
+  ) {
+    if (savedOrder.isEmpty) {
       return recipes;
     }
-
-    return recipes
-        .where(
-          (recipe) => recipe.title.toLowerCase().contains(query.toLowerCase()),
-        )
-        .toList();
+    final sorted = <RecipeModel>[];
+    for (final id in savedOrder) {
+      try {
+        final recipe = recipes.firstWhere((r) => r.id == id);
+        sorted.add(recipe);
+      } catch (_) {
+        // Recipe not found, skip
+      }
+    }
+    // Add any recipes that weren't in the saved order (new recipes)
+    for (final recipe in recipes) {
+      if (!sorted.contains(recipe)) {
+        sorted.add(recipe);
+      }
+    }
+    return sorted;
   }
 
   @override
-  Widget build(BuildContext context) {
-    final recipes = _filteredRecipes;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final viewMode = ref.watch(recipeViewModeProvider);
+    final isListMode = viewMode == 'list';
 
-    if (recipes.isEmpty) {
+    if (isListMode) {
+      return RecipeDraggableListView(recipes: recipes, query: query);
+    }
+
+    // Grid view with saved order applied
+    final savedOrder = ref.watch(recipeListOrderProvider);
+    final orderedRecipes = _sortBySavedOrder(recipes, savedOrder);
+    final filteredRecipes = query.isEmpty
+        ? orderedRecipes
+        : orderedRecipes
+              .where(
+                (recipe) =>
+                    recipe.title.toLowerCase().contains(query.toLowerCase()),
+              )
+              .toList();
+
+    if (filteredRecipes.isEmpty) {
       final isSearching = query.trim().isNotEmpty;
       return SliverFillRemaining(
         hasScrollBody: false,
@@ -40,7 +73,7 @@ class RecipeListContent extends StatelessWidget {
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       sliver: SliverGrid.builder(
-        itemCount: recipes.length,
+        itemCount: filteredRecipes.length,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           mainAxisSpacing: 16,
@@ -48,7 +81,7 @@ class RecipeListContent extends StatelessWidget {
           childAspectRatio: 0.75,
         ),
         itemBuilder: (context, index) {
-          final recipe = recipes[index];
+          final recipe = filteredRecipes[index];
           return RecipeCard(
             recipe: recipe,
             imageUrl: recipe.imageUrl,
@@ -77,7 +110,9 @@ class _RecipesEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = isSearching ? 'No recipes found' : 'Your recipe collection is empty';
+    final title = isSearching
+        ? 'No recipes found'
+        : 'Your recipe collection is empty';
     final subtitle = isSearching
         ? 'Use AI Chef chat to semantically search your recipes.'
         : 'Tap the + button to add your first recipe, or use AI to create one for you.';
@@ -93,10 +128,7 @@ class _RecipesEmptyState extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: const Color(0xFFE0E8ED),
-                width: 1,
-              ),
+              border: Border.all(color: const Color(0xFFE0E8ED), width: 1),
               boxShadow: [
                 BoxShadow(
                   color: const Color(0xFF2E4E69).withValues(alpha: 0.06),

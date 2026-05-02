@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class RecipeListHeader extends StatelessWidget {
+import '../../providers/recipe_providers.dart';
+
+class RecipeListHeader extends ConsumerWidget {
   final TextEditingController searchController;
   final ValueChanged<String> onSearchChanged;
   final bool showSearch;
@@ -13,7 +16,7 @@ class RecipeListHeader extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
@@ -28,9 +31,17 @@ class RecipeListHeader extends StatelessWidget {
           ),
           if (showSearch) ...[
             const SizedBox(height: 20),
-            _SearchInput(
-              controller: searchController,
-              onChanged: onSearchChanged,
+            Row(
+              children: [
+                Expanded(
+                  child: _SearchInput(
+                    controller: searchController,
+                    onChanged: onSearchChanged,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                _ViewToggleButton(),
+              ],
             ),
           ],
           const SizedBox(height: 8),
@@ -142,6 +153,51 @@ class _SearchInputState extends State<_SearchInput> {
             suffixIconConstraints: const BoxConstraints(
               minWidth: 0,
               minHeight: 48,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ViewToggleButton extends ConsumerWidget {
+  const _ViewToggleButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final viewMode = ref.watch(recipeViewModeProvider);
+    final isListMode = viewMode == 'list';
+
+    return SizedBox(
+      height: 48,
+      width: 48,
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: () {
+            ref.read(recipeViewModeProvider.notifier).toggle();
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFE0E8ED), width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF2E4E69).withValues(alpha: 0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Center(
+              child: Icon(
+                isListMode ? Icons.grid_view_rounded : Icons.list_rounded,
+                color: const Color(0xFF8BB3D6),
+                size: 22,
+              ),
             ),
           ),
         ),
