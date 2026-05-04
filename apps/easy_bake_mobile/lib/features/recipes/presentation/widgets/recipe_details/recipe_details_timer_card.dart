@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:flutter/services.dart';
 import 'package:vibration/vibration.dart';
 
@@ -227,7 +226,7 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
     }
 
     _timerEndsAt = DateTime.now().add(Duration(seconds: _remainingSeconds));
-    
+
     // On iOS, schedule the notification and let the OS handle background timing.
     // Don't run the foreground ticker while app is in background.
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
@@ -425,15 +424,9 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
 
   Future<void> _playCompletionFeedback() async {
     try {
-      await FlutterRingtonePlayer().play(
-        android: AndroidSounds.notification,
-        ios: IosSounds.glass,
-        looping: false,
-        volume: 1.0,
-        asAlarm: true,
-      );
+      await SystemSound.play(SystemSoundType.alert);
     } catch (_) {
-      SystemSound.play(SystemSoundType.alert);
+      await SystemSound.play(SystemSoundType.click);
     }
 
     try {
