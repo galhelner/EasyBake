@@ -37,11 +37,15 @@ jobs:
           flutter build ios --release --no-codesign \
             --dart-define="INTERNAL_APP_SECRET=$MY_APP_SECRET"
 
+      - name: Package Build Product
+        run: |
+          tar -czf Runner.app.tar.gz -C build/ios/iphoneos Runner.app
+
       - name: Upload Build Product Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ios-build-product
-          path: apps/easy_bake_mobile/build/ios/iphoneos/Runner.app
+          path: apps/easy_bake_mobile/Runner.app.tar.gz
 
   create-ipa:
     runs-on: macos-14
@@ -56,11 +60,14 @@ jobs:
           name: ios-build-product
           path: build-product
 
+      - name: Unpack Build Product Artifact
+        run: |
+          tar -xzf build-product/Runner.app.tar.gz -C build-product
+
       - name: Create IPA
         run: |
           mkdir -p Payload
-          APP_BUNDLE=$(find build-product -name Runner.app -type d | head -n 1)
-          cp -r "$APP_BUNDLE" Payload/
+          cp -r build-product/Runner.app Payload/
           zip -r EasyBake.ipa Payload
 
       - name: Upload IPA Build Artifact
