@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -980,7 +980,10 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       RecipeCreateHeader(
-                        onBack: () => Navigator.of(context).maybePop(),
+                        onBack: () {
+                          FocusScope.of(context).unfocus();
+                          Navigator.of(context).maybePop();
+                        },
                         primaryColor: _kPrimaryBlue,
                         logoAssetPath: _kLogoAssetPath,
                         isEditMode: _isEditMode,
