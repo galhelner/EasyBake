@@ -59,7 +59,8 @@ jobs:
       - name: Create IPA
         run: |
           mkdir -p Payload
-          cp -r build-product/Runner.app Payload/
+          APP_BUNDLE=$(find build-product -name Runner.app -type d | head -n 1)
+          cp -r "$APP_BUNDLE" Payload/
           zip -r EasyBake.ipa Payload
 
       - name: Upload IPA Build Artifact
