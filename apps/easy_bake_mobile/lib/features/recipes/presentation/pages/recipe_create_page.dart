@@ -53,9 +53,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
   final List<bool> _isIngredientSearchLoading = [false];
   final List<Timer?> _ingredientSearchDebouncers = [null];
   final List<bool> _isApplyingIngredientSuggestion = [false];
-  final List<TextEditingController> _instructionControllers = [
-    TextEditingController(),
-  ];
+  final List<TextEditingController> _instructionControllers = [];
   final ImagePicker _imagePicker = ImagePicker();
 
   bool _isLoading = false;
@@ -107,6 +105,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
     _replaceControllerValues(
       _instructionControllers,
       initialRecipe.instructions,
+      ensureAtLeastOne: false,
     );
     _applyInitialIngredientIcons(initialRecipe);
     _existingImageUrl = _hasCustomImageUrl(initialRecipe.imageUrl)
@@ -156,6 +155,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
     List<TextEditingController> target,
     List<String> values, {
     bool preserveEmptyEntries = false,
+    bool ensureAtLeastOne = true,
   }) {
     if (identical(target, _ingredientControllers)) {
       for (final timer in _ingredientSearchDebouncers) {
@@ -191,6 +191,9 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
               .toList();
 
     if (normalized.isEmpty) {
+      if (!ensureAtLeastOne) {
+        return;
+      }
       target.add(TextEditingController());
       return;
     }
@@ -704,7 +707,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                     style: const TextStyle(fontSize: 18),
                   ),
             minLines: 1,
-            maxLines: 1,
+            maxLines: 3,
             onChanged: (value) => _handleIngredientChanged(value, index: index),
           ),
           _buildIngredientSuggestions(index),
@@ -716,6 +719,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
             hintColor: _kHintText,
             minLines: 1,
             maxLines: 1,
+            hintFontSize: 14,
           ),
         ],
       );
@@ -740,7 +744,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                         style: const TextStyle(fontSize: 18),
                       ),
                 minLines: 1,
-                maxLines: 1,
+                maxLines: 3,
                 onChanged: (value) => _handleIngredientChanged(value, index: index),
               ),
               _buildIngredientSuggestions(index),
@@ -757,6 +761,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
             hintColor: _kHintText,
             minLines: 1,
             maxLines: 1,
+            hintFontSize: 11,
           ),
         ),
       ],
@@ -769,8 +774,8 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
       hintText: 'Instruction Step #${index + 1}',
       primaryColor: _kPrimaryBlue,
       hintColor: _kHintText,
-      minLines: 2,
-      maxLines: 4,
+      minLines: 1,
+      maxLines: 6,
     );
   }
 
@@ -781,7 +786,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
   }
 
   void _removeInstructionField(int index) {
-    if (_instructionControllers.length <= 1) return;
+    if (_instructionControllers.isEmpty) return;
     setState(() {
       final removed = _instructionControllers.removeAt(index);
       removed.dispose();
@@ -980,13 +985,15 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                         logoAssetPath: _kLogoAssetPath,
                         isEditMode: _isEditMode,
                       ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 20),
                       RecipeCreateInputField(
                         controller: _titleController,
                         hintText: 'Recipe Title',
                         primaryColor: _kPrimaryBlue,
                         hintColor: _kHintText,
                         hasError: _titleError != null,
+                        minLines: 1,
+                        maxLines: 3,
                         onChanged: _handleTitleChanged,
                       ),
                       if (_titleError != null) ...[
@@ -1017,7 +1024,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                           ),
                         ),
                       ],
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 20),
                       RecipeCreateUploadCard(
                         primaryColor: _kButtonBlue,
                         backgroundColor: _kUploadCardBackground,
@@ -1033,10 +1040,11 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                             ? _removeRecipeImage
                             : null,
                       ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 20),
                       RecipeCreateDynamicSection(
                         title: 'Ingredients',
                         itemCount: _ingredientControllers.length,
+                        minItemCount: 1,
                         itemBuilder: _buildIngredientItem,
                         onAdd: _addIngredientField,
                         onRemove: _removeIngredientField,
@@ -1047,12 +1055,13 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                       RecipeCreateDynamicSection(
                         title: 'Instructions',
                         itemCount: _instructionControllers.length,
+                        minItemCount: 0,
                         itemBuilder: _buildInstructionItem,
                         onAdd: _addInstructionField,
                         onRemove: _removeInstructionField,
                         primaryColor: _kPrimaryBlue,
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 24),
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(

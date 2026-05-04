@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class RecipeCreateDynamicSection extends StatefulWidget {
   final String title;
   final int itemCount;
+  final int minItemCount;
   final Widget Function(BuildContext context, int index) itemBuilder;
   final VoidCallback onAdd;
   final ValueChanged<int> onRemove;
@@ -13,6 +14,7 @@ class RecipeCreateDynamicSection extends StatefulWidget {
     super.key,
     required this.title,
     required this.itemCount,
+    this.minItemCount = 1,
     required this.itemBuilder,
     required this.onAdd,
     required this.onRemove,
@@ -33,7 +35,7 @@ class _RecipeCreateDynamicSectionState
   void didUpdateWidget(RecipeCreateDynamicSection oldWidget) {
     super.didUpdateWidget(oldWidget);
     // Reset edit mode if item count changes to <= 1 (edit button won't show)
-    if (widget.itemCount <= 1 && _isEditing) {
+    if (widget.itemCount <= widget.minItemCount && _isEditing) {
       setState(() {
         _isEditing = false;
       });
@@ -42,7 +44,7 @@ class _RecipeCreateDynamicSectionState
 
   @override
   Widget build(BuildContext context) {
-    final isEditingActive = _isEditing && widget.itemCount > 1;
+    final isEditingActive = _isEditing && widget.itemCount > widget.minItemCount;
 
     return Container(
       decoration: BoxDecoration(
@@ -112,7 +114,7 @@ class _RecipeCreateDynamicSectionState
                   ),
                 ),
                 const SizedBox(width: 12),
-                if (widget.itemCount > 1)
+                if (widget.itemCount > widget.minItemCount)
                   _CompactActionButton(
                     onTap: () {
                       setState(() {

@@ -10,6 +10,7 @@ class RecipeCreateInputField extends StatefulWidget {
   final ValueChanged<String>? onChanged;
   final int minLines;
   final int maxLines;
+  final double? hintFontSize;
 
   const RecipeCreateInputField({
     super.key,
@@ -22,6 +23,7 @@ class RecipeCreateInputField extends StatefulWidget {
     this.onChanged,
     this.minLines = 1,
     this.maxLines = 1,
+    this.hintFontSize,
   });
 
   @override
@@ -60,7 +62,7 @@ class _RecipeCreateInputFieldState extends State<RecipeCreateInputField> {
             hintText: widget.hintText,
             hintStyle: TextStyle(
               color: widget.hintColor.withValues(alpha: 0.5),
-              fontSize: isMultiline ? 15 : 16,
+              fontSize: widget.hintFontSize ?? (isMultiline ? 15 : 16),
               height: 1.4,
               fontWeight: FontWeight.w400,
             ),
