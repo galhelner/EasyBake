@@ -968,7 +968,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                   vertical: 16,
                 ),
                 keyboardDismissBehavior:
-                    ScrollViewKeyboardDismissBehavior.onDrag,
+                    ScrollViewKeyboardDismissBehavior.manual,
                 child: Form(
                   key: _formKey,
                   child: Column(

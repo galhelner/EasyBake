@@ -261,7 +261,7 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
                     },
                     child: CustomScrollView(
                       keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
+                          ScrollViewKeyboardDismissBehavior.manual,
                       physics: allowPageScroll
                           ? const AlwaysScrollableScrollPhysics()
                           : const NeverScrollableScrollPhysics(),

@@ -549,7 +549,7 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
                     child: ListView.separated(
                       controller: _scrollController,
                       keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
+                          ScrollViewKeyboardDismissBehavior.manual,
                       itemCount: _messages.length,
                       separatorBuilder: (context, index) =>
                           const SizedBox(height: 14),

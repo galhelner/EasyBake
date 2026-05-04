@@ -252,7 +252,7 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
                   child: ListView.builder(
                     controller: _scrollController,
                     keyboardDismissBehavior:
-                        ScrollViewKeyboardDismissBehavior.onDrag,
+                        ScrollViewKeyboardDismissBehavior.manual,
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(12, 14, 12, 14),
                     itemCount: messages.isEmpty ? 1 : messages.length,

@@ -253,7 +253,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                     child: SingleChildScrollView(
                       physics: const ClampingScrollPhysics(),
                       keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
+                          ScrollViewKeyboardDismissBehavior.manual,
                       child: ConstrainedBox(
                         constraints: BoxConstraints(
                           minHeight: constraints.maxHeight,
