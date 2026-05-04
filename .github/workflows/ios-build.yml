@@ -37,14 +37,52 @@ jobs:
           flutter build ios --release --no-codesign \
             --dart-define="INTERNAL_APP_SECRET=$MY_APP_SECRET"
 
+      - name: Upload Build Product Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-product
+          path: apps/easy_bake_mobile/build/ios/iphoneos/Runner.app
+
+  create-ipa:
+    runs-on: macos-14
+    needs: build
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Build Product Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ios-build-product
+          path: build-product
+
       - name: Create IPA
         run: |
           mkdir -p Payload
-          cp -r build/ios/iphoneos/Runner.app Payload/
+          cp -r build-product/Runner.app Payload/
           zip -r EasyBake.ipa Payload
-          
+
+      - name: Upload IPA Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa-build
+          path: EasyBake.ipa
+
+  upload-ipa-artifact:
+    runs-on: macos-14
+    needs: create-ipa
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download IPA Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ios-ipa-build
+          path: .
+
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ios-ipa
-          path: apps/easy_bake_mobile/EasyBake.ipa
+          path: EasyBake.ipa
