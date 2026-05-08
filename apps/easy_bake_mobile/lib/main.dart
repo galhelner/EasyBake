@@ -5,6 +5,7 @@ import 'core/services/notification_service.dart';
 import 'features/auth/presentation/pages/auth_page.dart';
 import 'features/auth/presentation/providers/auth_notifier.dart';
 import 'features/home/presentation/pages/home_tabs_page.dart';
+import 'features/profile/presentation/providers/user_preferences_notifier.dart';
 
 Future<void> main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -54,6 +55,7 @@ class _AppBootstrapPageState extends ConsumerState<AppBootstrapPage>
 
   Future<void> _bootstrapAuthState() async {
     await ref.read(authNotifierProvider.notifier).restoreFromStorage();
+    await ref.read(userPreferencesNotifierProvider.notifier).restoreFromStorage();
     if (!mounted) {
       return;
     }

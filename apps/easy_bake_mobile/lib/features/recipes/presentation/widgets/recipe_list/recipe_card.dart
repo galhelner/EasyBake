@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../domain/models/recipe_model.dart';
+import '../../../../profile/presentation/providers/user_preferences_notifier.dart';
 import '../../pages/recipe_details_page.dart';
 
 class RecipeCard extends StatefulWidget {
@@ -133,47 +135,51 @@ class _RecipeCardState extends State<RecipeCard>
                                   ),
                           ),
                         ),
-                        // Health Score Badge
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: widget.statusColor.withValues(alpha: 0.9),
-                              borderRadius: BorderRadius.circular(8),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: widget.statusColor.withValues(alpha: 0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  _getHealthIcon(widget.recipe.healthScore),
-                                  color: Colors.white,
-                                  size: 12,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  _getHealthLabel(widget.recipe.healthScore),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
+                        // Health Score Badge (conditionally displayed)
+                        Consumer(builder: (context, ref, child) {
+                          final show = ref.watch(healthyModeEnabledProvider);
+                          if (!show) return const SizedBox.shrink();
+                          return Positioned(
+                            top: 8,
+                            right: 8,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: widget.statusColor.withValues(alpha: 0.9),
+                                borderRadius: BorderRadius.circular(8),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: widget.statusColor.withValues(alpha: 0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    _getHealthIcon(widget.recipe.healthScore),
+                                    color: Colors.white,
+                                    size: 12,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    _getHealthLabel(widget.recipe.healthScore),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ),
+                          );
+                        }),
                       ],
                     ),
                     // Content Section
