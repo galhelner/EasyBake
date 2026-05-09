@@ -34,7 +34,8 @@ describe('chatService', () => {
         user: {
           id: userId,
           email: 'user@example.com',
-          fullName: 'John Doe'
+          fullName: 'John Doe',
+          displayName: 'Johnny'
         }
       });
 
@@ -45,6 +46,7 @@ describe('chatService', () => {
         userId,
         userEmail: 'user@example.com',
         userFullName: 'John Doe',
+        userDisplayName: 'Johnny',
         content,
         createdAt: expect.any(Date)
       });
@@ -59,7 +61,8 @@ describe('chatService', () => {
             select: {
               id: true,
               email: true,
-              fullName: true
+              fullName: true,
+              displayName: true
             }
           }
         }
@@ -84,7 +87,8 @@ describe('chatService', () => {
           user: {
             id: 'user-1',
             email: 'user1@example.com',
-            fullName: 'User One'
+            fullName: 'User One',
+            displayName: null
           }
         },
         {
@@ -95,7 +99,8 @@ describe('chatService', () => {
           user: {
             id: 'user-2',
             email: 'user2@example.com',
-            fullName: 'User Two'
+            fullName: 'User Two',
+            displayName: 'U2'
           }
         }
       ];
@@ -121,7 +126,8 @@ describe('chatService', () => {
             select: {
               id: true,
               email: true,
-              fullName: true
+              fullName: true,
+              displayName: true
             }
           }
         },

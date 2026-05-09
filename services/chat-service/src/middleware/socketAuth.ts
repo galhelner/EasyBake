@@ -42,7 +42,7 @@ export const authenticateToken = async (token: string): Promise<AuthenticatedUse
     const { data, error } = await client.auth.getUser(token);
 
     if (error || !data.user) {
-      logger.warn(`Token authentication failed for token: ${token.substring(0, 10)}...`);
+      logger.warn(`Token authentication failed`);
       return null;
     }
 
@@ -52,7 +52,7 @@ export const authenticateToken = async (token: string): Promise<AuthenticatedUse
     });
 
     if (!user) {
-      logger.warn(`User not found in database for authId: ${data.user.id}`);
+      logger.warn(`User not found in database for auth email: ${data.user.email}`);
       return null;
     }
 
@@ -84,7 +84,6 @@ export const verifySocketAuth = async (socket: AuthenticatedSocket): Promise<boo
     socket.userId = authenticatedUser.userId;
     socket.userEmail = authenticatedUser.userEmail;
 
-    logger.info(`Socket authenticated for user: ${authenticatedUser.userId}`);
     return true;
   } catch (error) {
     logger.error('Socket auth verification error', error);

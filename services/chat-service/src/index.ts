@@ -8,6 +8,7 @@ import { authenticateToken, verifySocketAuth, AuthenticatedSocket } from './midd
 import { saveMessage, getRecentMessages } from './services/chatService';
 
 const app: Application = express();
+app.use(express.json());
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
@@ -43,10 +44,90 @@ app.get('/messages', async (req, res) => {
       : 50;
 
     const messages = await getRecentMessages(limit);
+    logger.info(`📨 ${authenticatedUser.userEmail} fetched ${messages.length} messages`);
     res.status(200).json(messages);
   } catch (error) {
     logger.error('Failed to fetch chat messages', error);
     res.status(500).json({ message: 'Failed to fetch messages' });
+  }
+});
+
+// Get user profile (displayName, email)
+app.get('/profile', async (req, res) => {
+  try {
+    const authHeader = req.header('authorization') || req.header('Authorization');
+    const token = authHeader?.startsWith('Bearer ')
+      ? authHeader.slice('Bearer '.length).trim()
+      : '';
+
+    const authenticatedUser = await authenticateToken(token);
+
+    if (!authenticatedUser) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const prisma = (await import('./services/prismaClient')).default();
+
+    const user = await prisma.user.findUnique({
+      where: { id: authenticatedUser.userId },
+      select: { id: true, email: true, displayName: true, fullName: true }
+    });
+
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    res.status(200).json(user);
+  } catch (error) {
+    logger.error('Failed to fetch profile', error);
+    res.status(500).json({ message: 'Failed to fetch profile' });
+  }
+});
+
+// Update profile (displayName)
+app.patch('/profile', async (req, res) => {
+  try {
+    const authHeader = req.header('authorization') || req.header('Authorization');
+    const token = authHeader?.startsWith('Bearer ')
+      ? authHeader.slice('Bearer '.length).trim()
+      : '';
+
+    const authenticatedUser = await authenticateToken(token);
+
+    if (!authenticatedUser) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const { displayName } = req.body as { displayName?: string };
+
+    if (displayName !== undefined && typeof displayName !== 'string') {
+      res.status(400).json({ message: 'Invalid displayName' });
+      return;
+    }
+
+    const prisma = (await import('./services/prismaClient')).default();
+
+    const updated = await prisma.user.update({
+      where: { id: authenticatedUser.userId },
+      data: { displayName },
+      select: { id: true, displayName: true, email: true }
+    });
+
+    logger.info(`📝 ${updated.email} updated display name to: "${displayName}"`);
+
+    // Broadcast the name change to community
+    io.to(COMMUNITY_ROOM).emit('user_updated', {
+      userId: updated.id,
+      displayName: updated.displayName
+    });
+
+    res.status(200).json({ success: true, user: updated });
+  } catch (error) {
+    logger.error('Failed to update profile', error);
+    res.status(500).json({ message: 'Failed to update profile' });
   }
 });
 
@@ -55,8 +136,6 @@ const COMMUNITY_ROOM = 'community-chat';
 // Socket.IO connection handler
 io.on('connection', async (socket: Socket) => {
   const authSocket = socket as AuthenticatedSocket;
-
-  logger.info(`New connection attempt: ${socket.id}`);
 
   // Verify authentication
   const isAuthenticated = await verifySocketAuth(authSocket);
@@ -67,19 +146,18 @@ io.on('connection', async (socket: Socket) => {
     return;
   }
 
-  logger.info(`User ${authSocket.userId} connected with socket ${socket.id}`);
+  const userEmail = authSocket.userEmail || 'unknown';
+  logger.info(`✓ User connected: ${userEmail}`);
 
   // Join the community chat room
   authSocket.join(COMMUNITY_ROOM);
-  logger.info(`User ${authSocket.userId} joined ${COMMUNITY_ROOM}`);
 
   try {
     // Send recent messages to the newly connected user
     const recentMessages = await getRecentMessages(50);
     authSocket.emit('message_history', recentMessages);
-    logger.info(`Sent message history to user ${authSocket.userId}`);
   } catch (error) {
-    logger.error('Failed to send message history', error);
+    logger.error(`Failed to send message history to ${userEmail}`, error);
     authSocket.emit('error', { message: 'Failed to load message history' });
   }
 
@@ -119,16 +197,19 @@ io.on('connection', async (socket: Socket) => {
       // Emit message to all users in the community room
       io.to(COMMUNITY_ROOM).emit('new_message', savedMessage);
 
-      logger.info(`Message saved from user ${authSocket.userId}: ${savedMessage.id}`);
+      const contentPreview = trimmedContent.length > 50 
+        ? `${trimmedContent.substring(0, 50)}...` 
+        : trimmedContent;
+      logger.info(`💬 Message from ${userEmail}: "${contentPreview}"`);
     } catch (error) {
-      logger.error('Failed to save message', error);
+      logger.error(`Failed to save message from ${userEmail}`, error);
       authSocket.emit('error', { message: 'Failed to save message' });
     }
   });
 
   // Handle disconnection
   authSocket.on('disconnect', () => {
-    logger.info(`User ${authSocket.userId} disconnected from socket ${socket.id}`);
+    logger.info(`✗ User disconnected: ${userEmail}`);
 
     // Notify others that a user left
     io.to(COMMUNITY_ROOM).emit('user_left', {
@@ -139,7 +220,7 @@ io.on('connection', async (socket: Socket) => {
 
   // Handle socket errors
   authSocket.on('error', (error: unknown) => {
-    logger.error(`Socket error for user ${authSocket.userId}`, error);
+    logger.error(`Socket error for ${userEmail}`, error);
   });
 });
 
