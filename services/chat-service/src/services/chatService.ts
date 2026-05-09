@@ -6,6 +6,7 @@ export interface ChatMessage {
   userId: string;
   userEmail: string;
   userFullName: string | null;
+  userDisplayName: string | null;
   content: string;
   createdAt: Date;
 }
@@ -24,7 +25,8 @@ export const saveMessage = async (userId: string, content: string): Promise<Chat
           select: {
             id: true,
             email: true,
-            fullName: true
+            fullName: true,
+            displayName: true
           }
         }
       }
@@ -35,6 +37,7 @@ export const saveMessage = async (userId: string, content: string): Promise<Chat
       userId: message.user.id,
       userEmail: message.user.email || '',
       userFullName: message.user.fullName,
+      userDisplayName: message.user.displayName ?? message.user.fullName,
       content: message.content,
       createdAt: message.createdAt
     };
@@ -55,7 +58,8 @@ export const getRecentMessages = async (limit: number = 50): Promise<ChatMessage
           select: {
             id: true,
             email: true,
-            fullName: true
+            fullName: true,
+            displayName: true
           }
         }
       },
@@ -69,6 +73,7 @@ export const getRecentMessages = async (limit: number = 50): Promise<ChatMessage
       userId: msg.user.id,
       userEmail: msg.user.email || '',
       userFullName: msg.user.fullName,
+      userDisplayName: msg.user.displayName ?? msg.user.fullName,
       content: msg.content,
       createdAt: msg.createdAt
     }));
