@@ -80,18 +80,3 @@ class RecipeViewModeNotifier extends Notifier<String> {
     state = mode;
   }
 }
-
-/// Keeps track of recipe order when in list mode (for drag and reorder)
-final recipeListOrderProvider =
-    NotifierProvider<RecipeListOrderNotifier, List<String>>(
-      RecipeListOrderNotifier.new,
-    );
-
-class RecipeListOrderNotifier extends Notifier<List<String>> {
-  @override
-  List<String> build() => [];
-
-  void updateOrder(List<String> newOrder) {
-    state = newOrder;
-  }
-}

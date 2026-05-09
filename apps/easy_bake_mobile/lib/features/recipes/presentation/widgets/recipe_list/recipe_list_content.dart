@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../domain/models/recipe_model.dart';
 import '../../providers/recipe_providers.dart';
 import 'recipe_card.dart';
-import 'recipe_draggable_list.dart';
+import 'recipe_simple_list.dart';
 
 class RecipeListContent extends ConsumerWidget {
   final List<RecipeModel> recipes;
@@ -16,51 +16,19 @@ class RecipeListContent extends ConsumerWidget {
     required this.query,
   });
 
-  List<RecipeModel> _sortBySavedOrder(
-    List<RecipeModel> recipes,
-    List<String> savedOrder,
-  ) {
-    if (savedOrder.isEmpty) {
-      return recipes;
-    }
-    final sorted = <RecipeModel>[];
-    for (final id in savedOrder) {
-      try {
-        final recipe = recipes.firstWhere((r) => r.id == id);
-        sorted.add(recipe);
-      } catch (_) {
-        // Recipe not found, skip
-      }
-    }
-    // Add any recipes that weren't in the saved order (new recipes)
-    for (final recipe in recipes) {
-      if (!sorted.contains(recipe)) {
-        sorted.add(recipe);
-      }
-    }
-    return sorted;
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final viewMode = ref.watch(recipeViewModeProvider);
     final isListMode = viewMode == 'list';
 
-    if (isListMode) {
-      return RecipeDraggableListView(recipes: recipes, query: query);
-    }
-
-    // Grid view with saved order applied
-    final savedOrder = ref.watch(recipeListOrderProvider);
-    final orderedRecipes = _sortBySavedOrder(recipes, savedOrder);
     final filteredRecipes = query.isEmpty
-        ? orderedRecipes
-        : orderedRecipes
-              .where(
-                (recipe) =>
-                    recipe.title.toLowerCase().contains(query.toLowerCase()),
-              )
-              .toList();
+        ? recipes
+        : recipes
+            .where(
+              (recipe) =>
+                  recipe.title.toLowerCase().contains(query.toLowerCase()),
+            )
+            .toList();
 
     if (filteredRecipes.isEmpty) {
       final isSearching = query.trim().isNotEmpty;
@@ -70,6 +38,11 @@ class RecipeListContent extends ConsumerWidget {
       );
     }
 
+    if (isListMode) {
+      return RecipeSimpleListView(recipes: filteredRecipes);
+    }
+
+    // Grid view
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       sliver: SliverGrid.builder(
