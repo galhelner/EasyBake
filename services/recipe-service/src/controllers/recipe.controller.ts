@@ -617,6 +617,9 @@ export const getRecipes = async (
               },
             },
           },
+          orderBy: {
+            updatedAt: 'desc',
+          },
         },
       },
     });
