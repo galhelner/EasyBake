@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../ai-chat/data/services/chat_service.dart';
 import '../../../ai-chat/presentation/widgets/ai_chef_chat_popup_dialog.dart';
 import '../../data/services/recipe_service.dart';
+import '../../domain/models/recipe_model.dart';
 import '../../presentation/providers/recipe_providers.dart';
 import '../widgets/bottom_actions.dart';
 import '../widgets/load_error_sliver.dart';
@@ -218,13 +219,19 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
                     pageContext: 'home',
                     chatService: ref.read(chatServiceProvider),
                     onOpenRecipeCreated: (recipePayload) {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => RecipeCreatePage(
-                            initialRecipeJson: recipePayload,
+                      WidgetsBinding.instance.addPostFrameCallback((_) async {
+                        final savedRecipe = await Navigator.of(context).push<RecipeModel>(
+                          MaterialPageRoute(
+                            builder: (_) => RecipeCreatePage(
+                              initialRecipeJson: recipePayload,
+                            ),
                           ),
-                        ),
-                      );
+                        );
+
+                        if (savedRecipe != null && context.mounted) {
+                          notifyRecipeSaved(savedRecipe.title);
+                        }
+                      });
                     },
                   ),
                 );

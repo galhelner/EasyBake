@@ -8,6 +8,9 @@ import '../../../recipes/domain/models/recipe_model.dart';
 import '../../../recipes/presentation/pages/recipe_details_page.dart';
 import '../../data/services/chat_service.dart';
 
+final _chatDialogStateKey =
+    GlobalKey<_AiChefChatPopupDialogState>();
+
 Future<void> showAiChefChatPopup(
   BuildContext context, {
   required String pageContext,
@@ -20,6 +23,7 @@ Future<void> showAiChefChatPopup(
     barrierDismissible: true,
     barrierColor: Colors.black54,
     builder: (_) => _AiChefChatPopupDialog(
+      key: _chatDialogStateKey,
       pageContext: pageContext,
       recipeId: recipeId,
       chatService: chatService,
@@ -28,8 +32,13 @@ Future<void> showAiChefChatPopup(
   );
 }
 
+void notifyRecipeSaved(String recipeName) {
+  _chatDialogStateKey.currentState?.addRecipeSavedConfirmation(recipeName);
+}
+
 class _AiChefChatPopupDialog extends StatefulWidget {
   const _AiChefChatPopupDialog({
+    super.key,
     required this.pageContext,
     required this.chatService,
     required this.onOpenRecipeCreated,
@@ -1194,6 +1203,21 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
     }
 
     return null;
+  }
+
+  void addRecipeSavedConfirmation(String recipeName) {
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _messages.add(
+        _ChatMessage.ai(
+          'Great! I\'ve saved your recipe: $recipeName',
+        ),
+      );
+    });
+    _scrollToBottom();
   }
 }
 

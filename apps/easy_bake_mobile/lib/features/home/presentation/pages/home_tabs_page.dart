@@ -9,6 +9,7 @@ import '../../../ai-chat/presentation/widgets/ai_chef_chat_popup_dialog.dart';
 import '../../../community-chat/presentation/pages/community_chat_room_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 import '../../../recipes/data/services/recipe_service.dart';
+import '../../../recipes/domain/models/recipe_model.dart';
 import '../../../recipes/presentation/pages/recipe_create_page.dart';
 import '../../../recipes/presentation/pages/recipe_list_page.dart';
 import '../../../recipes/presentation/widgets/bottom_actions.dart';
@@ -172,12 +173,18 @@ class _HomeTabsPageState extends ConsumerState<HomeTabsPage> {
                   pageContext: 'home',
                   chatService: ref.read(chatServiceProvider),
                   onOpenRecipeCreated: (recipePayload) {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            RecipeCreatePage(initialRecipeJson: recipePayload),
-                      ),
-                    );
+                    WidgetsBinding.instance.addPostFrameCallback((_) async {
+                      final savedRecipe = await Navigator.of(context).push<RecipeModel>(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              RecipeCreatePage(initialRecipeJson: recipePayload),
+                        ),
+                      );
+
+                      if (savedRecipe != null && context.mounted) {
+                        notifyRecipeSaved(savedRecipe.title);
+                      }
+                    });
                   },
                 ),
               );

@@ -208,12 +208,18 @@ class _RecipeDetailsPageState extends ConsumerState<RecipeDetailsPage> {
             recipeId: _recipe.id,
             chatService: ref.read(chatServiceProvider),
             onOpenRecipeCreated: (recipePayload) {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) =>
-                      RecipeCreatePage(initialRecipeJson: recipePayload),
-                ),
-              );
+              WidgetsBinding.instance.addPostFrameCallback((_) async {
+                final savedRecipe = await Navigator.of(context).push<RecipeModel>(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        RecipeCreatePage(initialRecipeJson: recipePayload),
+                  ),
+                );
+
+                if (savedRecipe != null && context.mounted) {
+                  notifyRecipeSaved(savedRecipe.title);
+                }
+              });
             },
           );
         },
