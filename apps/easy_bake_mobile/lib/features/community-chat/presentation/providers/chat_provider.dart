@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -232,6 +233,33 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
         ref.read(chatMessagesProvider.notifier).markMessageAsSent(message);
       };
 
+      chatService.onUserUpdated = (userId, displayName) {
+        try {
+          // If the updated user is the current user, update auth state displayName
+          final authState = ref.read(authNotifierProvider);
+          if (authState.userId != null && authState.userId == userId) {
+            ref.read(authNotifierProvider.notifier).setAuth(
+                  accessToken: authState.accessToken ?? '',
+                  userId: authState.userId,
+                  email: authState.email,
+                  displayName: displayName,
+                );
+          }
+
+          // Update in-memory messages to reflect new display name where applicable
+          final messages = ref.read(chatMessagesProvider);
+          final updated = messages.map((m) {
+            if (m.userId == userId) {
+              return m.copyWith(userFullName: displayName ?? m.userFullName);
+            }
+            return m;
+          }).toList();
+          ref.read(chatMessagesProvider.notifier).setMessages(updated, preservePendingMessages: true);
+        } catch (e) {
+          debugPrint('[Chat] Error handling user_updated: $e');
+        }
+      };
+
       chatService.onError = (error) {
         ref.read(chatErrorProvider.notifier).setError(_chatUnavailableMessage);
       };
@@ -302,12 +330,15 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
       return;
     }
 
+    // Use display name from auth state (source of truth from server)
+    final displayName = authState.displayName;
+
     final localId = DateTime.now().microsecondsSinceEpoch.toString();
     final pendingMessage = ChatMessage.pending(
       localId: localId,
       userId: userId,
       userEmail: userEmail,
-      userFullName: authState.displayName,
+      userFullName: displayName,
       content: trimmedContent,
       createdAt: DateTime.now(),
     );

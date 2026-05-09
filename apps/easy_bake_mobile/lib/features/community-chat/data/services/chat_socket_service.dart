@@ -10,6 +10,7 @@ typedef OnErrorCallback = void Function(String error);
 typedef OnUserJoinedCallback = void Function(String userId, String email);
 typedef OnUserLeftCallback = void Function(String userId);
 typedef OnConnectionStateChangedCallback = void Function(bool isConnected);
+typedef OnUserUpdatedCallback = void Function(String userId, String? displayName);
 
 class ChatSocketService {
   static const _unavailableMessage =
@@ -28,6 +29,7 @@ class ChatSocketService {
   OnUserJoinedCallback? onUserJoined;
   OnUserLeftCallback? onUserLeft;
   OnConnectionStateChangedCallback? onConnectionStateChanged;
+  OnUserUpdatedCallback? onUserUpdated;
 
   bool get isConnected => _socket.connected;
 
@@ -130,6 +132,17 @@ class ChatSocketService {
         onUserLeft?.call(userId);
       } catch (e) {
         debugPrint('[Chat] Error parsing user_left: $e');
+      }
+    });
+
+    _socket.on('user_updated', (data) {
+      try {
+        final userId = data['userId'] as String;
+        final displayName = data['displayName'] as String?;
+        debugPrint('[Chat] User updated: $userId -> $displayName');
+        onUserUpdated?.call(userId, displayName);
+      } catch (e) {
+        debugPrint('[Chat] Error parsing user_updated: $e');
       }
     });
 

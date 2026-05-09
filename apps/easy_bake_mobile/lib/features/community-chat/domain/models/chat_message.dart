@@ -73,7 +73,7 @@ class ChatMessage {
       id: json['id'] as String,
       userId: json['userId'] as String,
       userEmail: json['userEmail'] as String? ?? '',
-      userFullName: json['userFullName'] as String?,
+      userFullName: (json['userDisplayName'] as String?) ?? (json['userFullName'] as String?),
       content: json['content'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
