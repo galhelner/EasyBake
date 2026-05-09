@@ -52,7 +52,7 @@ class ProfilePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authNotifierProvider);
     final recipesAsync = ref.watch(recipesListProvider);
-    final fullName = authState.displayName?.trim();
+    final fullName = authState.fullName?.trim();
     final userName = (fullName != null && fullName.isNotEmpty)
         ? fullName
         : 'EasyBake User';
@@ -131,7 +131,10 @@ class ProfilePage extends ConsumerWidget {
                           icon: const Icon(Icons.logout_rounded),
                           label: const Text(
                             'Logout',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ],

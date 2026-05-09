@@ -36,14 +36,18 @@ class AuthApiService {
       throw Exception('Login did not return access token');
     }
 
+    final fullName = user?['fullName'] as String?;
+
     // Fetch the user's profile from chat-service to get the authoritative displayName
-    String? displayName = user?['fullName'] as String?;
+    String? displayName = fullName;
     try {
       final chatBaseUrl = _getChatServiceBaseUrl();
-      final chatDio = Dio(BaseOptions(
-        baseUrl: chatBaseUrl,
-        headers: {'Authorization': 'Bearer $accessToken'},
-      ));
+      final chatDio = Dio(
+        BaseOptions(
+          baseUrl: chatBaseUrl,
+          headers: {'Authorization': 'Bearer $accessToken'},
+        ),
+      );
       final profileResponse = await chatDio.get('/profile');
       final profileData = profileResponse.data as Map<String, dynamic>?;
       displayName = profileData?['displayName'] as String? ?? displayName;
@@ -56,6 +60,7 @@ class AuthApiService {
       accessToken: accessToken,
       userId: user?['id'] as String?,
       email: user?['email'] as String?,
+      fullName: fullName,
       displayName: displayName,
     );
   }
@@ -78,26 +83,31 @@ class AuthApiService {
       throw Exception('Register did not return access token');
     }
 
+    final userFullName = user?['fullName'] as String?;
+
     // Fetch the user's profile from chat-service to get the authoritative displayName
-    String? displayName = user?['fullName'] as String?;
+    String? displayName = userFullName;
     try {
       final chatBaseUrl = _getChatServiceBaseUrl();
-      final chatDio = Dio(BaseOptions(
-        baseUrl: chatBaseUrl,
-        headers: {'Authorization': 'Bearer $accessToken'},
-      ));
+      final chatDio = Dio(
+        BaseOptions(
+          baseUrl: chatBaseUrl,
+          headers: {'Authorization': 'Bearer $accessToken'},
+        ),
+      );
       final profileResponse = await chatDio.get('/profile');
       final profileData = profileResponse.data as Map<String, dynamic>?;
       displayName = profileData?['displayName'] as String? ?? displayName;
     } catch (e) {
       // Fall back to fullName if profile fetch fails
-      displayName = user?['fullName'] as String?;
+      displayName = userFullName;
     }
 
     return AuthState(
       accessToken: accessToken,
       userId: user?['id'] as String?,
       email: user?['email'] as String?,
+      fullName: userFullName,
       displayName: displayName,
     );
   }

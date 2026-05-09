@@ -68,6 +68,7 @@ class UserPreferencesNotifier extends Notifier<UserPreferences> {
         accessToken: authState.accessToken ?? '',
         userId: authState.userId,
         email: authState.email,
+        fullName: authState.fullName,
         displayName: displayName,
       );
     } catch (e) {

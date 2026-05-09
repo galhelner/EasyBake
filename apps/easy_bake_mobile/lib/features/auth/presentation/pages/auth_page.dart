@@ -78,6 +78,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
             accessToken: authState.accessToken!,
             userId: authState.userId,
             email: authState.email,
+            fullName: authState.fullName,
             displayName: authState.displayName,
           );
 
@@ -115,6 +116,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
             accessToken: authState.accessToken!,
             userId: authState.userId,
             email: authState.email,
+            fullName: authState.fullName,
             displayName: authState.displayName,
           );
 

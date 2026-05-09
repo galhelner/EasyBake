@@ -13,11 +13,13 @@ class AuthNotifier extends Notifier<AuthState> {
     required String accessToken,
     String? userId,
     String? email,
+    String? fullName,
     String? displayName,
   }) {
     state = AuthState(
       userId: userId,
       email: email,
+      fullName: fullName,
       displayName: displayName,
       accessToken: accessToken,
     );

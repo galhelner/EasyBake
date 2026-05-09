@@ -2,12 +2,14 @@
 class AuthState {
   final String? userId;
   final String? email;
+  final String? fullName;
   final String? displayName;
   final String? accessToken;
 
   const AuthState({
     this.userId,
     this.email,
+    this.fullName,
     this.displayName,
     this.accessToken,
   });

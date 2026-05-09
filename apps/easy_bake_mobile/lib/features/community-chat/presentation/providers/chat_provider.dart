@@ -12,7 +12,9 @@ import '../../../auth/presentation/providers/auth_notifier.dart';
 
 // Messages notifier
 final chatMessagesProvider =
-    NotifierProvider<ChatMessagesNotifier, List<ChatMessage>>(ChatMessagesNotifier.new);
+    NotifierProvider<ChatMessagesNotifier, List<ChatMessage>>(
+      ChatMessagesNotifier.new,
+    );
 
 class ChatMessagesNotifier extends Notifier<List<ChatMessage>> {
   @override
@@ -40,7 +42,9 @@ class ChatMessagesNotifier extends Notifier<List<ChatMessage>> {
     );
 
     if (pendingIndex == -1) {
-      final existingIndex = messages.indexWhere((message) => message.id == serverMessage.id);
+      final existingIndex = messages.indexWhere(
+        (message) => message.id == serverMessage.id,
+      );
       if (existingIndex == -1) {
         state = [...messages, serverMessage];
       } else {
@@ -71,7 +75,9 @@ class ChatMessagesNotifier extends Notifier<List<ChatMessage>> {
       return;
     }
 
-    final pendingMessages = state.where((message) => message.isPending).toList();
+    final pendingMessages = state
+        .where((message) => message.isPending)
+        .toList();
     final mergedMessages = [...messages, ...pendingMessages]
       ..sort((left, right) {
         final createdAtComparison = left.createdAt.compareTo(right.createdAt);
@@ -91,16 +97,16 @@ class ChatMessagesNotifier extends Notifier<List<ChatMessage>> {
 
 // Service notifier
 final chatServiceProvider =
-    NotifierProvider<ChatServiceNotifier, ChatSocketService?>(ChatServiceNotifier.new);
+    NotifierProvider<ChatServiceNotifier, ChatSocketService?>(
+      ChatServiceNotifier.new,
+    );
 
-enum ChatConnectionState {
-  disconnected,
-  connecting,
-  connected,
-}
+enum ChatConnectionState { disconnected, connecting, connected }
 
 // Error state
-final chatErrorProvider = NotifierProvider<ChatErrorNotifier, String?>(() => ChatErrorNotifier());
+final chatErrorProvider = NotifierProvider<ChatErrorNotifier, String?>(
+  () => ChatErrorNotifier(),
+);
 
 class ChatErrorNotifier extends Notifier<String?> {
   @override
@@ -119,7 +125,8 @@ const _chatUnavailableMessage =
 const _chatRefreshFailedMessage =
     'We could not refresh community chat right now. Please try again later.';
 const _chatIdentityMessage = 'We could not identify your account for chat.';
-const _chatSendFailedMessage = 'Could not send your message right now. Please try again later.';
+const _chatSendFailedMessage =
+    'Could not send your message right now. Please try again later.';
 
 // Connection status
 final chatConnectionStateProvider =
@@ -155,15 +162,17 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
       state = null;
       ref.read(chatMessagesProvider.notifier).clear();
       ref.read(chatErrorProvider.notifier).setError(null);
-      ref.read(chatConnectionStateProvider.notifier).setState(
-        ChatConnectionState.disconnected,
-      );
+      ref
+          .read(chatConnectionStateProvider.notifier)
+          .setState(ChatConnectionState.disconnected);
     });
 
     return null;
   }
 
-  Future<void> _loadMessageHistory({bool preservePendingMessages = true}) async {
+  Future<void> _loadMessageHistory({
+    bool preservePendingMessages = true,
+  }) async {
     final authState = ref.read(authNotifierProvider);
     final token = authState.accessToken;
 
@@ -175,9 +184,7 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
     final dio = Dio(
       BaseOptions(
         baseUrl: chatServerUrl,
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
+        headers: {'Authorization': 'Bearer $token'},
       ),
     );
 
@@ -193,13 +200,18 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
 
     ref
         .read(chatMessagesProvider.notifier)
-        .setMessages(messages, preservePendingMessages: preservePendingMessages);
+        .setMessages(
+          messages,
+          preservePendingMessages: preservePendingMessages,
+        );
   }
 
   Future<void> initializeChat() async {
     ChatSocketService? chatService;
     try {
-      ref.read(chatConnectionStateProvider.notifier).setState(ChatConnectionState.connecting);
+      ref
+          .read(chatConnectionStateProvider.notifier)
+          .setState(ChatConnectionState.connecting);
 
       if (state != null) {
         await state!.disconnect();
@@ -211,16 +223,15 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
       final authState = ref.read(authNotifierProvider);
       final token = authState.accessToken;
       if (token == null || token.isEmpty) {
-        ref.read(chatConnectionStateProvider.notifier).setState(ChatConnectionState.disconnected);
+        ref
+            .read(chatConnectionStateProvider.notifier)
+            .setState(ChatConnectionState.disconnected);
         return;
       }
 
       final chatServerUrl = ref.read(chatServiceBaseUrlProvider);
 
-      chatService = ChatSocketService(
-        serverUrl: chatServerUrl,
-        token: token,
-      );
+      chatService = ChatSocketService(serverUrl: chatServerUrl, token: token);
 
       // Setup callbacks
       chatService.onMessageHistory = (messages) {
@@ -238,10 +249,13 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
           // If the updated user is the current user, update auth state displayName
           final authState = ref.read(authNotifierProvider);
           if (authState.userId != null && authState.userId == userId) {
-            ref.read(authNotifierProvider.notifier).setAuth(
+            ref
+                .read(authNotifierProvider.notifier)
+                .setAuth(
                   accessToken: authState.accessToken ?? '',
                   userId: authState.userId,
                   email: authState.email,
+                  fullName: authState.fullName,
                   displayName: displayName,
                 );
           }
@@ -254,7 +268,9 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
             }
             return m;
           }).toList();
-          ref.read(chatMessagesProvider.notifier).setMessages(updated, preservePendingMessages: true);
+          ref
+              .read(chatMessagesProvider.notifier)
+              .setMessages(updated, preservePendingMessages: true);
         } catch (e) {
           debugPrint('[Chat] Error handling user_updated: $e');
         }
@@ -277,7 +293,9 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
       // Connect
       await chatService.connect();
 
-      ref.read(chatConnectionStateProvider.notifier).setState(ChatConnectionState.connected);
+      ref
+          .read(chatConnectionStateProvider.notifier)
+          .setState(ChatConnectionState.connected);
       ref.read(chatErrorProvider.notifier).setError(null);
 
       state = chatService;
@@ -285,7 +303,9 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
       if (chatService != null) {
         await chatService.disconnect();
       }
-      ref.read(chatConnectionStateProvider.notifier).setState(ChatConnectionState.disconnected);
+      ref
+          .read(chatConnectionStateProvider.notifier)
+          .setState(ChatConnectionState.disconnected);
       ref.read(chatErrorProvider.notifier).setError(_chatUnavailableMessage);
       state = null;
     }
@@ -295,7 +315,9 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
     final service = state;
     final connectionState = ref.read(chatConnectionStateProvider);
     final shouldReconnect =
-        service == null || !service.isConnected || connectionState != ChatConnectionState.connected;
+        service == null ||
+        !service.isConnected ||
+        connectionState != ChatConnectionState.connected;
 
     if (shouldReconnect) {
       await initializeChat();
@@ -356,7 +378,9 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
     if (state != null) {
       await state!.disconnect();
     }
-    ref.read(chatConnectionStateProvider.notifier).setState(ChatConnectionState.disconnected);
+    ref
+        .read(chatConnectionStateProvider.notifier)
+        .setState(ChatConnectionState.disconnected);
     state = null;
   }
 }

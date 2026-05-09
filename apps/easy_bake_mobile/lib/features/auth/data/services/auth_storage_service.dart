@@ -7,6 +7,7 @@ class AuthStorageService {
   static const _kAccessTokenKey = 'auth.accessToken';
   static const _kUserIdKey = 'auth.userId';
   static const _kEmailKey = 'auth.email';
+  static const _kFullNameKey = 'auth.fullName';
   static const _kDisplayNameKey = 'auth.displayName';
 
   Future<AuthState> restoreFromStorage() async {
@@ -21,6 +22,7 @@ class AuthStorageService {
       accessToken: token,
       userId: prefs.getString(_kUserIdKey),
       email: prefs.getString(_kEmailKey),
+      fullName: prefs.getString(_kFullNameKey),
       displayName: prefs.getString(_kDisplayNameKey),
     );
   }
@@ -31,6 +33,7 @@ class AuthStorageService {
 
     final userId = authState.userId;
     final email = authState.email;
+    final fullName = authState.fullName;
     final displayName = authState.displayName;
 
     if (userId != null && userId.isNotEmpty) {
@@ -45,6 +48,12 @@ class AuthStorageService {
       await prefs.remove(_kEmailKey);
     }
 
+    if (fullName != null && fullName.isNotEmpty) {
+      await prefs.setString(_kFullNameKey, fullName);
+    } else {
+      await prefs.remove(_kFullNameKey);
+    }
+
     if (displayName != null && displayName.isNotEmpty) {
       await prefs.setString(_kDisplayNameKey, displayName);
     } else {
@@ -57,6 +66,7 @@ class AuthStorageService {
     await prefs.remove(_kAccessTokenKey);
     await prefs.remove(_kUserIdKey);
     await prefs.remove(_kEmailKey);
+    await prefs.remove(_kFullNameKey);
     await prefs.remove(_kDisplayNameKey);
   }
 }
