@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:vibration/vibration.dart';
 
@@ -494,124 +495,166 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
 
     final picked = await showModalBottomSheet<int>(
       context: context,
-      backgroundColor: const Color(0xFFF6FBFF),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            return SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+        return DraggableScrollableSheet(
+          initialChildSize: 0.44,
+          minChildSize: 0.32,
+          maxChildSize: 0.72,
+          builder: (context, scrollController) {
+            return Container(
+              decoration: const BoxDecoration(
+                color: Color(0xFFF6FBFF),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
+              child: StatefulBuilder(builder: (context, setSheetState) {
+                String preview() {
+                  final total = (hours * 3600) + (minutes * 60) + seconds;
+                  final d = Duration(seconds: total);
+                  if (d.inHours > 0) {
+                    final h = d.inHours;
+                    final m = d.inMinutes.remainder(60);
+                    return '${h}h ${m}m';
+                  }
+                  if (d.inMinutes > 0) {
+                    return '${d.inMinutes}m ${d.inSeconds.remainder(60)}s'.replaceAll(RegExp(r' 0s'), '');
+                  }
+                  return '${d.inSeconds}s';
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
-                      'Set custom timer',
-                      style: TextStyle(
-                        color: kRecipeDetailsPrimaryBlue,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Set custom timer',
+                                style: TextStyle(
+                                  color: kRecipeDetailsPrimaryBlue,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                preview(),
+                                style: const TextStyle(
+                                  color: Color(0xFF4A607A),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.of(context).pop<int>(null),
+                          icon: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: const Color(0xFFE2EEF8)),
+                            ),
+                            child: const Icon(
+                              Icons.close_rounded,
+                              size: 18,
+                              color: kRecipeDetailsPrimaryBlue,
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 160,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: CupertinoPicker(
+                              scrollController: FixedExtentScrollController(initialItem: hours),
+                              itemExtent: 34,
+                              backgroundColor: Colors.transparent,
+                              onSelectedItemChanged: (i) {
+                                setSheetState(() => hours = i);
+                              },
+                              children: List.generate(13, (i) => Center(child: Text('$i', style: const TextStyle(fontSize: 16, color: Color(0xFF172A3E), fontWeight: FontWeight.w500)))),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: CupertinoPicker(
+                              scrollController: FixedExtentScrollController(initialItem: minutes),
+                              itemExtent: 34,
+                              backgroundColor: Colors.transparent,
+                              onSelectedItemChanged: (i) {
+                                setSheetState(() => minutes = i);
+                              },
+                              children: List.generate(60, (i) => Center(child: Text(i.toString().padLeft(2, '0'), style: const TextStyle(fontSize: 16, color: Color(0xFF172A3E), fontWeight: FontWeight.w500)))),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: CupertinoPicker(
+                              scrollController: FixedExtentScrollController(initialItem: seconds),
+                              itemExtent: 34,
+                              backgroundColor: Colors.transparent,
+                              onSelectedItemChanged: (i) {
+                                setSheetState(() => seconds = i);
+                              },
+                              children: List.generate(60, (i) => Center(child: Text(i.toString().padLeft(2, '0'), style: const TextStyle(fontSize: 16, color: Color(0xFF172A3E), fontWeight: FontWeight.w500)))),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 14),
                     Row(
                       children: [
                         Expanded(
-                          child: DropdownButtonFormField<int>(
-                            initialValue: hours,
-                            decoration: const InputDecoration(
-                              labelText: 'Hours',
-                              border: OutlineInputBorder(),
+                          child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: kRecipeDetailsPrimaryBlue,
+                              side: const BorderSide(color: Color(0xFFD8E7F4)),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
-                            items: List.generate(
-                              13,
-                              (i) =>
-                                  DropdownMenuItem(value: i, child: Text('$i')),
-                            ),
-                            onChanged: (value) {
-                              if (value == null) {
-                                return;
-                              }
-                              setSheetState(() {
-                                hours = value;
-                              });
-                            },
+                            onPressed: () => Navigator.of(context).pop<int>(null),
+                            child: const Text('Cancel'),
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: DropdownButtonFormField<int>(
-                            initialValue: minutes,
-                            decoration: const InputDecoration(
-                              labelText: 'Minutes',
-                              border: OutlineInputBorder(),
+                          child: FilledButton(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: kRecipeDetailsPrimaryBlue,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
-                            items: List.generate(
-                              60,
-                              (i) =>
-                                  DropdownMenuItem(value: i, child: Text('$i')),
-                            ),
-                            onChanged: (value) {
-                              if (value == null) {
+                            onPressed: () {
+                              final total = (hours * 3600) + (minutes * 60) + seconds;
+                              if (total <= 0) {
+                                Navigator.of(context).pop<int>(null);
                                 return;
                               }
-                              setSheetState(() {
-                                minutes = value;
-                              });
+                              Navigator.of(context).pop<int>(total);
                             },
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: DropdownButtonFormField<int>(
-                            initialValue: seconds,
-                            decoration: const InputDecoration(
-                              labelText: 'Seconds',
-                              border: OutlineInputBorder(),
-                            ),
-                            items: List.generate(
-                              60,
-                              (i) =>
-                                  DropdownMenuItem(value: i, child: Text('$i')),
-                            ),
-                            onChanged: (value) {
-                              if (value == null) {
-                                return;
-                              }
-                              setSheetState(() {
-                                seconds = value;
-                              });
-                            },
+                            child: const Text('Apply'),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 18),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: kRecipeDetailsPrimaryBlue,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                        ),
-                        onPressed: () {
-                          final total =
-                              (hours * 3600) + (minutes * 60) + seconds;
-                          if (total <= 0) {
-                            Navigator.of(context).pop<int>(null);
-                            return;
-                          }
-                          Navigator.of(context).pop<int>(total);
-                        },
-                        child: const Text('Apply timer'),
-                      ),
-                    ),
                   ],
-                ),
-              ),
+                );
+              }),
             );
           },
         );
