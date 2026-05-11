@@ -27,7 +27,6 @@ class _RegisterPageState extends State<RegisterPage> {
   static const _kButtonBlue = Color(0xFF8BB3D6);
   static const _kActionBlue = Color(0xFF1B75DD);
   static const _kPrimaryText = Color(0xFF1E2C44);
-  static const _kThemeBackground = Color(0xFFF6FAFF);
   static const _kProgressTrack = Color(0xFFE1EBF6);
 
   late final PageController _pageController;
@@ -46,12 +45,32 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
   bool _showNameStepErrorLogo = false;
+  bool _showEmailStepError = false;
+  bool _showPasswordStepError = false;
 
   void _resetNameStepErrorVisuals() {
     if (_showNameStepErrorLogo) {
       setState(() => _showNameStepErrorLogo = false);
       _nameFormKey.currentState?.validate();
     }
+  }
+
+  void _resetEmailStepErrorVisuals() {
+    if (_showEmailStepError) {
+      setState(() => _showEmailStepError = false);
+      _emailFormKey.currentState?.validate();
+    }
+  }
+
+  void _resetPasswordStepErrorVisuals() {
+    if (_showPasswordStepError) {
+      setState(() => _showPasswordStepError = false);
+      _passwordFormKey.currentState?.validate();
+    }
+  }
+
+  bool get _isAnyPasswordVisible {
+    return !_obscurePassword || !_obscureConfirmPassword;
   }
 
   @override
@@ -94,6 +113,10 @@ class _RegisterPageState extends State<RegisterPage> {
   Future<void> _proceedToNextStep() async {
     if (_isLoading) {
       return;
+    }
+
+    if (_currentPage == 1) {
+      setState(() => _showEmailStepError = true);
     }
 
     if (_currentPage == 0) {
@@ -166,6 +189,8 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
+    setState(() => _showPasswordStepError = true);
+
     final hasNameError = _validateName(_nameController.text) != null;
     if (hasNameError) {
       setState(() => _showNameStepErrorLogo = true);
@@ -180,6 +205,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
     final hasEmailError = _validateEmail(_emailController.text) != null;
     if (hasEmailError) {
+      setState(() => _showEmailStepError = true);
       await _pageController.animateToPage(
         1,
         duration: const Duration(milliseconds: 300),
@@ -191,6 +217,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
     final isPasswordValid = _passwordFormKey.currentState?.validate() ?? false;
     if (!isPasswordValid) {
+      setState(() => _showPasswordStepError = true);
       return;
     }
 
@@ -218,7 +245,7 @@ class _RegisterPageState extends State<RegisterPage> {
             mainAxisSize: MainAxisSize.max,
             children: [
               Padding(
-                padding: const EdgeInsets.only(bottom: 14),
+                padding: const EdgeInsets.only(bottom: 8),
                 child: Column(
                   children: [
                     AnimatedSwitcher(
@@ -289,13 +316,10 @@ class _RegisterPageState extends State<RegisterPage> {
           const SizedBox(height: 6),
           Center(
             child: Container(
-              width: 150,
-              height: 150,
+              height: 190,
               decoration: BoxDecoration(color: Colors.transparent),
               child: Image.asset(
-                _showNameStepErrorLogo
-                    ? 'assets/ai_chef_register_error_logo.png'
-                    : 'assets/ai_chef_register_logo.png',
+                'assets/ai_chef_whats_your_name.png',
                 fit: BoxFit.contain,
               ),
             ),
@@ -306,7 +330,6 @@ class _RegisterPageState extends State<RegisterPage> {
             icon: Icons.person_outline,
             hint: 'Full Name',
             hintFontSize: 14,
-            hideErrorText: true,
             validator: (value) {
               if (!_showNameStepErrorLogo) {
                 return null;
@@ -359,31 +382,15 @@ class _RegisterPageState extends State<RegisterPage> {
           const SizedBox(height: 6),
           Center(
             child: Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _kThemeBackground,
-              ),
-              child: const Icon(
-                Icons.email_outlined,
-                color: _kActionBlue,
-                size: 25,
+              height: 190,
+              decoration: const BoxDecoration(color: Colors.transparent),
+              child: Image.asset(
+                'assets/ai_chef_whats_your_email.png',
+                fit: BoxFit.contain,
               ),
             ),
           ),
           const SizedBox(height: 12),
-          const Text(
-            'What is your email?',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 19,
-              height: 1.2,
-              fontWeight: FontWeight.w800,
-              color: _kPrimaryText,
-              letterSpacing: 0.1,
-            ),
-          ),
           const SizedBox(height: 18),
           AuthInputField(
             controller: _emailController,
@@ -391,7 +398,14 @@ class _RegisterPageState extends State<RegisterPage> {
             hint: 'Email Address',
             hintFontSize: 14,
             keyboardType: TextInputType.emailAddress,
-            validator: _validateEmail,
+            validator: (value) {
+              if (!_showEmailStepError) {
+                return null;
+              }
+
+              return _validateEmail(value);
+            },
+            onChanged: (_) => _resetEmailStepErrorVisuals(),
           ),
           const Spacer(),
           Row(
@@ -475,32 +489,17 @@ class _RegisterPageState extends State<RegisterPage> {
           const SizedBox(height: 6),
           Center(
             child: Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _kThemeBackground,
-              ),
-              child: const Icon(
-                Icons.lock_outline,
-                color: _kActionBlue,
-                size: 25,
+              height: 170,
+              decoration: const BoxDecoration(color: Colors.transparent),
+              child: Image.asset(
+                _isAnyPasswordVisible
+                    ? 'assets/ai_chef_enter_your_password_show.png'
+                    : 'assets/ai_chef_enter_your_password_hide.png',
+                fit: BoxFit.contain,
               ),
             ),
           ),
-          const SizedBox(height: 12),
-          const Text(
-            'Set your password',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 19,
-              height: 1.2,
-              fontWeight: FontWeight.w800,
-              color: _kPrimaryText,
-              letterSpacing: 0.1,
-            ),
-          ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 8),
           AuthInputField(
             controller: _passwordController,
             icon: Icons.lock_outline,
@@ -513,6 +512,10 @@ class _RegisterPageState extends State<RegisterPage> {
               });
             },
             validator: (value) {
+              if (!_showPasswordStepError) {
+                return null;
+              }
+
               final password = value ?? '';
               if (password.isEmpty) {
                 return 'Please enter a password';
@@ -522,6 +525,7 @@ class _RegisterPageState extends State<RegisterPage> {
               }
               return null;
             },
+            onChanged: (_) => _resetPasswordStepErrorVisuals(),
           ),
           const SizedBox(height: 10),
           AuthInputField(
@@ -536,6 +540,10 @@ class _RegisterPageState extends State<RegisterPage> {
               });
             },
             validator: (value) {
+              if (!_showPasswordStepError) {
+                return null;
+              }
+
               final confirmPassword = value ?? '';
               if (confirmPassword.isEmpty) {
                 return 'Please confirm your password';
@@ -545,6 +553,7 @@ class _RegisterPageState extends State<RegisterPage> {
               }
               return null;
             },
+            onChanged: (_) => _resetPasswordStepErrorVisuals(),
           ),
           const Spacer(),
           Row(

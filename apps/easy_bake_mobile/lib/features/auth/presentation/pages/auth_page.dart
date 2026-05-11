@@ -208,7 +208,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
           child: LayoutBuilder(
             builder: (context, constraints) {
               final isSmallScreen = constraints.maxHeight < 700;
-              final logoHeight = isSmallScreen ? 64.0 : 82.0;
+              final logoHeight = isSmallScreen ? 58.0 : 74.0;
               final baseFormAreaHeight = isSmallScreen ? 350.0 : 382.0;
               final sharedExtraHeight = isSmallScreen ? 56.0 : 64.0;
               final keyboardExtraHeight = keyboardInset > 0 ? 24.0 : 0.0;
@@ -263,7 +263,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                         child: Padding(
                           padding: EdgeInsets.only(
                             top: 12,
-                            bottom: keyboardInset + 16,
+                            bottom: keyboardInset > 0 ? 56 : 16,
                           ),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,

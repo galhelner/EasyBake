@@ -65,9 +65,9 @@ class _SignInFormState extends State<SignInForm> {
               children: [
                 const SizedBox(height: 4),
                 SizedBox(
-                  height: 150,
+                  height: 190,
                   child: Image.asset(
-                    'assets/ai_chef_login_logo.png',
+                    'assets/ai_chef_hello.png',
                     fit: BoxFit.contain,
                   ),
                 ),
