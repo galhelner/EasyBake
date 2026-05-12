@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../ai-chat/presentation/widgets/ai_chef_chat_bubble.dart';
+import 'ai_chef_chat_button.dart';
 
 class BottomActions extends StatelessWidget {
   final VoidCallback onCreate;
@@ -35,56 +35,13 @@ class BottomActions extends StatelessWidget {
             ),
           ),
           SizedBox(
-            width: 64,
-            height: 64,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Positioned(
-                  right: 0,
-                  bottom: 70,
-                  child: TweenAnimationBuilder<double>(
-                    tween: Tween(begin: 0.0, end: 1.0),
-                    duration: const Duration(milliseconds: 280),
-                    curve: Curves.easeOut,
-                    builder: (context, value, child) {
-                      return Opacity(
-                        opacity: value,
-                        child: Transform.translate(
-                          offset: Offset(0, 6 * (1 - value)),
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: const AiChefChatBubble(),
-                  ),
-                ),
-                _TapScaleEffect(
-                  onTap: onAiCreate,
-                  child: Material(
-                    color: Colors.white,
-                    shape: CircleBorder(
-                      side: BorderSide(
-                        color: const Color(0xFF2E4E69).withValues(alpha: 0.1),
-                        width: 1,
-                      ),
-                    ),
-                    elevation: 6,
-                    shadowColor: const Color(0xFF2E4E69).withValues(alpha: 0.2),
-                    child: InkWell(
-                      customBorder: const CircleBorder(),
-                      onTap: onAiCreate,
-                      child: Center(
-                        child: Image.asset(
-                          'assets/ai_chef_logo.png',
-                          width: 32,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+            width: 68,
+            height: 68,
+            child: _TapScaleEffect(
+              onTap: null,
+              child: AiChefChatButton(
+                onTap: onAiCreate,
+              ),
             ),
           ),
         ],

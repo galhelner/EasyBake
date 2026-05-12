@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../ai-chat/data/services/chat_service.dart';
-import '../../../ai-chat/presentation/widgets/ai_chef_chat_popup_dialog.dart';
+import '../../../ai-chat/presentation/pages/ai_chef_chat_popup_page.dart';
 import '../../../community-chat/presentation/pages/community_chat_room_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 import '../../../recipes/data/services/recipe_service.dart';

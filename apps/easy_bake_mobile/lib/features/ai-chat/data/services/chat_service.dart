@@ -348,10 +348,12 @@ class ChatService {
   String _toFriendlyErrorMessage(String raw, {int? statusCode}) {
     final normalized = raw.toLowerCase();
 
-    if (statusCode == 401 ||
-        statusCode == 403 ||
-        normalized.contains('unauthorized')) {
+    if (statusCode == 401 || normalized.contains('unauthorized')) {
       return 'Your session has expired. Please sign in again.';
+    }
+
+    if (statusCode == 403) {
+      return 'The server hit an issue while handling your request. Please try again shortly.';
     }
 
     if (statusCode == 404) {

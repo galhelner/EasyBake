@@ -100,7 +100,7 @@ final dioProvider = Provider<Dio>((ref) {
       },
       onError: (error, handler) {
         final statusCode = error.response?.statusCode;
-        if (statusCode == 401 || statusCode == 403) {
+        if (statusCode == 401) {
           ref.read(authNotifierProvider.notifier).clear();
         }
         handler.next(error);
