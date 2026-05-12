@@ -65,11 +65,12 @@ class BottomActions extends StatelessWidget {
                     color: Colors.white,
                     shape: CircleBorder(
                       side: BorderSide(
-                        color: const Color(0xFF2E4E69).withValues(alpha: 0.15),
-                        width: 1.5,
+                        color: const Color(0xFF2E4E69).withValues(alpha: 0.1),
+                        width: 1,
                       ),
                     ),
-                    elevation: 4,
+                    elevation: 6,
+                    shadowColor: const Color(0xFF2E4E69).withValues(alpha: 0.2),
                     child: InkWell(
                       customBorder: const CircleBorder(),
                       onTap: onAiCreate,

@@ -15,16 +15,16 @@ class AiChefChatBubble extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
             color: bubbleColor,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: borderColor, width: 1.3),
-            boxShadow: const [
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: borderColor, width: 1),
+            boxShadow: [
               BoxShadow(
-                color: Color(0x22000000),
-                blurRadius: 10,
-                offset: Offset(0, 4),
+                color: const Color(0xFF2E4E69).withValues(alpha: 0.12),
+                blurRadius: 12,
+                offset: const Offset(0, 3),
               ),
             ],
           ),
@@ -32,16 +32,17 @@ class AiChefChatBubble extends StatelessWidget {
             label,
             style: const TextStyle(
               color: Color(0xFF1E2630),
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              height: 1.2,
             ),
           ),
         ),
         Transform.translate(
-          offset: const Offset(-16, -1),
+          offset: const Offset(-12, -1),
           child: SizedBox(
-            width: 18,
-            height: 12,
+            width: 14,
+            height: 10,
             child: CustomPaint(
               painter: _BubbleTailPainter(
                 fillColor: bubbleColor,
