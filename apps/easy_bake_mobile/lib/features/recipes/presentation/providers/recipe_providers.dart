@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -46,6 +47,11 @@ final recipesListProvider = FutureProvider.autoDispose<List<RecipeModel>>((
     } // Convert HTTP status errors to user-friendly messages
     final statusCode = error.response?.statusCode;
     if (statusCode == 401 || statusCode == 403) {
+      // Clear auth state to trigger redirect to login
+      // Use addPostFrameCallback to avoid ticker conflicts during navigation
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(authNotifierProvider.notifier).clear();
+      });
       throw Exception('Your session has expired. Please sign in again.');
     }
     if (statusCode == 404) {
