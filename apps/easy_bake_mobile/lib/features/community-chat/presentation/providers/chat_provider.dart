@@ -9,6 +9,16 @@ import 'package:easy_bake_mobile/core/network/api_client.dart';
 import '../../data/services/services.dart';
 import '../../domain/models/models.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
+import '../../../recipes/data/services/recipe_service.dart';
+import '../../../recipes/domain/models/recipe_model.dart';
+
+final sharedRecipeByIdProvider = FutureProvider.family<RecipeModel, String>((
+  ref,
+  recipeId,
+) async {
+  final service = ref.read(recipeServiceProvider);
+  return service.fetchRecipeById(recipeId);
+});
 
 // Messages notifier
 final chatMessagesProvider =
@@ -34,6 +44,9 @@ class ChatMessagesNotifier extends Notifier<List<ChatMessage>> {
     final pendingIndex = messages.indexWhere(
       (message) =>
           message.isPending &&
+          message.type == serverMessage.type &&
+          (message.type != ChatMessageType.recipe ||
+              message.recipeId == serverMessage.recipeId) &&
           (message.userId == serverMessage.userId ||
               (message.userEmail.isNotEmpty &&
                   serverMessage.userEmail.isNotEmpty &&
@@ -367,7 +380,54 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
 
     ref.read(chatMessagesProvider.notifier).addPendingMessage(pendingMessage);
 
-    final sent = chatService.sendMessage(trimmedContent);
+    final sent = chatService.sendMessage(content: trimmedContent);
+    if (!sent) {
+      ref.read(chatErrorProvider.notifier).setError(_chatSendFailedMessage);
+      ref.read(chatMessagesProvider.notifier).removePendingMessage(localId);
+    }
+  }
+
+  void sendRecipeMessage(String recipeId) {
+    final chatService = state;
+    if (chatService == null) {
+      ref.read(chatErrorProvider.notifier).setError(_chatUnavailableMessage);
+      return;
+    }
+
+    final authState = ref.read(authNotifierProvider);
+    final userId = authState.userId?.trim() ?? '';
+    final userEmail = authState.email?.trim() ?? '';
+    if (userId.isEmpty && userEmail.isEmpty) {
+      ref.read(chatErrorProvider.notifier).setError(_chatIdentityMessage);
+      return;
+    }
+
+    final normalizedRecipeId = recipeId.trim();
+    if (normalizedRecipeId.isEmpty) {
+      return;
+    }
+
+    final localId = DateTime.now().microsecondsSinceEpoch.toString();
+    const pendingContent = 'Shared a recipe';
+    final pendingMessage = ChatMessage.pending(
+      localId: localId,
+      userId: userId,
+      userEmail: userEmail,
+      userFullName: authState.displayName,
+      content: pendingContent,
+      type: ChatMessageType.recipe,
+      recipeId: normalizedRecipeId,
+      createdAt: DateTime.now(),
+    );
+
+    ref.read(chatMessagesProvider.notifier).addPendingMessage(pendingMessage);
+
+    final sent = chatService.sendMessage(
+      content: pendingContent,
+      type: ChatMessageType.recipe,
+      recipeId: normalizedRecipeId,
+    );
+
     if (!sent) {
       ref.read(chatErrorProvider.notifier).setError(_chatSendFailedMessage);
       ref.read(chatMessagesProvider.notifier).removePendingMessage(localId);

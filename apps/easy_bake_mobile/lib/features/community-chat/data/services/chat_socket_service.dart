@@ -10,7 +10,8 @@ typedef OnErrorCallback = void Function(String error);
 typedef OnUserJoinedCallback = void Function(String userId, String email);
 typedef OnUserLeftCallback = void Function(String userId);
 typedef OnConnectionStateChangedCallback = void Function(bool isConnected);
-typedef OnUserUpdatedCallback = void Function(String userId, String? displayName);
+typedef OnUserUpdatedCallback =
+    void Function(String userId, String? displayName);
 
 class ChatSocketService {
   static const _unavailableMessage =
@@ -33,11 +34,9 @@ class ChatSocketService {
 
   bool get isConnected => _socket.connected;
 
-  ChatSocketService({
-    required String serverUrl,
-    required String token,
-  })  : _serverUrl = serverUrl,
-        _token = token;
+  ChatSocketService({required String serverUrl, required String token})
+    : _serverUrl = serverUrl,
+      _token = token;
 
   Future<void> connect() async {
     try {
@@ -147,7 +146,9 @@ class ChatSocketService {
     });
 
     _socket.on('error', (data) {
-      final message = data is Map ? data['message'] as String? : data.toString();
+      final message = data is Map
+          ? data['message'] as String?
+          : data.toString();
       debugPrint('[Chat] Socket error: $message');
       onConnectionStateChanged?.call(false);
       onError?.call(_unavailableMessage);
@@ -169,7 +170,11 @@ class ChatSocketService {
     });
   }
 
-  bool sendMessage(String content) {
+  bool sendMessage({
+    required String content,
+    ChatMessageType type = ChatMessageType.text,
+    String? recipeId,
+  }) {
     if (!_socket.connected) {
       onConnectionStateChanged?.call(false);
       onError?.call('Not connected to chat server');
@@ -177,8 +182,12 @@ class ChatSocketService {
     }
 
     try {
-      debugPrint('[Chat] Sending message: $content');
-      _socket.emit('send_message', {'content': content});
+      debugPrint('[Chat] Sending ${type.name} message');
+      _socket.emit('send_message', {
+        'content': content,
+        'messageType': type.name,
+        'recipeId': recipeId,
+      });
       return true;
     } catch (e) {
       debugPrint('[Chat] Error sending message: $e');

@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../domain/models/models.dart';
+import '../providers/chat_provider.dart';
 import 'chat_avatar.dart';
+import 'shared_recipe_preview_card.dart';
 
-Color _resolveSenderAccentColor(ChatMessage message, {required bool isCurrentUser}) {
+Color _resolveSenderAccentColor(
+  ChatMessage message, {
+  required bool isCurrentUser,
+}) {
   if (isCurrentUser) {
     return const Color(0xFF1565C0);
   }
@@ -29,11 +35,14 @@ Color _resolveSenderAccentColor(ChatMessage message, {required bool isCurrentUse
     Color(0xFF9E9D24),
   ];
 
-  final hash = senderKey.codeUnits.fold<int>(0, (value, unit) => value * 31 + unit);
+  final hash = senderKey.codeUnits.fold<int>(
+    0,
+    (value, unit) => value * 31 + unit,
+  );
   return palette[hash.abs() % palette.length];
 }
 
-class MessageTile extends StatelessWidget {
+class MessageTile extends ConsumerWidget {
   const MessageTile({
     super.key,
     required this.message,
@@ -44,7 +53,7 @@ class MessageTile extends StatelessWidget {
   final bool isCurrentUser;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final avatarColor = _resolveSenderAccentColor(
       message,
       isCurrentUser: isCurrentUser,
@@ -115,21 +124,30 @@ class MessageTile extends StatelessWidget {
                           ),
                           const SizedBox(height: 6),
                         ],
-                        Text(
-                          message.content,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            height: 1.4,
-                            color: Color(0xFF111B26),
+                        if (message.type == ChatMessageType.recipe &&
+                            (message.recipeId?.trim().isNotEmpty ?? false))
+                          _RecipePreviewCard(
+                            recipeId: message.recipeId!,
+                            fallbackText: message.content,
+                          )
+                        else
+                          Text(
+                            message.content,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              height: 1.4,
+                              color: Color(0xFF111B26),
+                            ),
                           ),
-                        ),
                         const SizedBox(height: 4),
                         Row(
                           mainAxisSize: MainAxisSize.max,
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             Text(
-                              DateFormat('dd/MM/yyyy HH:mm').format(message.createdAt),
+                              DateFormat(
+                                'dd/MM/yyyy HH:mm',
+                              ).format(message.createdAt),
                               style: const TextStyle(
                                 fontSize: 11,
                                 color: Color(0xFF6E8298),
@@ -177,6 +195,62 @@ class MessageTile extends StatelessWidget {
           const SizedBox(height: 2),
         ],
       ),
+    );
+  }
+}
+
+class _RecipePreviewCard extends ConsumerWidget {
+  const _RecipePreviewCard({
+    required this.recipeId,
+    required this.fallbackText,
+  });
+
+  final String recipeId;
+  final String fallbackText;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final recipeAsync = ref.watch(sharedRecipeByIdProvider(recipeId));
+
+    return recipeAsync.when(
+      loading: () => const SizedBox(
+        height: 152,
+        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      ),
+      error: (error, stackTrace) => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF6FAFF),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFD6E3F2)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.menu_book_rounded, color: Color(0xFF6D87A0)),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                fallbackText,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF314354),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      data: (recipe) {
+        return SharedRecipePreviewCard(
+          title: recipe.title,
+          imageUrl: recipe.imageUrl,
+          healthScore: recipe.healthScore,
+          onView: () {},
+          onSave: () {},
+        );
+      },
     );
   }
 }

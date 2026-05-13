@@ -6,7 +6,9 @@ import '../../../recipes/domain/models/recipe_model.dart';
 import '../../../recipes/presentation/providers/recipe_providers.dart';
 
 class ShareRecipeDialog extends ConsumerWidget {
-  const ShareRecipeDialog({super.key});
+  const ShareRecipeDialog({super.key, required this.onRecipeSelected});
+
+  final ValueChanged<String> onRecipeSelected;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -121,10 +123,21 @@ class ShareRecipeDialog extends ConsumerWidget {
                   return ListView.separated(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
                     itemCount: userRecipes.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 10),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 10),
                     itemBuilder: (context, index) {
                       final recipe = userRecipes[index];
-                      return _RecipeShareTile(recipe: recipe);
+                      return _RecipeShareTile(
+                        recipe: recipe,
+                        onTap: () {
+                          final recipeId = recipe.id?.trim() ?? '';
+                          if (recipeId.isEmpty) {
+                            return;
+                          }
+                          onRecipeSelected(recipeId);
+                          Navigator.of(context).pop();
+                        },
+                      );
                     },
                   );
                 },
@@ -138,14 +151,15 @@ class ShareRecipeDialog extends ConsumerWidget {
 }
 
 class _RecipeShareTile extends StatelessWidget {
-  const _RecipeShareTile({required this.recipe});
+  const _RecipeShareTile({required this.recipe, required this.onTap});
 
   final RecipeModel recipe;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {},
+      onTap: onTap,
       borderRadius: BorderRadius.circular(18),
       child: Container(
         padding: const EdgeInsets.all(14),
@@ -166,10 +180,11 @@ class _RecipeShareTile extends StatelessWidget {
                     ? Image.network(
                         recipe.imageUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => const Icon(
-                          Icons.restaurant_menu_rounded,
-                          color: Color(0xFF8AA2B8),
-                        ),
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(
+                              Icons.restaurant_menu_rounded,
+                              color: Color(0xFF8AA2B8),
+                            ),
                       )
                     : const Icon(
                         Icons.restaurant_menu_rounded,
@@ -205,10 +220,7 @@ class _RecipeShareTile extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: Color(0xFF8BA0B5),
-            ),
+            const Icon(Icons.chevron_right_rounded, color: Color(0xFF8BA0B5)),
           ],
         ),
       ),

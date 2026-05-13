@@ -49,7 +49,12 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
     await showDialog<void>(
       context: context,
       barrierDismissible: true,
-      builder: (dialogContext) => const ShareRecipeDialog(),
+      builder: (dialogContext) => ShareRecipeDialog(
+        onRecipeSelected: (recipeId) {
+          ref.read(chatServiceProvider.notifier).sendRecipeMessage(recipeId);
+          _scrollToBottom();
+        },
+      ),
     );
   }
 
