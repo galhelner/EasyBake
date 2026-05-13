@@ -30,6 +30,8 @@ describe('chatService', () => {
         id: 'msg-1',
         userId,
         content,
+        messageType: 'text',
+        recipeId: null,
         createdAt: new Date(),
         user: {
           id: userId,
@@ -39,7 +41,7 @@ describe('chatService', () => {
         }
       });
 
-      const result = await saveMessage(userId, content);
+      const result = await saveMessage(userId, { content });
 
       expect(result).toEqual({
         id: 'msg-1',
@@ -48,13 +50,17 @@ describe('chatService', () => {
         userFullName: 'John Doe',
         userDisplayName: 'Johnny',
         content,
+        messageType: 'text',
+        recipeId: null,
         createdAt: expect.any(Date)
       });
 
       expect(mockPrisma.message.create).toHaveBeenCalledWith({
         data: {
           userId,
-          content
+          content,
+          messageType: 'text',
+          recipeId: null
         },
         include: {
           user: {
@@ -72,7 +78,53 @@ describe('chatService', () => {
     it('should throw an error if message save fails', async () => {
       mockPrisma.message.create.mockRejectedValue(new Error('Database error'));
 
-      await expect(saveMessage('user-123', 'Hello')).rejects.toThrow('Database error');
+      await expect(saveMessage('user-123', { content: 'Hello' })).rejects.toThrow('Database error');
+    });
+
+    it('should persist recipe message metadata when provided', async () => {
+      const userId = 'user-123';
+      const content = 'Shared a recipe';
+      const recipeId = 'recipe-789';
+
+      mockPrisma.message.create.mockResolvedValue({
+        id: 'msg-2',
+        userId,
+        content,
+        messageType: 'recipe',
+        recipeId,
+        createdAt: new Date(),
+        user: {
+          id: userId,
+          email: 'user@example.com',
+          fullName: 'John Doe',
+          displayName: 'Johnny'
+        }
+      });
+
+      await saveMessage(userId, {
+        content,
+        messageType: 'recipe',
+        recipeId
+      });
+
+      expect(mockPrisma.message.create).toHaveBeenCalledWith({
+        data: {
+          userId,
+          content,
+          messageType: 'recipe',
+          recipeId
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              fullName: true,
+              displayName: true
+            }
+          }
+        }
+      });
     });
   });
 
@@ -83,6 +135,8 @@ describe('chatService', () => {
           id: 'msg-1',
           userId: 'user-1',
           content: 'First message',
+          messageType: 'text',
+          recipeId: null,
           createdAt: new Date('2026-04-15T10:00:00Z'),
           user: {
             id: 'user-1',
@@ -95,6 +149,8 @@ describe('chatService', () => {
           id: 'msg-2',
           userId: 'user-2',
           content: 'Second message',
+          messageType: 'recipe',
+          recipeId: 'recipe-2',
           createdAt: new Date('2026-04-15T10:05:00Z'),
           user: {
             id: 'user-2',

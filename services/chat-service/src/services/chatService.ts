@@ -8,17 +8,32 @@ export interface ChatMessage {
   userFullName: string | null;
   userDisplayName: string | null;
   content: string;
+  messageType: string;
+  recipeId: string | null;
   createdAt: Date;
 }
 
-export const saveMessage = async (userId: string, content: string): Promise<ChatMessage> => {
+interface SaveMessageInput {
+  content: string;
+  messageType?: string;
+  recipeId?: string | null;
+}
+
+export const saveMessage = async (
+  userId: string,
+  input: SaveMessageInput
+): Promise<ChatMessage> => {
   const prisma = getPrismaClient();
+  const normalizedType = (input.messageType ?? 'text').trim().toLowerCase();
+  const messageType = normalizedType === 'recipe' ? 'recipe' : 'text';
 
   try {
     const message = await prisma.message.create({
       data: {
         userId,
-        content
+        content: input.content,
+        messageType,
+        recipeId: messageType === 'recipe' ? input.recipeId ?? null : null
       },
       include: {
         user: {
@@ -39,6 +54,8 @@ export const saveMessage = async (userId: string, content: string): Promise<Chat
       userFullName: message.user.fullName,
       userDisplayName: message.user.displayName ?? message.user.fullName,
       content: message.content,
+      messageType,
+      recipeId: messageType === 'recipe' ? input.recipeId ?? null : null,
       createdAt: message.createdAt
     };
   } catch (error) {
@@ -68,15 +85,27 @@ export const getRecentMessages = async (limit: number = 50): Promise<ChatMessage
       }
     });
 
-    return messages.map((msg: typeof messages[number]): ChatMessage => ({
-      id: msg.id,
-      userId: msg.user.id,
-      userEmail: msg.user.email || '',
-      userFullName: msg.user.fullName,
-      userDisplayName: msg.user.displayName ?? msg.user.fullName,
-      content: msg.content,
-      createdAt: msg.createdAt
-    }));
+    return messages.map((msg: typeof messages[number]): ChatMessage => {
+      const raw = msg as unknown as Record<string, unknown>;
+      const persistedType =
+        typeof raw['messageType'] === 'string' && raw['messageType'].toString().trim().length > 0
+          ? raw['messageType'] as string
+          : 'text';
+      const persistedRecipeId =
+        typeof raw['recipeId'] === 'string' ? (raw['recipeId'] as string) : null;
+
+      return {
+        id: msg.id,
+        userId: msg.user.id,
+        userEmail: msg.user.email || '',
+        userFullName: msg.user.fullName,
+        userDisplayName: msg.user.displayName ?? msg.user.fullName,
+        content: msg.content,
+        messageType: persistedType,
+        recipeId: persistedRecipeId,
+        createdAt: msg.createdAt
+      };
+    });
   } catch (error) {
     logger.error('Failed to fetch recent messages', error);
     throw error;

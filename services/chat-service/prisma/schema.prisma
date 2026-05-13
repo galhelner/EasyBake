@@ -58,6 +58,8 @@ model Message {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   content   String
+  messageType String @default("text")
+  recipeId  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

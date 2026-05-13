@@ -172,35 +172,59 @@ io.on('connection', async (socket: Socket) => {
   authSocket.on('send_message', async (data: unknown) => {
     try {
       const messageData = data as Record<string, unknown>;
-      const content = messageData.content as string;
+      const rawType = messageData.messageType;
+      const messageType =
+        typeof rawType === 'string' && rawType.trim().toLowerCase() === 'recipe'
+          ? 'recipe'
+          : 'text';
 
-      if (!content || typeof content !== 'string') {
-        authSocket.emit('error', { message: 'Invalid message content' });
-        return;
-      }
-
-      const trimmedContent = content.trim();
-
-      if (!trimmedContent || trimmedContent.length === 0) {
-        authSocket.emit('error', { message: 'Message cannot be empty' });
-        return;
-      }
+      const rawContent = messageData.content;
+      const trimmedContent =
+        typeof rawContent === 'string' ? rawContent.trim() : '';
 
       if (trimmedContent.length > 500) {
         authSocket.emit('error', { message: 'Message is too long (max 500 characters)' });
         return;
       }
 
+      const normalizedRecipeId =
+        typeof messageData.recipeId === 'string'
+          ? messageData.recipeId.trim()
+          : '';
+
+      if (messageType === 'recipe' && normalizedRecipeId.length === 0) {
+        authSocket.emit('error', { message: 'Recipe id is required for recipe messages' });
+        return;
+      }
+
+      if (messageType === 'recipe' && normalizedRecipeId.length > 128) {
+        authSocket.emit('error', { message: 'Invalid recipe id' });
+        return;
+      }
+
+      if (messageType === 'text' && trimmedContent.length === 0) {
+        authSocket.emit('error', { message: 'Message cannot be empty' });
+        return;
+      }
+
+      const content = messageType === 'recipe'
+        ? (trimmedContent || 'Shared a recipe')
+        : trimmedContent;
+
       // Save message to database
-      const savedMessage = await saveMessage(authSocket.userId as string, trimmedContent);
+      const savedMessage = await saveMessage(authSocket.userId as string, {
+        content,
+        messageType,
+        recipeId: messageType === 'recipe' ? normalizedRecipeId : null
+      });
 
       // Emit message to all users in the community room
       io.to(COMMUNITY_ROOM).emit('new_message', savedMessage);
 
-      const contentPreview = trimmedContent.length > 50 
-        ? `${trimmedContent.substring(0, 50)}...` 
-        : trimmedContent;
-      logger.info(`💬 Message from ${userEmail}: "${contentPreview}"`);
+      const contentPreview = content.length > 50
+        ? `${content.substring(0, 50)}...`
+        : content;
+      logger.info(`💬 ${messageType.toUpperCase()} message from ${userEmail}: "${contentPreview}"`);
     } catch (error) {
       logger.error(`Failed to save message from ${userEmail}`, error);
       authSocket.emit('error', { message: 'Failed to save message' });
