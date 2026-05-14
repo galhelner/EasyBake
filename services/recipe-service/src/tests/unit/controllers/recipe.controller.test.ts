@@ -230,6 +230,57 @@ describe('recipe controller', () => {
 		);
 	});
 
+	it('createRecipe skips AI health score when client provides healthScore', async () => {
+		const {
+			controller,
+			mockAxiosPost,
+			mockPrismaRecipeCreate,
+			mockPrismaIngredientUpdateMany,
+			mockPrismaExecuteRaw,
+		} = await loadRecipeControllerModule();
+
+		mockAxiosPost.mockResolvedValueOnce({ data: { embedding: [1, 2, 3] } });
+
+		mockPrismaRecipeCreate.mockResolvedValue({
+			id: 'recipe-2',
+			title: 'Soup',
+			instructions: ['Simmer'],
+			healthScore: 71,
+			imageUrl: 'https://example.com/default-recipe.jpg',
+			authorId: 'author-1',
+			ingredients: [{ ingredient: { name: 'Carrot' } }],
+		});
+		mockPrismaIngredientUpdateMany.mockResolvedValue({ count: 0 });
+
+		const req = {
+			method: 'POST',
+			originalUrl: '/recipes',
+			body: {
+				title: 'Soup',
+				instructions: ['Simmer'],
+				ingredients: [{ name: 'Carrot' }],
+				healthScore: 71,
+			},
+			user: { id: 'auth-1' },
+			file: undefined,
+		};
+		const res = createMockResponse();
+
+		await controller.createRecipe(req, res);
+
+		expect(mockAxiosPost).toHaveBeenCalledTimes(1);
+		expect(mockAxiosPost.mock.calls[0][0]).toContain('/embeddings');
+		expect(mockPrismaRecipeCreate).toHaveBeenCalledWith(
+			expect.objectContaining({
+				data: expect.objectContaining({
+					title: 'Soup',
+					healthScore: 71,
+				}),
+			})
+		);
+		expect(res.status).toHaveBeenCalledWith(201);
+	});
+
 	it('getRecipes returns 401 when unauthenticated', async () => {
 		const { controller } = await loadRecipeControllerModule();
 		const req = { method: 'GET', originalUrl: '/recipes', user: undefined };
@@ -259,6 +310,11 @@ describe('recipe controller', () => {
 
 		await controller.getRecipeById(req, res);
 
+		expect(mockPrismaRecipeFindFirst).toHaveBeenCalledWith(
+			expect.objectContaining({
+				where: { id: 'recipe-1' },
+			}),
+		);
 		expect(res.json).toHaveBeenCalledWith(
 			expect.objectContaining({
 				id: 'recipe-1',

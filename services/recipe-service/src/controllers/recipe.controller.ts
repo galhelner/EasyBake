@@ -168,6 +168,20 @@ const parseBooleanish = (value: unknown): boolean | undefined => {
   return undefined;
 };
 
+const parseOptionalHealthScore = (value: unknown): number | undefined => {
+  if (value === undefined || value === null || value === '') {
+    return undefined;
+  }
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Math.round(value);
+  }
+  if (typeof value === 'string') {
+    const n = Number.parseInt(value.trim(), 10);
+    return Number.isNaN(n) ? undefined : n;
+  }
+  return undefined;
+};
+
 const createRecipeSchema = z.object({
   title: z.string().min(1),
   instructions: z.preprocess(
@@ -176,6 +190,10 @@ const createRecipeSchema = z.object({
   ),
   ingredients: z.preprocess(parseIngredients, z.array(ingredientSchema).default([])),
   remove_image: z.preprocess(parseBooleanish, z.boolean().optional()).optional(),
+  healthScore: z.preprocess(
+    parseOptionalHealthScore,
+    z.number().int().min(0).max(100).optional(),
+  ),
 }).strict();
 
 const semanticSearchSchema = z.object({
@@ -384,12 +402,19 @@ export const createRecipe = async (
       return;
     }
 
-    const { title, instructions, ingredients } = parsed.data;
+    const { title, instructions, ingredients, healthScore: clientHealthScore } = parsed.data;
     const imageUrl = req.file ? await uploadImage(req.file) : DEFAULT_RECIPE_IMAGE_URL;
 
     const normalizedIngredients = normalizeIngredients(ingredients);
     const ingredientNames = normalizedIngredients.map((ingredient) => ingredient.name);
-    const healthScore = await requestAiHealthScore(title, ingredientNames, instructions);
+    const healthScore =
+      typeof clientHealthScore === 'number'
+        ? Math.max(0, Math.min(100, Math.round(clientHealthScore)))
+        : await requestAiHealthScore(title, ingredientNames, instructions);
+
+    if (typeof clientHealthScore === 'number') {
+      logger.info(`Using client-provided health score ${healthScore} for "${title}"`);
+    }
 
     const createData: any = {
       title,
@@ -653,12 +678,11 @@ export const getRecipeById = async (
 
     const { id } = req.params;
 
+    // Any authenticated user may read a recipe by id (e.g. community chat shared
+    // recipes). Mutations remain restricted to the author in update/delete.
     const recipe = await prisma.recipe.findFirst({
       where: {
         id,
-        author: {
-          authId: req.user.id,
-        },
       },
       include: {
         ingredients: {
@@ -721,10 +745,17 @@ export const updateRecipe = async (
       return;
     }
 
-    const { title, instructions, ingredients, remove_image: removeImage } = parsed.data;
+    const { title, instructions, ingredients, remove_image: removeImage, healthScore: clientHealthScore } = parsed.data;
     const normalizedIngredients = normalizeIngredients(ingredients);
     const ingredientNames = normalizedIngredients.map((ingredient) => ingredient.name);
-    const healthScore = await requestAiHealthScore(title, ingredientNames, instructions);
+    const healthScore =
+      typeof clientHealthScore === 'number'
+        ? Math.max(0, Math.min(100, Math.round(clientHealthScore)))
+        : await requestAiHealthScore(title, ingredientNames, instructions);
+
+    if (typeof clientHealthScore === 'number') {
+      logger.info(`Using client-provided health score ${healthScore} for recipe update "${title}"`);
+    }
     const previousImageUrl = existingRecipe.imageUrl ?? null;
     const imageUrl = req.file
       ? await uploadImage(req.file)
