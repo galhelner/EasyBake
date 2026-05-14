@@ -337,8 +337,6 @@ export const streamChat = async (
   req: AuthenticatedRequest,
   res: Response,
 ): Promise<void> => {
-  logger.info(`Incoming request: ${req.method} ${req.originalUrl}`);
-
   const parsed = chatRequestSchema.safeParse(req.body);
 
   if (!parsed.success) {

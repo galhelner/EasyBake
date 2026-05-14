@@ -219,7 +219,6 @@ describe('recipe controller', () => {
 			where: { name: 'eggs', icon: '' },
 			data: { icon: '🥚' },
 		});
-		expect(mockLoggerInfo).toHaveBeenCalledWith('Incoming request: POST /recipes');
 		expect(res.status).toHaveBeenCalledWith(201);
 		expect(res.json).toHaveBeenCalledWith(
 			expect.objectContaining({

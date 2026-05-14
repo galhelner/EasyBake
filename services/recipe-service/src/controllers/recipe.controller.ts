@@ -333,8 +333,6 @@ export const createRecipeFromImage = async (
   res: Response,
 ): Promise<void> => {
   try {
-    logger.info(`Incoming request: ${req.method} ${req.originalUrl}`);
-
     if (!req.user?.id) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
@@ -388,8 +386,6 @@ export const createRecipe = async (
   res: Response,
 ): Promise<void> => {
   try {
-    logger.info(`Incoming request: ${req.method} ${req.originalUrl}`);
-
     if (!req.user?.id) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
@@ -496,8 +492,6 @@ export const searchRecipes = async (
   res: Response,
 ): Promise<void> => {
   try {
-    logger.info(`Incoming request: ${req.method} ${req.originalUrl}`);
-
     if (!req.user?.id) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
@@ -575,8 +569,6 @@ export const searchIngredients = async (
   res: Response,
 ): Promise<void> => {
   try {
-    logger.info(`Incoming request: ${req.method} ${req.originalUrl}`);
-
     if (!req.user?.id) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
@@ -624,8 +616,6 @@ export const getRecipes = async (
   res: Response,
 ): Promise<void> => {
   try {
-    logger.info(`Incoming request: ${req.method} ${req.originalUrl}`);
-
     if (!req.user?.id) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
@@ -669,8 +659,6 @@ export const getRecipeById = async (
   res: Response,
 ): Promise<void> => {
   try {
-    logger.info(`Incoming request: ${req.method} ${req.originalUrl}`);
-
     if (!req.user?.id) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
@@ -711,8 +699,6 @@ export const updateRecipe = async (
   res: Response,
 ): Promise<void> => {
   try {
-    logger.info(`Incoming request: ${req.method} ${req.originalUrl}`);
-
     if (!req.user?.id) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
@@ -831,8 +817,6 @@ export const deleteRecipe = async (
   res: Response,
 ): Promise<void> => {
   try {
-    logger.info(`Incoming request: ${req.method} ${req.originalUrl}`);
-
     if (!req.user?.id) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
