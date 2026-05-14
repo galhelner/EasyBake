@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../recipes/presentation/widgets/recipe_details/save_confirmation_dialog.dart';
 
 class SharedRecipePreviewCard extends StatelessWidget {
   const SharedRecipePreviewCard({
@@ -8,6 +9,7 @@ class SharedRecipePreviewCard extends StatelessWidget {
     required this.healthScore,
     required this.onView,
     required this.onSave,
+    this.showButtons = true,
   });
 
   final String title;
@@ -15,6 +17,7 @@ class SharedRecipePreviewCard extends StatelessWidget {
   final int healthScore;
   final VoidCallback onView;
   final VoidCallback onSave;
+  final bool showButtons;
 
   @override
   Widget build(BuildContext context) {
@@ -106,32 +109,37 @@ class SharedRecipePreviewCard extends StatelessWidget {
                     height: 1.2,
                   ),
                 ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: FilledButton.tonal(
-                        onPressed: onView,
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          visualDensity: VisualDensity.compact,
+                if (showButtons) ...[
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton.tonal(
+                          onPressed: onView,
+                          style: FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          child: const Text('View'),
                         ),
-                        child: const Text('View'),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: onSave,
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          visualDensity: VisualDensity.compact,
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton(
+                            onPressed: () => showSaveConfirmationDialog(
+                                  context,
+                                  onSave: onSave,
+                                ),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          child: const Text('Save'),
                         ),
-                        child: const Text('Save'),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),

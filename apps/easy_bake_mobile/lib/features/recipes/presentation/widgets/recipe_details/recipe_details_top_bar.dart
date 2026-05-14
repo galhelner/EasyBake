@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'recipe_details_theme.dart';
+import 'save_confirmation_dialog.dart';
 
 class RecipeDetailsTopBar extends StatelessWidget {
   const RecipeDetailsTopBar({
@@ -8,11 +9,15 @@ class RecipeDetailsTopBar extends StatelessWidget {
     required this.onBack,
     required this.onMenuSelected,
     required this.isMenuDisabled,
+    this.showSaveButton = false,
+    this.onSave,
   });
 
   final VoidCallback onBack;
   final ValueChanged<String> onMenuSelected;
   final bool isMenuDisabled;
+  final bool showSaveButton;
+  final VoidCallback? onSave;
 
   @override
   Widget build(BuildContext context) {
@@ -43,79 +48,117 @@ class RecipeDetailsTopBar extends StatelessWidget {
           ),
         ),
         const Spacer(),
-        PopupMenuButton<String>(
-          enabled: !isMenuDisabled,
-          onSelected: isMenuDisabled ? null : onMenuSelected,
-          color: Colors.white,
-          elevation: 14,
-          shadowColor: const Color(0x29304466),
-          surfaceTintColor: Colors.white,
-          constraints: const BoxConstraints(minWidth: 236),
-          menuPadding: const EdgeInsets.all(8),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-            side: const BorderSide(color: Color(0xFFE4EAF2)),
-          ),
-          offset: const Offset(0, 10),
-          tooltip: 'Recipe actions',
-          icon: Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFFFFFFFF), Color(0xFFF3F7FC)],
-              ),
+        if (showSaveButton)
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                if (onSave != null) {
+                  showSaveConfirmationDialog(context, onSave: onSave!);
+                }
+              },
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFD5DFEC)),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x1A304466),
-                  blurRadius: 12,
-                  offset: Offset(0, 4),
+              child: Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFFFFFFFF), Color(0xFFF3F7FC)],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFD5DFEC)),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x1A304466),
+                      blurRadius: 12,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
                 ),
-              ],
+                child: const Icon(
+                  Icons.bookmark,
+                  size: 22,
+                  color: kRecipeDetailsPrimaryBlue,
+                ),
+              ),
             ),
-            child: Icon(
-              Icons.more_horiz,
-              size: 22,
-              color: isMenuDisabled
-                  ? const Color(0xFF9BA8B7)
-                  : kRecipeDetailsPrimaryBlue,
+          )
+        else
+          PopupMenuButton<String>(
+            enabled: !isMenuDisabled,
+            onSelected: isMenuDisabled ? null : onMenuSelected,
+            color: Colors.white,
+            elevation: 14,
+            shadowColor: const Color(0x29304466),
+            surfaceTintColor: Colors.white,
+            constraints: const BoxConstraints(minWidth: 236),
+            menuPadding: const EdgeInsets.all(8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+              side: const BorderSide(color: Color(0xFFE4EAF2)),
             ),
+            offset: const Offset(0, 10),
+            tooltip: 'Recipe actions',
+            icon: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFFFFFFF), Color(0xFFF3F7FC)],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFD5DFEC)),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x1A304466),
+                    blurRadius: 12,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Icon(
+                Icons.more_horiz,
+                size: 22,
+                color: isMenuDisabled
+                    ? const Color(0xFF9BA8B7)
+                    : kRecipeDetailsPrimaryBlue,
+              ),
+            ),
+            itemBuilder: (context) => const [
+              PopupMenuItem<String>(
+                height: 68,
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                value: 'edit',
+                child: _RecipeMenuItem(
+                  icon: Icons.edit_outlined,
+                  label: 'Edit',
+                  subtitle: 'Update title, image, or steps',
+                  iconColor: kRecipeDetailsPrimaryBlue,
+                  textColor: Color(0xFF1B2A41),
+                  backgroundColor: Color(0xFFF5F9FF),
+                  borderColor: Color(0xFFDAE6F5),
+                ),
+              ),
+              PopupMenuItem<String>(
+                height: 68,
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                value: 'delete',
+                child: _RecipeMenuItem(
+                  icon: Icons.delete_outline,
+                  label: 'Delete',
+                  subtitle: 'Remove this recipe permanently',
+                  iconColor: Color(0xFFD14343),
+                  textColor: Color(0xFFB83232),
+                  backgroundColor: Color(0xFFFFF4F4),
+                  borderColor: Color(0xFFF4D1D1),
+                ),
+              ),
+            ],
           ),
-          itemBuilder: (context) => const [
-            PopupMenuItem<String>(
-              height: 68,
-              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              value: 'edit',
-              child: _RecipeMenuItem(
-                icon: Icons.edit_outlined,
-                label: 'Edit',
-                subtitle: 'Update title, image, or steps',
-                iconColor: kRecipeDetailsPrimaryBlue,
-                textColor: Color(0xFF1B2A41),
-                backgroundColor: Color(0xFFF5F9FF),
-                borderColor: Color(0xFFDAE6F5),
-              ),
-            ),
-            PopupMenuItem<String>(
-              height: 68,
-              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              value: 'delete',
-              child: _RecipeMenuItem(
-                icon: Icons.delete_outline,
-                label: 'Delete',
-                subtitle: 'Remove this recipe permanently',
-                iconColor: Color(0xFFD14343),
-                textColor: Color(0xFFB83232),
-                backgroundColor: Color(0xFFFFF4F4),
-                borderColor: Color(0xFFF4D1D1),
-              ),
-            ),
-          ],
-        ),
       ],
     );
   }

@@ -123,7 +123,7 @@ class RecipeModel {
     return result;
   }
 
-  Map<String, dynamic> toCreateJson() {
+  Map<String, dynamic> toCreateJson({bool includeHealthScore = false}) {
     final payloadIngredients = ingredients.map((name) {
       final normalizedName = name.trim();
       final rawAmount = ingredientAmounts[normalizedName];
@@ -139,6 +139,7 @@ class RecipeModel {
       'title': title,
       'instructions': instructions,
       'ingredients': payloadIngredients,
+      if (includeHealthScore) 'healthScore': healthScore.clamp(0, 100),
     };
   }
 }

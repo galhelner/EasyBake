@@ -1,11 +1,34 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../domain/models/models.dart';
 import '../providers/chat_provider.dart';
+import '../../../recipes/presentation/pages/recipe_details_page.dart';
+import '../../../recipes/data/services/recipe_service.dart';
+import '../../../recipes/presentation/providers/recipe_providers.dart';
+import '../../../recipes/presentation/widgets/recipe_details/saving_status_card.dart';
 import 'chat_avatar.dart';
 import 'shared_recipe_preview_card.dart';
+
+String _userFacingRecipeSaveError(Object error) {
+  if (error is DioException) {
+    final data = error.response?.data;
+    if (data is Map) {
+      final err = data['error'];
+      if (err is String && err.trim().isNotEmpty) {
+        return err.trim();
+      }
+    }
+    if (error.type == DioExceptionType.connectionTimeout ||
+        error.type == DioExceptionType.receiveTimeout ||
+        error.type == DioExceptionType.sendTimeout) {
+      return 'Request timed out. Please try again.';
+    }
+  }
+  return 'Could not save recipe. Please try again.';
+}
 
 Color _resolveSenderAccentColor(
   ChatMessage message, {
@@ -129,6 +152,7 @@ class MessageTile extends ConsumerWidget {
                           _RecipePreviewCard(
                             recipeId: message.recipeId!,
                             fallbackText: message.content,
+                            isCurrentUser: isCurrentUser,
                           )
                         else
                           Text(
@@ -203,10 +227,12 @@ class _RecipePreviewCard extends ConsumerWidget {
   const _RecipePreviewCard({
     required this.recipeId,
     required this.fallbackText,
+    required this.isCurrentUser,
   });
 
   final String recipeId;
   final String fallbackText;
+  final bool isCurrentUser;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -243,12 +269,78 @@ class _RecipePreviewCard extends ConsumerWidget {
         ),
       ),
       data: (recipe) {
+        Future<void> showSavingDialogAndSave(BuildContext context) async {
+          final service = ref.read(recipeServiceProvider);
+
+          var isSaving = true;
+          var saveSucceeded = false;
+          String? saveErrorMessage;
+
+          await showDialog<void>(
+            context: context,
+            barrierDismissible: false,
+            builder: (dialogContext) {
+              return StatefulBuilder(builder: (ctx, setState) {
+                if (isSaving) {
+                  Future.microtask(() async {
+                    try {
+                      await service.createRecipeCopyWithRemoteImage(recipe);
+                      saveSucceeded = true;
+                      if (dialogContext.mounted) {
+                        setState(() {
+                          isSaving = false;
+                        });
+                      }
+                      ref.invalidate(recipesListProvider);
+                    } catch (e) {
+                      saveSucceeded = false;
+                      saveErrorMessage = _userFacingRecipeSaveError(e);
+                      if (dialogContext.mounted) {
+                        setState(() {
+                          isSaving = false;
+                        });
+                      }
+                    }
+                  });
+                }
+
+                return Dialog(
+                  backgroundColor: Colors.transparent,
+                  insetPadding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 24,
+                  ),
+                  child: Center(
+                    child: SavingStatusCard(
+                      isSaving: isSaving,
+                      saveSucceeded: saveSucceeded,
+                      saveErrorMessage: saveErrorMessage,
+                      onOk: () => Navigator.of(dialogContext).pop(),
+                    ),
+                  ),
+                );
+              });
+            },
+          );
+        }
+
         return SharedRecipePreviewCard(
           title: recipe.title,
           imageUrl: recipe.imageUrl,
           healthScore: recipe.healthScore,
-          onView: () {},
-          onSave: () {},
+          showButtons: !isCurrentUser,
+          onView: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => RecipeDetailsPage(
+                  initialRecipe: recipe,
+                  showSaveButton: true,
+                  popRouteAfterSaveAcknowledged: true,
+                ),
+              ),
+            );
+          },
+          onSave: () => showSavingDialogAndSave(context),
         );
       },
     );

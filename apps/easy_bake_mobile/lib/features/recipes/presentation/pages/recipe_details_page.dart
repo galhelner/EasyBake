@@ -15,6 +15,7 @@ import '../widgets/recipe_details/recipe_details_skeleton.dart';
 import '../widgets/recipe_details/recipe_details_tab_bar.dart';
 import '../widgets/recipe_details/recipe_details_theme.dart';
 import '../widgets/recipe_details/recipe_details_top_bar.dart';
+import '../widgets/recipe_details/saving_status_card.dart';
 import 'recipe_create_page.dart';
 
 enum _RecipeDetailTab { ingredients, instructions }
@@ -23,8 +24,18 @@ enum _RecipeAction { edit, delete }
 
 class RecipeDetailsPage extends ConsumerStatefulWidget {
   final RecipeModel initialRecipe;
+  final bool showSaveButton;
 
-  const RecipeDetailsPage({super.key, required this.initialRecipe});
+  /// When true, after a successful save the user is returned to the previous
+  /// route (e.g. community chat) when they tap OK on the confirmation dialog.
+  final bool popRouteAfterSaveAcknowledged;
+
+  const RecipeDetailsPage({
+    super.key,
+    required this.initialRecipe,
+    this.showSaveButton = false,
+    this.popRouteAfterSaveAcknowledged = false,
+  });
 
   @override
   ConsumerState<RecipeDetailsPage> createState() => _RecipeDetailsPageState();
@@ -192,6 +203,82 @@ class _RecipeDetailsPageState extends ConsumerState<RecipeDetailsPage> {
     }
   }
 
+  String _userFacingSaveError(Object error) {
+    if (error is DioException) {
+      final data = error.response?.data;
+      if (data is Map) {
+        final err = data['error'];
+        if (err is String && err.trim().isNotEmpty) {
+          return err.trim();
+        }
+      }
+      if (error.type == DioExceptionType.connectionTimeout ||
+          error.type == DioExceptionType.receiveTimeout ||
+          error.type == DioExceptionType.sendTimeout) {
+        return 'Request timed out. Please try again.';
+      }
+    }
+    return 'Could not save recipe. Please try again.';
+  }
+
+  Future<void> showSavingDialogAndSave() async {
+    var isSaving = true;
+    var saveSucceeded = false;
+    String? saveErrorMessage;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return StatefulBuilder(builder: (ctx, setState) {
+          if (isSaving) {
+            Future.microtask(() async {
+              try {
+                await ref
+                    .read(recipeServiceProvider)
+                    .createRecipeCopyWithRemoteImage(_recipe);
+                saveSucceeded = true;
+                if (dialogContext.mounted) {
+                  setState(() {
+                    isSaving = false;
+                  });
+                }
+                ref.invalidate(recipesListProvider);
+              } catch (e) {
+                saveSucceeded = false;
+                saveErrorMessage = _userFacingSaveError(e);
+                if (dialogContext.mounted) {
+                  setState(() {
+                    isSaving = false;
+                  });
+                }
+              }
+            });
+          }
+
+          return Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            child: Center(
+                child: SavingStatusCard(
+                  isSaving: isSaving,
+                  saveSucceeded: saveSucceeded,
+                  saveErrorMessage: saveErrorMessage,
+                  onOk: () {
+                    Navigator.of(dialogContext).pop();
+                    if (saveSucceeded &&
+                        widget.popRouteAfterSaveAcknowledged &&
+                        context.mounted) {
+                      Navigator.of(context).maybePop();
+                    }
+                  },
+                ),
+              ),
+          );
+        });
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final ingredients = _recipe.ingredients;
@@ -239,6 +326,8 @@ class _RecipeDetailsPageState extends ConsumerState<RecipeDetailsPage> {
                       onBack: () => Navigator.of(context).maybePop(),
                       onMenuSelected: _handleMenuAction,
                       isMenuDisabled: _isDeleting,
+                      showSaveButton: widget.showSaveButton,
+                      onSave: showSavingDialogAndSave,
                     ),
                     const SizedBox(height: 10),
                     RecipeDetailsHero(

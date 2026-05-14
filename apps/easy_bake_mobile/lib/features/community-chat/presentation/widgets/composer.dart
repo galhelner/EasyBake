@@ -102,6 +102,11 @@ class Composer extends StatelessWidget {
                                 : const Color(0xFFD8E1EB),
                           ),
                           child: IconButton(
+                            // Disable Material tooltip: this button lives inside a
+                            // ValueListenableBuilder that rebuilds on every keystroke.
+                            // Default IconButton tooltips use RawTooltip + a single ticker;
+                            // rapid rebuilds can throw "multiple tickers were created".
+                            tooltip: '',
                             onPressed: canSend ? onSend : null,
                             icon: Icon(
                               Icons.arrow_upward_rounded,
@@ -122,10 +127,12 @@ class Composer extends StatelessWidget {
             const SizedBox(height: 10),
             Align(
               alignment: Alignment.centerLeft,
-              child: Tooltip(
-                message: isConnected
+              child: Semantics(
+                label: isConnected
                     ? 'Share a recipe with the community'
                     : 'Connect to share recipes',
+                button: true,
+                enabled: isConnected,
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(

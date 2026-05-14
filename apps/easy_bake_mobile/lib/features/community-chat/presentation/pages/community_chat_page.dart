@@ -23,9 +23,13 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
   final _scrollController = ScrollController();
   bool _isFailureDialogOpen = false;
 
+  /// Cached so [dispose] never calls `ref.read` after the element is unmounted.
+  late final ChatServiceNotifier _chatServiceNotifier;
+
   @override
   void initState() {
     super.initState();
+    _chatServiceNotifier = ref.read(chatServiceProvider.notifier);
     Future.microtask(() {
       _initializeChat();
     });
@@ -33,12 +37,12 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
 
   Future<void> _initializeChat() async {
     ref.read(chatErrorProvider.notifier).setError(null);
-    await ref.read(chatServiceProvider.notifier).initializeChat();
+    await _chatServiceNotifier.initializeChat();
   }
 
   Future<void> _refreshChat() async {
     ref.read(chatErrorProvider.notifier).setError(null);
-    await ref.read(chatServiceProvider.notifier).refreshMessages();
+    await _chatServiceNotifier.refreshMessages();
   }
 
   Future<void> _showShareRecipeDialog() async {
@@ -51,7 +55,7 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
       barrierDismissible: true,
       builder: (dialogContext) => ShareRecipeDialog(
         onRecipeSelected: (recipeId) {
-          ref.read(chatServiceProvider.notifier).sendRecipeMessage(recipeId);
+          _chatServiceNotifier.sendRecipeMessage(recipeId);
           _scrollToBottom();
         },
       ),
@@ -119,7 +123,7 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
-    ref.read(chatServiceProvider.notifier).dispose();
+    unawaited(_chatServiceNotifier.dispose());
     super.dispose();
   }
 
@@ -127,7 +131,7 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
     final content = _messageController.text.trim();
     if (content.isEmpty) return;
 
-    ref.read(chatServiceProvider.notifier).sendMessage(content);
+    _chatServiceNotifier.sendMessage(content);
     _messageController.clear();
     _scrollToBottom();
   }

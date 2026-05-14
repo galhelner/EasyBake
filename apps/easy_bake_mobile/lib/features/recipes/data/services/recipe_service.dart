@@ -26,8 +26,13 @@ class RecipeService {
     return RecipeModel.fromJson(response.data as Map<String, dynamic>);
   }
 
-  Future<RecipeModel> createRecipe(RecipeModel recipe) async {
-    final createData = recipe.toCreateJson();
+  Future<RecipeModel> createRecipe(
+    RecipeModel recipe, {
+    bool reuseExistingHealthScore = false,
+  }) async {
+    final createData = recipe.toCreateJson(
+      includeHealthScore: reuseExistingHealthScore,
+    );
     final response = await _dio.post(
       '/recipes',
       data: createData,
@@ -37,6 +42,108 @@ class RecipeService {
       ),
     );
     return RecipeModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  /// Creates a copy of [recipe] for the current user. If [recipe.imageUrl] is a
+  /// non-default remote URL, downloads it and uploads it as multipart so the
+  /// saved recipe matches the image shown in the UI (same as [createRecipeWithOptionalImage]).
+  Future<RecipeModel> createRecipeCopyWithRemoteImage(RecipeModel recipe) async {
+    final url = recipe.imageUrl?.trim();
+    if (!_isNetworkRecipeImageUrl(url)) {
+      return createRecipe(recipe, reuseExistingHealthScore: true);
+    }
+
+    final path = await _downloadRecipeImageToTempFile(url!);
+    if (path == null) {
+      return createRecipe(recipe, reuseExistingHealthScore: true);
+    }
+
+    try {
+      return await createRecipeWithOptionalImage(
+        recipe,
+        imageFilePath: path,
+        reuseExistingHealthScore: true,
+      );
+    } finally {
+      try {
+        final file = File(path);
+        if (await file.exists()) {
+          await file.delete();
+        }
+      } catch (_) {}
+    }
+  }
+
+  static bool _isNetworkRecipeImageUrl(String? imageUrl) {
+    final trimmed = imageUrl?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      return false;
+    }
+    if (trimmed.startsWith('assets/')) {
+      return false;
+    }
+    if (trimmed.toLowerCase().contains('default-recipe.jpg')) {
+      return false;
+    }
+    final lower = trimmed.toLowerCase();
+    return lower.startsWith('http://') || lower.startsWith('https://');
+  }
+
+  static String _imageExtensionFromDownload(
+    Response<List<int>> response,
+    String requestUrl,
+  ) {
+    final type =
+        response.headers.value(Headers.contentTypeHeader)?.toLowerCase() ?? '';
+    if (type.contains('png')) {
+      return 'png';
+    }
+    if (type.contains('webp')) {
+      return 'webp';
+    }
+    if (type.contains('jpeg') || type.contains('jpg')) {
+      return 'jpg';
+    }
+    if (type.contains('gif')) {
+      return 'gif';
+    }
+
+    final path = Uri.tryParse(requestUrl)?.path.toLowerCase() ?? '';
+    for (final ext in ['.png', '.webp', '.jpeg', '.jpg', '.gif']) {
+      if (path.endsWith(ext)) {
+        return ext.substring(1);
+      }
+    }
+    return 'jpg';
+  }
+
+  Future<String?> _downloadRecipeImageToTempFile(String imageUrl) async {
+    try {
+      final client = Dio(
+        BaseOptions(
+          connectTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 90),
+          responseType: ResponseType.bytes,
+          followRedirects: true,
+          validateStatus: (code) => code != null && code >= 200 && code < 300,
+        ),
+      );
+
+      final response = await client.get<List<int>>(imageUrl);
+      final bytes = response.data;
+      if (bytes == null || bytes.isEmpty) {
+        return null;
+      }
+
+      final ext = _imageExtensionFromDownload(response, imageUrl);
+      final name =
+          'easybake_recipe_save_${DateTime.now().millisecondsSinceEpoch}.$ext';
+      final file = File('${Directory.systemTemp.path}/$name');
+      await file.writeAsBytes(bytes);
+      return file.path;
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<RecipeModel> updateRecipe(
@@ -62,17 +169,26 @@ class RecipeService {
   Future<RecipeModel> createRecipeWithOptionalImage(
     RecipeModel recipe, {
     String? imageFilePath,
+    bool reuseExistingHealthScore = false,
   }) async {
     if (imageFilePath == null || imageFilePath.isEmpty) {
-      return createRecipe(recipe);
+      return createRecipe(
+        recipe,
+        reuseExistingHealthScore: reuseExistingHealthScore,
+      );
     }
 
     final imageFile = File(imageFilePath);
     if (!await imageFile.exists()) {
-      return createRecipe(recipe);
+      return createRecipe(
+        recipe,
+        reuseExistingHealthScore: reuseExistingHealthScore,
+      );
     }
 
-    final createData = recipe.toCreateJson();
+    final createData = recipe.toCreateJson(
+      includeHealthScore: reuseExistingHealthScore,
+    );
     final instructions = (createData['instructions'] as List<dynamic>?) ?? [];
     final ingredients = (createData['ingredients'] as List<dynamic>?) ?? [];
     final fileName = imageFile.path.split(RegExp(r'[\\/]')).last;
@@ -82,6 +198,7 @@ class RecipeService {
       // Backend preprocessors accept JSON strings in multipart fields.
       'instructions': jsonEncode(instructions),
       'ingredients': jsonEncode(ingredients),
+      if (createData.containsKey('healthScore')) 'healthScore': createData['healthScore'],
       'image': await MultipartFile.fromFile(imageFile.path, filename: fileName),
     });
 
@@ -89,7 +206,6 @@ class RecipeService {
       '/recipes',
       data: formData,
       options: Options(
-        contentType: 'multipart/form-data',
         sendTimeout: _saveRequestTimeout,
         receiveTimeout: _saveRequestTimeout,
       ),
@@ -112,7 +228,6 @@ class RecipeService {
       '/recipes/create-from-image',
       data: formData,
       options: Options(
-        contentType: 'multipart/form-data',
         sendTimeout: _saveRequestTimeout,
         receiveTimeout: _saveRequestTimeout,
       ),
@@ -162,7 +277,6 @@ class RecipeService {
       '/recipes/$id',
       data: formData,
       options: Options(
-        contentType: 'multipart/form-data',
         sendTimeout: _saveRequestTimeout,
         receiveTimeout: _saveRequestTimeout,
       ),
