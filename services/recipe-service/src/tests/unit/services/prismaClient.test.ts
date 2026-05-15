@@ -57,6 +57,9 @@ afterEach(() => {
 
 describe('prismaClient service', () => {
 	it('throws an error when DATABASE_URL is missing', async () => {
+		jest.resetModules();
+		delete process.env.DATABASE_URL;
+
 		await expect(import('../../../services/prismaClient')).rejects.toThrow(
 			'DATABASE_URL is not defined in environment variables'
 		);
