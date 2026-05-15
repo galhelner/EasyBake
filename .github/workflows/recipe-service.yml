@@ -7,6 +7,7 @@ on:
     paths:
       - 'services/recipe-service/**'
       - '.github/workflows/recipe-service.yml'
+      - '.github/workflows/ci-cd_pipeline_template.yml'
   workflow_dispatch:
 
 jobs:
