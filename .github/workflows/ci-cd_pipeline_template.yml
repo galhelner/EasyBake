@@ -105,7 +105,7 @@ jobs:
       - if: inputs.language == 'python'
         name: 'Deploy Python app to Azure Web App'
         uses: azure/webapps-deploy@v3
-        id: deploy-to-webapp
+        id: deploy-to-webapp-python
         with:
           app-name: ${{ inputs.app_name }}
           slot-name: 'Production'
@@ -114,7 +114,7 @@ jobs:
       - if: inputs.language == 'node'
         name: 'Deploy Node.js app to Azure Web App'
         uses: azure/webapps-deploy@v3
-        id: deploy-to-webapp
+        id: deploy-to-webapp-node
         with:
           app-name: ${{ inputs.app_name }}
           slot-name: 'Production'
