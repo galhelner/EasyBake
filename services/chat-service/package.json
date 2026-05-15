@@ -8,6 +8,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "jest",
+    "test:unit": "jest --testPathPattern=src/tests/unit",
     "prisma:generate": "npx prisma generate",
     "prisma:migrate": "npx prisma migrate dev",
     "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0",
