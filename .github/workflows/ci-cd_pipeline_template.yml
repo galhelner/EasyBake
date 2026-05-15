@@ -29,8 +29,40 @@ on:
         description: 'Azure publish profile for deployment'
 
 jobs:
+  run-lint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - if: inputs.language == 'node'
+        name: Set up Node.js version
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+          cache-dependency-path: ${{ inputs.workdir }}/package-lock.json
+
+      - if: inputs.language == 'node'
+        name: 'npm install and generate Prisma client'
+        env:
+          DATABASE_URL: "postgresql://placeholder:placeholder@localhost:5432/placeholder"
+        run: |
+          cd ${{ inputs.workdir }}
+          npm install
+          npx prisma generate
+
+      - if: inputs.language == 'node'
+        name: 'run linter'
+        run: |
+          cd ${{ inputs.workdir }}
+          npm run lint
+
   run-unit-tests:
     runs-on: ubuntu-latest
+    needs: run-lint
     permissions:
       contents: read
 
