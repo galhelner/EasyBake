@@ -134,7 +134,7 @@ describe('chat controller', () => {
 		});
 	});
 
-	it('handles CREATE_RECIPE intent and returns generated payload', async () => {
+	it('handles CREATE_RECIPE intent and streams the generated payload', async () => {
 		const { controller, mockAxiosPost } = await loadChatControllerModule();
 		const generatedRecipe = {
 			title: 'Spicy Lentil Soup',
@@ -162,8 +162,16 @@ describe('chat controller', () => {
 		await controller.streamChat(req, res);
 
 		expect(mockAxiosPost).toHaveBeenCalledTimes(2);
-		expect(res.status).toHaveBeenCalledWith(200);
-		expect(res.json).toHaveBeenCalledWith(generatedRecipe);
+		expect(res.writeHead).toHaveBeenCalledWith(
+			200,
+			expect.objectContaining({
+				'Content-Type': 'text/event-stream',
+			}),
+		);
+		expect(res.write).toHaveBeenCalledWith(
+			expect.stringContaining(JSON.stringify({ type: 'recipeCreated', recipe: generatedRecipe })),
+		);
+		expect(res.end).toHaveBeenCalled();
 	});
 
 	it('returns 401 for SEARCH_RECIPES intent when user is unauthenticated', async () => {
