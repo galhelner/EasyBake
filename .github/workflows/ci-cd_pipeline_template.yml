@@ -60,7 +60,7 @@ jobs:
           DATABASE_URL: "postgresql://placeholder:placeholder@localhost:5432/placeholder"
         run: |
           cd ${{ inputs.workdir }}
-          npm test
+          npm run test:unit
 
   build:
     runs-on: ubuntu-latest
