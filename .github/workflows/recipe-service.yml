@@ -1,4 +1,4 @@
-name: Build and deploy Node.js app to Azure Web App - easybake-recipe-service
+name: Recipe Service CI/CD Pipeline
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  default:
+  recipe-service:
     uses: ./.github/workflows/ci-cd_pipeline_template.yml
     with:
       language: 'node'

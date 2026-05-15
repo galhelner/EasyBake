@@ -1,4 +1,4 @@
-name: Service Build and Deploy Template
+name: CI/CD Pipeline Template
 
 on:
   workflow_call:

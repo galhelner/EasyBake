@@ -1,4 +1,4 @@
-name: Build and deploy Node.js app to Azure Web App - easybake-chat-service
+name: Chat Service CI/CD Pipeline
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  default:
+  chat-service:
     uses: ./.github/workflows/ci-cd_pipeline_template.yml
     with:
       language: 'node'

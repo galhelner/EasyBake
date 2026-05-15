@@ -1,4 +1,4 @@
-name: Build and deploy Python app to Azure Web App - easybake-ai-service
+name: AI Service CI/CD Pipeline
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  default:
+  ai-service:
     uses: ./.github/workflows/ci-cd_pipeline_template.yml
     with:
       language: 'python'
