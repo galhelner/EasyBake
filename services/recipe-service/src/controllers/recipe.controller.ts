@@ -62,7 +62,7 @@ const requestAiHealthScore = async (
     return Math.max(0, Math.min(100, Math.round(score)));
   } catch (error: any) {
     logger.warn(
-      `AI health score unavailable for \"${title}\". Falling back to default score 50. Reason: ${error?.message ?? 'Unknown error'}`,
+      `AI health score unavailable for "${title}". Falling back to default score 50. Reason: ${error?.message ?? 'Unknown error'}`,
     );
     return 50;
   }
@@ -295,10 +295,10 @@ const cleanupTempUpload = async (file?: Express.Multer.File): Promise<void> => {
     logger.info(`Cleaned up temporary file: ${absolutePath}`);
   } catch (error: any) {
     if (error?.code !== 'ENOENT') {
-      // eslint-disable-next-line no-console
+       
       console.warn(`Failed to clean temporary file at ${absolutePath}:`, error.message);
     } else {
-      // eslint-disable-next-line no-console
+       
       console.warn(`Temporary file not found at ${absolutePath} (may have been deleted already)`);
     }
   }
@@ -473,13 +473,13 @@ export const createRecipe = async (
       const embedding = await generateEmbedding(embeddingText);
       await saveRecipeEmbedding(createdRecipe.id, embedding);
     } catch (embeddingError) {
-      // eslint-disable-next-line no-console
+       
       console.warn('Recipe created but embedding generation failed', embeddingError);
     }
 
     res.status(201).json(mapRecipeToDTO(createdRecipe));
   } catch (error) {
-    // eslint-disable-next-line no-console
+     
     console.error('Error creating recipe', error);
     res.status(500).json({ error: 'Failed to create recipe' });
   } finally {
@@ -527,7 +527,8 @@ export const searchRecipes = async (
       LIMIT 5
     `;
 
-    logger.info(`Calling AI Service for: semantic search embedding for query \"${parsed.data.query}\"`);
+    logger.info(`Calling AI Service for: semantic search embedding for query "${parsed.data.query}"`);
+
 
     const recipeIds = searchResults.map((result) => result.id);
 
@@ -558,7 +559,7 @@ export const searchRecipes = async (
 
     res.json(orderedRecipes.map(mapRecipeToDTO));
   } catch (error) {
-    // eslint-disable-next-line no-console
+     
     console.error('Error searching recipes semantically', error);
     res.status(500).json({ error: 'Failed to search recipes' });
   }
@@ -605,7 +606,7 @@ export const searchIngredients = async (
 
     res.json(payload);
   } catch (error) {
-    // eslint-disable-next-line no-console
+     
     console.error('Error searching ingredients', error);
     res.status(500).json({ error: 'Failed to search ingredients' });
   }
@@ -648,7 +649,7 @@ export const getRecipes = async (
 
     res.json(recipes);
   } catch (error) {
-    // eslint-disable-next-line no-console
+     
     console.error('Error fetching recipes', error);
     res.status(500).json({ error: 'Failed to fetch recipes' });
   }
@@ -688,7 +689,7 @@ export const getRecipeById = async (
 
     res.json(mapRecipeToDTO(recipe));
   } catch (error) {
-    // eslint-disable-next-line no-console
+     
     console.error('Error fetching recipe', error);
     res.status(500).json({ error: 'Failed to fetch recipe' });
   }
@@ -785,7 +786,7 @@ export const updateRecipe = async (
       const embedding = await generateEmbedding(embeddingText);
       await saveRecipeEmbedding(updatedRecipe.id, embedding);
     } catch (embeddingError) {
-      // eslint-disable-next-line no-console
+       
       console.warn('Recipe updated but embedding generation failed', embeddingError);
     }
 
@@ -804,7 +805,7 @@ export const updateRecipe = async (
 
     res.json(mapRecipeToDTO(updatedRecipe));
   } catch (error) {
-    // eslint-disable-next-line no-console
+     
     console.error('Error updating recipe', error);
     res.status(500).json({ error: 'Failed to update recipe' });
   } finally {
@@ -865,7 +866,7 @@ export const deleteRecipe = async (
 
     res.status(204).send();
   } catch (error) {
-    // eslint-disable-next-line no-console
+     
     console.error('Error deleting recipe', error);
     res.status(500).json({ error: 'Failed to delete recipe' });
   }

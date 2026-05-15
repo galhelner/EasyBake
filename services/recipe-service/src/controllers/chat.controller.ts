@@ -302,7 +302,7 @@ const forwardStructuredSseStream = (
         lineEndIndex = buffer.indexOf('\n\n');
       }
     } catch (streamParseError) {
-      // eslint-disable-next-line no-console
+       
       console.error('AI structured stream parse failed', streamParseError);
       onAbort();
       closeStream();
@@ -319,7 +319,7 @@ const forwardStructuredSseStream = (
   });
 
   upstreamStream.on('error', (streamError: Error) => {
-    // eslint-disable-next-line no-console
+     
     console.error('AI upstream stream failed', streamError);
     onAbort();
 
@@ -351,7 +351,7 @@ export const streamChat = async (
     try {
       recipeContext = await loadRecipeContext(req, recipe_id);
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('Failed to load recipe context', { recipeId: recipe_id, error });
       res.status(500).json({ error: 'Failed to load recipe context' });
       return;
@@ -441,7 +441,7 @@ export const streamChat = async (
         upstreamAbortController.abort();
       });
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('AI stream setup failed after initialization', error);
       if (!streamingResponse.headersSent) {
         sendInitFailureJson(streamingResponse, error, routedIntent.intent);

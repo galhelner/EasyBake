@@ -169,9 +169,8 @@ describe('recipe controller', () => {
 			mockAxiosPost,
 			mockPrismaRecipeCreate,
 			mockPrismaIngredientUpdateMany,
-			mockPrismaExecuteRaw,
 			mockUploadImage,
-			mockLoggerInfo,
+			mockPrismaExecuteRaw,
 		} = await loadRecipeControllerModule();
 
 		mockAxiosPost
@@ -235,10 +234,7 @@ describe('recipe controller', () => {
 			mockAxiosPost,
 			mockPrismaRecipeCreate,
 			mockPrismaIngredientUpdateMany,
-			mockPrismaExecuteRaw,
 		} = await loadRecipeControllerModule();
-
-		mockAxiosPost.mockResolvedValueOnce({ data: { embedding: [1, 2, 3] } });
 
 		mockPrismaRecipeCreate.mockResolvedValue({
 			id: 'recipe-2',

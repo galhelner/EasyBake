@@ -36,7 +36,7 @@ export const authMiddleware = async (
     req.user = { id: user.id };
     next();
   } catch (err) {
-    // eslint-disable-next-line no-console
+     
     console.error('Auth middleware error', err);
     res.status(500).json({ error: 'Authentication failed' });
   }

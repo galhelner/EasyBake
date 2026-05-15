@@ -64,7 +64,7 @@ const cleanupTmpFolder = async (): Promise<void> => {
     await rm(tmpPath, { recursive: true, force: true });
     logger.info(`Cleaned up temporary folder: ${tmpPath}`);
   } catch (error) {
-    // eslint-disable-next-line no-console
+     
     console.warn(`Failed to clean up temporary folder: ${error}`);
   }
 };
@@ -75,7 +75,7 @@ const handleShutdown = async (signal: string): Promise<void> => {
   process.exit(0);
 };
 
-const server = app.listen(Number(port), "0.0.0.0", () => {
+app.listen(Number(port), "0.0.0.0", () => {
   logger.info(`Recipe service listening on port ${port}`);
 });
 
