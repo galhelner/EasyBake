@@ -35,11 +35,11 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - if: inputs.language == 'node'
         name: Set up Node.js version
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '22.x'
           cache: 'npm'
@@ -69,7 +69,7 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # Python workflow
       - if: inputs.language == 'python'
@@ -90,7 +90,7 @@ jobs:
 
       - if: inputs.language == 'python'
         name: Upload artifact for deployment jobs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ inputs.artifact_name }}
           path: |
@@ -100,7 +100,7 @@ jobs:
       # Node.js workflow
       - if: inputs.language == 'node'
         name: Set up Node.js version
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '22.x'
           cache: 'npm'
@@ -120,7 +120,7 @@ jobs:
 
       - if: inputs.language == 'node'
         name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ inputs.artifact_name }}
           path: release.zip
@@ -131,7 +131,7 @@ jobs:
 
     steps:
       - name: Download artifact from build job
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: ${{ inputs.artifact_name }}
           path: .
