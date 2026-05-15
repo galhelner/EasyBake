@@ -1,5 +1,4 @@
 {
-  "type": "module",
   "name": "easybake-chat-service",
   "version": "1.0.0",
   "description": "EasyBake community chat service - Node.js WebSocket server with Socket.IO and TypeScript.",

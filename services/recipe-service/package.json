@@ -1,5 +1,4 @@
 {
-  "type": "module",
   "name": "easybake-recipe-service",
   "version": "1.0.0",
   "description": "EasyBake recipe service - Node.js Express API with TypeScript, Prisma, and Supabase auth.",
