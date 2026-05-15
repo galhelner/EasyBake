@@ -28,6 +28,9 @@ on:
         required: true
         description: 'Azure publish profile for deployment'
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   run-lint:
     runs-on: ubuntu-latest
