@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  default:
     uses: ./.github/workflows/ci-cd_pipeline_template.yml
     with:
       language: 'python'
