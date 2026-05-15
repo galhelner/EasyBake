@@ -1,0 +1,22 @@
+name: Build and deploy Python app to Azure Web App - easybake-ai-service
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'services/ai-service/**'
+      - '.github/workflows/ai-service.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    uses: ./.github/workflows/ci-cd_pipeline_template.yml
+    with:
+      language: 'python'
+      service_name: 'ai-service'
+      workdir: 'services/ai-service'
+      app_name: 'easybake-ai-service'
+      artifact_name: 'python-app'
+    secrets:
+      PUBLISH_PROFILE: ${{ secrets.AZURE_AI_SERVICE_SWEDEN_PUBLISH_PROFILE }}

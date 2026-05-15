@@ -1,0 +1,22 @@
+name: Build and deploy Node.js app to Azure Web App - easybake-recipe-service
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'services/recipe-service/**'
+      - '.github/workflows/recipe-service.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    uses: ./.github/workflows/ci-cd_pipeline_template.yml
+    with:
+      language: 'node'
+      service_name: 'recipe-service'
+      workdir: 'services/recipe-service'
+      app_name: 'easybake-recipe-service'
+      artifact_name: 'recipe-app'
+    secrets:
+      PUBLISH_PROFILE: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_D2B3E939DD6F44F9A9699799ACBB68A3 }}

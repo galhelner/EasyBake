@@ -1,0 +1,22 @@
+name: Build and deploy Node.js app to Azure Web App - easybake-chat-service
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'services/chat-service/**'
+      - '.github/workflows/chat-service.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    uses: ./.github/workflows/ci-cd_pipeline_template.yml
+    with:
+      language: 'node'
+      service_name: 'chat-service'
+      workdir: 'services/chat-service'
+      app_name: 'easybake-chat-service'
+      artifact_name: 'chat-app'
+    secrets:
+      PUBLISH_PROFILE: ${{ secrets.AZURE_CHAT_SERVICE_SWEDEN_PUBLISH_PROFILE }}
