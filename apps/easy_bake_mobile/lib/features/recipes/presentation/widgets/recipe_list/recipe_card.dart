@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../domain/models/recipe_model.dart';
 import '../../../../profile/presentation/providers/user_preferences_notifier.dart';
 import '../../pages/recipe_details_page.dart';
+import 'recipe_card_delete_overlay.dart';
 
 class RecipeCard extends StatefulWidget {
   final RecipeModel recipe;
@@ -25,6 +26,7 @@ class _RecipeCardState extends State<RecipeCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _hoverController;
   late Animation<double> _hoverAnimation;
+  bool _showingDeleteOverlay = false;
 
   @override
   void initState() {
@@ -42,6 +44,14 @@ class _RecipeCardState extends State<RecipeCard>
   void dispose() {
     _hoverController.dispose();
     super.dispose();
+  }
+
+  void _showDeleteOverlay() {
+    setState(() => _showingDeleteOverlay = true);
+  }
+
+  void _hideDeleteOverlay() {
+    setState(() => _showingDeleteOverlay = false);
   }
 
   @override
@@ -65,174 +75,199 @@ class _RecipeCardState extends State<RecipeCard>
               ),
             );
           },
+          onLongPress: _showDeleteOverlay,
           child: Card(
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
             color: Colors.white,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF2E4E69).withValues(alpha: 0.08),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
+            child: Stack(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF2E4E69).withValues(alpha: 0.08),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                      BoxShadow(
+                        color: const Color(0xFF2E4E69).withValues(alpha: 0.04),
+                        blurRadius: 8,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
                   ),
-                  BoxShadow(
-                    color: const Color(0xFF2E4E69).withValues(alpha: 0.04),
-                    blurRadius: 8,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Image Section
-                    Stack(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        ClipRRect(
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(16),
-                            topRight: Radius.circular(16),
-                          ),
-                          child: SizedBox(
-                            height: 100,
-                            width: double.infinity,
-                            child: (widget.imageUrl != null &&
-                                    widget.imageUrl!.isNotEmpty)
-                                ? Image.network(
-                                    widget.imageUrl!,
-                                    fit: BoxFit.cover,
-                                    errorBuilder:
-                                        (context, error, stackTrace) {
-                                      return Container(
+                        // Image Section
+                        Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(16),
+                                topRight: Radius.circular(16),
+                              ),
+                              child: SizedBox(
+                                height: 100,
+                                width: double.infinity,
+                                child:
+                                    (widget.imageUrl != null &&
+                                        widget.imageUrl!.isNotEmpty)
+                                    ? Image.network(
+                                        widget.imageUrl!,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return Container(
+                                            color: const Color(0xFFF0F4F7),
+                                            alignment: Alignment.center,
+                                            child: Icon(
+                                              Icons
+                                                  .image_not_supported_outlined,
+                                              color: const Color(
+                                                0xFF8BB3D6,
+                                              ).withValues(alpha: 0.4),
+                                              size: 32,
+                                            ),
+                                          );
+                                        },
+                                      )
+                                    : Container(
                                         color: const Color(0xFFF0F4F7),
                                         alignment: Alignment.center,
                                         child: Icon(
                                           Icons.image_not_supported_outlined,
-                                          color:
-                                              const Color(0xFF8BB3D6)
-                                                  .withValues(alpha: 0.4),
+                                          color: const Color(
+                                            0xFF8BB3D6,
+                                          ).withValues(alpha: 0.4),
                                           size: 32,
                                         ),
-                                      );
-                                    },
-                                  )
-                                : Container(
-                                    color: const Color(0xFFF0F4F7),
-                                    alignment: Alignment.center,
-                                    child: Icon(
-                                      Icons.image_not_supported_outlined,
-                                      color: const Color(0xFF8BB3D6)
-                                          .withValues(alpha: 0.4),
-                                      size: 32,
-                                    ),
-                                  ),
-                          ),
-                        ),
-                        // Health Score Badge (conditionally displayed)
-                        Consumer(builder: (context, ref, child) {
-                          final show = ref.watch(healthyModeEnabledProvider);
-                          if (!show) return const SizedBox.shrink();
-                          return Positioned(
-                            top: 8,
-                            right: 8,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: widget.statusColor.withValues(alpha: 0.9),
-                                borderRadius: BorderRadius.circular(8),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: widget.statusColor.withValues(alpha: 0.3),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    _getHealthIcon(widget.recipe.healthScore),
-                                    color: Colors.white,
-                                    size: 12,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    _getHealthLabel(widget.recipe.healthScore),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
+                                      ),
                               ),
                             ),
-                          );
-                        }),
-                      ],
-                    ),
-                    // Content Section
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                widget.recipe.title,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF20364B),
-                                  height: 1.3,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            // Recipe ingredients count
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.shopping_bag_rounded,
-                                  size: 14,
-                                  color: const Color(0xFF2E4E69),
-                                ),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    '${widget.recipe.ingredients.length} ingredients',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xFF4E677D),
+                            // Health Score Badge (conditionally displayed)
+                            Consumer(
+                              builder: (context, ref, child) {
+                                final show = ref.watch(
+                                  healthyModeEnabledProvider,
+                                );
+                                if (!show) return const SizedBox.shrink();
+                                return Positioned(
+                                  top: 8,
+                                  right: 8,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: widget.statusColor.withValues(
+                                        alpha: 0.9,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: widget.statusColor.withValues(
+                                            alpha: 0.3,
+                                          ),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          _getHealthIcon(
+                                            widget.recipe.healthScore,
+                                          ),
+                                          color: Colors.white,
+                                          size: 12,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          _getHealthLabel(
+                                            widget.recipe.healthScore,
+                                          ),
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                ),
-                              ],
+                                );
+                              },
                             ),
                           ],
                         ),
-                      ),
+                        // Content Section
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    widget.recipe.title,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF20364B),
+                                      height: 1.3,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                // Recipe ingredients count
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.shopping_bag_rounded,
+                                      size: 14,
+                                      color: const Color(0xFF2E4E69),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        '${widget.recipe.ingredients.length} ingredients',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          color: Color(0xFF4E677D),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
+                // Delete overlay
+                if (_showingDeleteOverlay)
+                  RecipeCardDeleteOverlay(
+                    recipe: widget.recipe,
+                    onClose: _hideDeleteOverlay,
+                  ),
+              ],
             ),
           ),
         ),
@@ -258,5 +293,3 @@ class _RecipeCardState extends State<RecipeCard>
     }
   }
 }
-
-

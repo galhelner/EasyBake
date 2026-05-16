@@ -1,0 +1,206 @@
+import 'dart:ui';
+
+import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../data/services/recipe_service.dart';
+import '../../../domain/models/recipe_model.dart';
+import '../../providers/recipe_providers.dart';
+import 'delete_confirmation_dialog.dart';
+import 'deleting_status_card.dart';
+
+class RecipeCardDeleteOverlay extends ConsumerStatefulWidget {
+  final RecipeModel recipe;
+  final VoidCallback onClose;
+
+  const RecipeCardDeleteOverlay({
+    super.key,
+    required this.recipe,
+    required this.onClose,
+  });
+
+  @override
+  ConsumerState<RecipeCardDeleteOverlay> createState() =>
+      _RecipeCardDeleteOverlayState();
+}
+
+class _RecipeCardDeleteOverlayState
+    extends ConsumerState<RecipeCardDeleteOverlay> {
+  Future<void> _showDeleteConfirmationAndDelete() async {
+    final recipeId = widget.recipe.id;
+    if (recipeId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cannot delete: recipe ID is missing'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        widget.onClose();
+      }
+      return;
+    }
+
+    // Show confirmation dialog first while context is still valid
+    if (!mounted) return;
+
+    Future<void>? performDeleteFuture;
+
+    await showDeleteConfirmationDialog(
+      context,
+      onDelete: () async {
+        // After user confirms, perform the delete
+        if (!mounted) return;
+        performDeleteFuture = _performDelete(recipeId);
+        await performDeleteFuture;
+      },
+    );
+
+    // Wait for deletion to complete if it's still running
+    if (performDeleteFuture != null) {
+      await performDeleteFuture;
+    }
+
+    // After entire deletion flow completes, close the overlay
+    if (mounted) {
+      widget.onClose();
+    }
+  }
+
+  Future<void> _performDelete(String recipeId) async {
+    if (!mounted) return;
+
+    // Show the deleting dialog with status updates
+    var isDeleting = true;
+    var deleteSucceeded = false;
+    String? deleteErrorMessage;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return StatefulBuilder(builder: (ctx, setState) {
+          if (isDeleting) {
+            Future.microtask(() async {
+              try {
+                await ref.read(recipeServiceProvider).deleteRecipe(recipeId);
+                deleteSucceeded = true;
+                if (dialogContext.mounted) {
+                  setState(() {
+                    isDeleting = false;
+                  });
+                }
+                if (mounted) {
+                  ref.invalidate(recipesListProvider);
+                }
+              } catch (error) {
+                deleteSucceeded = false;
+                deleteErrorMessage = _userFacingDeleteError(error);
+                if (dialogContext.mounted) {
+                  setState(() {
+                    isDeleting = false;
+                  });
+                }
+              }
+            });
+          }
+
+          return Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            child: Center(
+              child: DeletingStatusCard(
+                isDeleting: isDeleting,
+                deleteSucceeded: deleteSucceeded,
+                deleteErrorMessage: deleteErrorMessage,
+                onOk: () {
+                  Navigator.of(dialogContext).pop();
+                },
+              ),
+            ),
+          );
+        });
+      },
+    );
+  }
+
+  String _userFacingDeleteError(Object error) {
+    if (error is DioException) {
+      final data = error.response?.data;
+      if (data is Map<String, dynamic> && data['error'] != null) {
+        return data['error'].toString();
+      }
+      
+      if (error.response?.statusCode == 401) {
+        return 'Unauthorized. Please check your app configuration.';
+      }
+      
+      if (error.response?.statusCode == 404) {
+        return 'Recipe not found.';
+      }
+    }
+    
+    return 'Could not delete recipe. Please try again.';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: Stack(
+        children: [
+          // Blur glass effect (confined to card only)
+          // GestureDetector to consume taps and close overlay on tap outside
+          GestureDetector(
+            onTap: widget.onClose,
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+          ),
+          // Close button - top right corner (icon only, no background)
+          Positioned(
+            top: 8,
+            right: 8,
+            child: GestureDetector(
+              onTap: widget.onClose,
+              child: const Icon(Icons.close, color: Colors.black54, size: 24),
+            ),
+          ),
+          // Delete button at bottom
+          Positioned(
+            bottom: 12,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: SizedBox(
+                width: 120,
+                child: ElevatedButton.icon(
+                  onPressed: _showDeleteConfirmationAndDelete,
+                  icon: const Icon(Icons.delete_outline, size: 16),
+                  label: const Text(
+                    'Delete',
+                    style: TextStyle(fontSize: 13),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red[400],
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
