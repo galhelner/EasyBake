@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 class HomeBottomTabBar extends StatefulWidget {
@@ -52,10 +50,7 @@ class _HomeBottomTabBarState extends State<HomeBottomTabBar> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               color: const Color(0xFFEDF1F6),
-              border: Border.all(
-                color: const Color(0xFFD8E4EE),
-                width: 1.2,
-              ),
+              border: Border.all(color: const Color(0xFFD8E4EE), width: 1.2),
               boxShadow: [
                 BoxShadow(
                   color: const Color(0xFF2E4E69).withValues(alpha: 0.06),
@@ -67,111 +62,78 @@ class _HomeBottomTabBarState extends State<HomeBottomTabBar> {
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final segmentWidth = constraints.maxWidth / 3;
+                const double indicatorWidth = 78.0;
+                const double indicatorHeight = 46.0;
+                final double indicatorTop =
+                    (constraints.maxHeight - indicatorHeight) / 2;
 
                 return Stack(
-                children: [
-                  // Glass-morphic rounded rectangle indicator
-                  AnimatedPositioned(
-                    duration: const Duration(milliseconds: 320),
-                    curve: Curves.easeOutCubic,
-                    left: segmentWidth * widget.currentIndex + (segmentWidth - 78) / 2,
-                    top: 4,
-                    width: 78,
-                    height: 48,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(14),
-                      child: Stack(
-                        children: [
-                          // Blur effect layer
-                          BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(14),
-                                color: Colors.transparent,
-                              ),
-                            ),
-                          ),
-                          // Gradient glass layer
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(14),
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  const Color(0xFFFFFFFF).withValues(alpha: 0.4),
-                                  const Color(0xFF6BA3D1).withValues(alpha: 0.35),
-                                ],
-                              ),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.55),
-                                width: 1.2,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFFFFFFFF).withValues(alpha: 0.25),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 1),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                  children: [
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 320),
+                      curve: Curves.easeOutCubic,
+                      left:
+                          segmentWidth * widget.currentIndex +
+                          (segmentWidth - indicatorWidth) / 2,
+                      top: indicatorTop,
+                      width: indicatorWidth,
+                      height: indicatorHeight,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(color: const Color(0xFFB6D8E8)),
                       ),
                     ),
-                  ),
-                  // Tab buttons
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _TabIconButton(
-                          tooltip: 'Community Chat',
-                          label: _labelForIndex(0),
-                          selected: widget.currentIndex == 0,
-                          icon: Icons.forum_rounded,
-                          onTap: () => widget.onTabSelected(0),
-                          isHovered: _hoveredIndices[0] > 0,
-                          onHoverChange: (hovering) {
-                            setState(() {
-                              _hoveredIndices[0] = hovering ? 1 : 0;
-                            });
-                          },
+                    // Tab buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _TabIconButton(
+                            tooltip: 'Community Chat',
+                            label: _labelForIndex(0),
+                            selected: widget.currentIndex == 0,
+                            icon: Icons.forum_rounded,
+                            onTap: () => widget.onTabSelected(0),
+                            isHovered: _hoveredIndices[0] > 0,
+                            onHoverChange: (hovering) {
+                              setState(() {
+                                _hoveredIndices[0] = hovering ? 1 : 0;
+                              });
+                            },
+                          ),
                         ),
-                      ),
-                      Expanded(
-                        child: _TabIconButton(
-                          tooltip: 'Home',
-                          label: _labelForIndex(1),
-                          selected: widget.currentIndex == 1,
-                          icon: Icons.home_rounded,
-                          onTap: () => widget.onTabSelected(1),
-                          isHovered: _hoveredIndices[1] > 0,
-                          onHoverChange: (hovering) {
-                            setState(() {
-                              _hoveredIndices[1] = hovering ? 1 : 0;
-                            });
-                          },
+                        Expanded(
+                          child: _TabIconButton(
+                            tooltip: 'Home',
+                            label: _labelForIndex(1),
+                            selected: widget.currentIndex == 1,
+                            icon: Icons.home_rounded,
+                            onTap: () => widget.onTabSelected(1),
+                            isHovered: _hoveredIndices[1] > 0,
+                            onHoverChange: (hovering) {
+                              setState(() {
+                                _hoveredIndices[1] = hovering ? 1 : 0;
+                              });
+                            },
+                          ),
                         ),
-                      ),
-                      Expanded(
-                        child: _TabIconButton(
-                          tooltip: 'Profile',
-                          label: _labelForIndex(2),
-                          selected: widget.currentIndex == 2,
-                          icon: Icons.person_rounded,
-                          onTap: () => widget.onTabSelected(2),
-                          isHovered: _hoveredIndices[2] > 0,
-                          onHoverChange: (hovering) {
-                            setState(() {
-                              _hoveredIndices[2] = hovering ? 1 : 0;
-                            });
-                          },
+                        Expanded(
+                          child: _TabIconButton(
+                            tooltip: 'Profile',
+                            label: _labelForIndex(2),
+                            selected: widget.currentIndex == 2,
+                            icon: Icons.person_rounded,
+                            onTap: () => widget.onTabSelected(2),
+                            isHovered: _hoveredIndices[2] > 0,
+                            onHoverChange: (hovering) {
+                              setState(() {
+                                _hoveredIndices[2] = hovering ? 1 : 0;
+                              });
+                            },
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
                 );
               },
             ),
@@ -255,11 +217,8 @@ class _TabIconButtonState extends State<_TabIconButton>
             child: AnimatedBuilder(
               animation: _tapController,
               builder: (context, child) {
-                final scale = 1.0 - (_tapController.value * 0.08);
-                return Transform.scale(
-                  scale: scale,
-                  child: child,
-                );
+                final tapScale = 1.0 - (_tapController.value * 0.08);
+                return Transform.scale(scale: tapScale, child: child);
               },
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -269,7 +228,7 @@ class _TabIconButtonState extends State<_TabIconButton>
                     curve: Curves.easeOutCubic,
                     child: Icon(
                       widget.icon,
-                      size: widget.selected ? 24 : 22,
+                      size: 22,
                       color: widget.selected
                           ? const Color(0xFF2E4E69)
                           : const Color(0xFF7A95B1),
@@ -279,8 +238,8 @@ class _TabIconButtonState extends State<_TabIconButton>
                   AnimatedDefaultTextStyle(
                     duration: const Duration(milliseconds: 200),
                     style: TextStyle(
-                      fontSize: widget.selected ? 10.5 : 9.5,
-                      fontWeight: widget.selected ? FontWeight.w700 : FontWeight.w500,
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w600,
                       color: widget.selected
                           ? const Color(0xFF2E4E69)
                           : const Color(0xFF7A95B1),
