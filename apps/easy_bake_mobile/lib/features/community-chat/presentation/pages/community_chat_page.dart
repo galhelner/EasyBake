@@ -50,6 +50,8 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
       return;
     }
 
+    FocusManager.instance.primaryFocus?.unfocus();
+
     await showDialog<void>(
       context: context,
       barrierDismissible: true,
@@ -60,6 +62,10 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
         },
       ),
     );
+
+    if (mounted) {
+      FocusManager.instance.primaryFocus?.unfocus();
+    }
   }
 
   Future<void> _showChatFailureDialog(String message) async {
