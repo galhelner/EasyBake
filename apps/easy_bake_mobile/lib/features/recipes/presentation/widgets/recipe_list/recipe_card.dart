@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 import '../../../domain/models/recipe_model.dart';
 import '../../../../profile/presentation/providers/user_preferences_notifier.dart';
@@ -56,6 +57,8 @@ class _RecipeCardState extends State<RecipeCard>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return AnimatedBuilder(
       animation: _hoverAnimation,
       builder: (context, child) {
@@ -193,6 +196,7 @@ class _RecipeCardState extends State<RecipeCard>
                                         const SizedBox(width: 4),
                                         Text(
                                           _getHealthLabel(
+                                            l10n,
                                             widget.recipe.healthScore,
                                           ),
                                           style: const TextStyle(
@@ -241,7 +245,9 @@ class _RecipeCardState extends State<RecipeCard>
                                     const SizedBox(width: 4),
                                     Expanded(
                                       child: Text(
-                                        '${widget.recipe.ingredients.length} ingredients',
+                                        l10n.shareRecipeIngredientsCount(
+                                          widget.recipe.ingredients.length,
+                                        ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(
@@ -275,13 +281,13 @@ class _RecipeCardState extends State<RecipeCard>
     );
   }
 
-  String _getHealthLabel(int healthScore) {
+  String _getHealthLabel(AppLocalizations l10n, int healthScore) {
     if (healthScore >= 70) {
-      return 'Healthy';
+      return l10n.healthyBadgeLabel;
     } else if (healthScore >= 40) {
-      return 'Average';
+      return l10n.averageBadgeLabel;
     } else {
-      return 'Unhealthy';
+      return l10n.unhealthyBadgeLabel;
     }
   }
 

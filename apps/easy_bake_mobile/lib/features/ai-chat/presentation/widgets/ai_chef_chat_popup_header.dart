@@ -1,3 +1,4 @@
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class AiChefChatPopupHeader extends StatelessWidget {
@@ -18,6 +19,8 @@ class AiChefChatPopupHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 8, 10),
       decoration: const BoxDecoration(
@@ -65,23 +68,28 @@ class AiChefChatPopupHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'EasyBake AI Chef',
-                  style: TextStyle(
+                  l10n.aiChefPopupTitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF253852),
                     letterSpacing: 0.1,
                   ),
                 ),
-                SizedBox(height: 2),
+                const SizedBox(height: 2),
                 Text(
-                  'Chat assistant',
-                  style: TextStyle(
+                  l10n.aiChefPopupSubtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
                     fontSize: 12,
                     color: Color(0xFF557089),
                     fontWeight: FontWeight.w500,
@@ -96,30 +104,30 @@ class AiChefChatPopupHeader extends StatelessWidget {
               color: isCheckingInitialConnection
                   ? const Color(0xFFE3F2FD)
                   : isServiceOnline
-                  ? const Color(0xFFE8F5E9)
-                  : const Color(0xFFFCE4EC),
+                      ? const Color(0xFFE8F5E9)
+                      : const Color(0xFFFCE4EC),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isCheckingInitialConnection
                     ? const Color(0xFFD3DADF)
                     : isServiceOnline
-                    ? const Color(0xFFA5D6A7)
-                    : const Color(0xFFF48FB1),
+                        ? const Color(0xFFA5D6A7)
+                        : const Color(0xFFF48FB1),
               ),
             ),
             child: Text(
               isCheckingInitialConnection
-                  ? 'Checking...'
+                  ? l10n.aiChefPopupCheckingLabel
                   : isServiceOnline
-                  ? 'Online'
-                  : 'Offline',
+                      ? l10n.connectionPillOnlineLabel
+                      : l10n.connectionPillOfflineLabel,
               style: TextStyle(
                 fontSize: 11,
                 color: isCheckingInitialConnection
                     ? const Color(0xFF6A7884)
                     : isServiceOnline
-                    ? const Color(0xFF2E7D32)
-                    : const Color(0xFFC2185B),
+                        ? const Color(0xFF2E7D32)
+                        : const Color(0xFFC2185B),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -145,9 +153,9 @@ class AiChefChatPopupHeader extends StatelessWidget {
                         ),
                       )
                     : const Icon(Icons.refresh_rounded, size: 14),
-                label: const Text(
-                  'Refresh',
-                  style: TextStyle(fontSize: 11),
+                label: Text(
+                  l10n.aiChefPopupRefreshLabel,
+                  style: const TextStyle(fontSize: 11),
                 ),
               ),
             ),

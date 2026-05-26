@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 import '../../../home/presentation/pages/home_tabs_page.dart';
 import '../../data/services/auth_api_service.dart';
@@ -183,10 +184,12 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   }
 
   Future<void> _showEmailExistsDialog() {
+    final l10n = AppLocalizations.of(context)!;
+
     return _showAuthErrorDialog(
-      const _AuthErrorDialogData(
-        title: 'Email already exists',
-        message: 'A user with this email is already registered.',
+      _AuthErrorDialogData(
+        title: l10n.emailAlreadyExistsTitle,
+        message: l10n.emailAlreadyExistsMessage,
         icon: Icons.email_outlined,
         accentColor: Color(0xFFD64545),
         iconBackgroundColor: Color(0xFFFCE8E8),
@@ -391,38 +394,40 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     Object error, {
     bool isRegister = false,
   }) {
+    final l10n = AppLocalizations.of(context)!;
+
     if (error is DioException) {
       if (error.response?.statusCode == 401) {
-        return const _AuthErrorDialogData(
-          title: 'Wrong credentials',
-          message: 'The email or password is incorrect. Please try again.',
+        return _AuthErrorDialogData(
+          title: l10n.authWrongCredentialsTitle,
+          message: l10n.authWrongCredentialsMessage,
           icon: Icons.lock_outline_rounded,
           accentColor: _kActionBlue,
           iconBackgroundColor: Color(0xFFE6F0FA),
         );
       }
       if (isRegister && _isEmailAlreadyRegisteredError(error)) {
-        return const _AuthErrorDialogData(
-          title: 'Email already exists',
-          message: 'A user with this email is already registered.',
+        return _AuthErrorDialogData(
+          title: l10n.emailAlreadyExistsTitle,
+          message: l10n.emailAlreadyExistsMessage,
           icon: Icons.email_outlined,
           accentColor: Color(0xFFD64545),
           iconBackgroundColor: Color(0xFFFCE8E8),
         );
       }
 
-      return const _AuthErrorDialogData(
-        title: 'Oops! Something went wrong',
-        message: 'Please try again in a moment.',
+      return _AuthErrorDialogData(
+        title: l10n.authGenericErrorTitle,
+        message: l10n.authRetrySoonMessage,
         icon: Icons.sentiment_dissatisfied_rounded,
         accentColor: _kActionBlue,
         iconBackgroundColor: Color(0xFFE6F0FA),
       );
     }
 
-    return const _AuthErrorDialogData(
-      title: 'Oops! Something went wrong',
-      message: 'An unexpected error occurred. Please try again.',
+    return _AuthErrorDialogData(
+      title: l10n.authGenericErrorTitle,
+      message: l10n.authUnexpectedErrorMessage,
       icon: Icons.sentiment_dissatisfied_rounded,
       accentColor: _kActionBlue,
       iconBackgroundColor: Color(0xFFE6F0FA),
@@ -460,6 +465,8 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   }
 
   Future<void> _showAuthErrorDialog(_AuthErrorDialogData data) {
+    final l10n = AppLocalizations.of(context)!;
+
     return showDialog(
       context: context,
       builder: (ctx) => Dialog(
@@ -529,9 +536,9 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  child: const Text(
-                    'Got it',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                  child: Text(
+                    l10n.gotItButtonLabel,
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                   ),
                 ),
               ),

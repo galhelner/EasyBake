@@ -766,7 +766,10 @@ export const updateRecipe = async (
             ingredient: {
               connectOrCreate: {
                 where: { name: ingredient.name },
-                create: { name: ingredient.name },
+                create: {
+                  name: ingredient.name,
+                  ...(ingredient.icon && { icon: ingredient.icon }),
+                },
               },
             },
           })),
@@ -780,6 +783,22 @@ export const updateRecipe = async (
         },
       },
     });
+
+    await Promise.all(
+      normalizedIngredients
+        .filter((ingredient) => Boolean(ingredient.icon))
+        .map((ingredient) =>
+          prisma.ingredient.updateMany({
+            where: {
+              name: ingredient.name,
+              icon: '',
+            },
+            data: {
+              icon: ingredient.icon,
+            },
+          }),
+        ),
+    );
 
     try {
       const embeddingText = buildRecipeEmbeddingText(title, ingredientNames, instructions);

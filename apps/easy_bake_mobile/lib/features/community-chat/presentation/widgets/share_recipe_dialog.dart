@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 import '../../../auth/presentation/providers/auth_notifier.dart';
 import '../../../recipes/domain/models/recipe_model.dart';
@@ -12,6 +13,7 @@ class ShareRecipeDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final recipesAsync = ref.watch(recipesListProvider);
     final currentUserId = ref.watch(authNotifierProvider).userId?.trim() ?? '';
 
@@ -41,12 +43,12 @@ class ShareRecipeDialog extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Share a recipe',
+                          l10n.shareRecipeTitle,
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
@@ -55,7 +57,7 @@ class ShareRecipeDialog extends ConsumerWidget {
                         ),
                         SizedBox(height: 4),
                         Text(
-                          'Choose one of your recipes to send to the community.',
+                          l10n.shareRecipeSubtitle,
                           style: TextStyle(
                             fontSize: 12.5,
                             height: 1.35,
@@ -68,7 +70,7 @@ class ShareRecipeDialog extends ConsumerWidget {
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.close_rounded),
-                    tooltip: 'Close',
+                    tooltip: l10n.closeTooltip,
                   ),
                 ],
               ),
@@ -87,7 +89,7 @@ class ShareRecipeDialog extends ConsumerWidget {
                     child: Padding(
                       padding: const EdgeInsets.all(24),
                       child: Text(
-                        'Could not load your recipes right now.',
+                        l10n.couldNotLoadRecipesRightNowMessage,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Colors.grey.shade700,
@@ -109,7 +111,7 @@ class ShareRecipeDialog extends ConsumerWidget {
                       child: Padding(
                         padding: const EdgeInsets.all(24),
                         child: Text(
-                          'You do not have any recipes to share yet.',
+                          l10n.noRecipesYetMessage,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Colors.grey.shade700,
@@ -158,6 +160,8 @@ class _RecipeShareTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(18),
@@ -210,7 +214,7 @@ class _RecipeShareTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    '${recipe.ingredients.length} ingredients',
+                    l10n.shareRecipeIngredientsCount(recipe.ingredients.length),
                     style: const TextStyle(
                       fontSize: 12.5,
                       color: Color(0xFF667C8E),

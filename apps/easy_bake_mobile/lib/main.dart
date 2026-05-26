@@ -1,7 +1,9 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 import 'core/services/notification_service.dart';
+import 'core/localization/app_locale_controller.dart';
 import 'features/auth/presentation/pages/auth_page.dart';
 import 'features/auth/presentation/providers/auth_notifier.dart';
 import 'features/home/presentation/pages/home_tabs_page.dart';
@@ -14,26 +16,35 @@ Future<void> main() async {
   /// Initialize notifications ONCE at app startup to prevent iOS apsd conflicts.
   /// This ensures the notification plugin is set up once globally, not per-widget.
   await NotificationService().initialize();
+  await restoreAppLocaleFromStorage();
 
   final container = ProviderContainer();
   runApp(UncontrolledProviderScope(container: container, child: const MyApp()));
 }
 
-class MyApp extends ConsumerWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return MaterialApp(
-      title: 'EasyBake',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: const Color(0xFF8BB3D6),
-        brightness: Brightness.light,
-        typography: Typography.material2021(),
-      ),
-      home: const AppBootstrapPage(),
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<Locale?>(
+      valueListenable: appLocaleNotifier,
+      builder: (context, locale, _) {
+        return MaterialApp(
+          title: 'EasyBake',
+          debugShowCheckedModeBanner: false,
+          locale: locale,
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          theme: ThemeData(
+            useMaterial3: true,
+            colorSchemeSeed: const Color(0xFF8BB3D6),
+            brightness: Brightness.light,
+            typography: Typography.material2021(),
+          ),
+          home: const AppBootstrapPage(),
+        );
+      },
     );
   }
 }
@@ -55,7 +66,9 @@ class _AppBootstrapPageState extends ConsumerState<AppBootstrapPage>
 
   Future<void> _bootstrapAuthState() async {
     await ref.read(authNotifierProvider.notifier).restoreFromStorage();
-    await ref.read(userPreferencesNotifierProvider.notifier).restoreFromStorage();
+    await ref
+        .read(userPreferencesNotifierProvider.notifier)
+        .restoreFromStorage();
     if (!mounted) {
       return;
     }
@@ -148,8 +161,8 @@ class _AnimatedSplash extends StatelessWidget {
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFFF6FAFF), Color(0xFFDDEBFF)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            begin: AlignmentDirectional.topStart,
+            end: AlignmentDirectional.bottomEnd,
           ),
         ),
         child: Center(

@@ -22,8 +22,8 @@ class AiChefChatButton extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          Positioned(
-            right: -2,
+          PositionedDirectional(
+            end: -2,
             bottom: 72,
             child: TweenAnimationBuilder<double>(
               tween: Tween(begin: 0.0, end: 1.0),

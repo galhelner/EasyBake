@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 class ProfileHeader extends StatelessWidget {
   final String userName;
@@ -7,6 +8,8 @@ class ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -57,9 +60,9 @@ class ProfileHeader extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-                const Text(
-                  'Welcome back to EasyBake',
-                  style: TextStyle(
+                Text(
+                  l10n.profileHeaderGreetingSubtitle,
+                  style: const TextStyle(
                     fontSize: 13,
                     color: Color(0xFF587085),
                     fontWeight: FontWeight.w500,

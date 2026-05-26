@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
+
 import 'recipe_scale_toggle.dart';
 
 class RecipeDetailsIngredientList extends StatefulWidget {
@@ -142,6 +144,7 @@ class _RecipeDetailsIngredientListState
   }
 
   Future<void> _showCustomScaleDialog() async {
+    final l10n = AppLocalizations.of(context)!;
     final controller = TextEditingController(
       text: _isPresetScale(widget.scale) ? '' : _formatNumber(widget.scale),
     );
@@ -149,19 +152,19 @@ class _RecipeDetailsIngredientListState
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Custom Scale'),
+          title: Text(l10n.customScaleTitle),
           content: TextField(
             controller: controller,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
-              hintText: 'Enter your desired scale',
+            decoration: InputDecoration(
+              hintText: l10n.enterDesiredScaleHint,
             ),
             autofocus: true,
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
+              child: Text(l10n.cancelButtonLabel),
             ),
             TextButton(
               onPressed: () {
@@ -171,7 +174,7 @@ class _RecipeDetailsIngredientListState
                 }
                 Navigator.of(dialogContext).pop(parsed);
               },
-              child: const Text('Apply'),
+              child: Text(l10n.applyButtonLabel),
             ),
           ],
         );
@@ -187,10 +190,11 @@ class _RecipeDetailsIngredientListState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (widget.items.isEmpty) {
-      return const Text(
-        'No ingredients available.',
-        style: TextStyle(color: Color(0xFF2B3D5A), fontSize: 16),
+      return Text(
+        l10n.noIngredientsAvailableMessage,
+        style: const TextStyle(color: Color(0xFF2B3D5A), fontSize: 16),
       );
     }
 
@@ -217,8 +221,8 @@ class _RecipeDetailsIngredientListState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Recipe scales',
+              Text(
+                l10n.recipeScalesTitle,
                 style: TextStyle(
                   color: Color(0xFF6B7F92),
                   fontSize: 11,
@@ -257,9 +261,9 @@ class _RecipeDetailsIngredientListState
                           size: 16,
                           color: _controlAccent,
                         ),
-                        label: const Text(
-                          'Custom',
-                          style: TextStyle(
+                        label: Text(
+                          l10n.customScaleButtonLabel,
+                          style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
                             color: _controlAccent,

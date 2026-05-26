@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 /// Displays a recipe preview card with image and view button
 class AiChefRecipePreview extends StatelessWidget {
@@ -17,6 +18,7 @@ class AiChefRecipePreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -99,7 +101,7 @@ class AiChefRecipePreview extends StatelessWidget {
                       ),
                       elevation: 0,
                     ),
-                    child: const Text('View recipe'),
+                    child: Text(l10n.viewRecipeButtonLabel),
                   ),
                 ),
               ],

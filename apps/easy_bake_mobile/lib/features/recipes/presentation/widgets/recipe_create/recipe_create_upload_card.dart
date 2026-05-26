@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
 import 'dart:typed_data';
+import 'package:flutter/material.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 class RecipeCreateUploadCard extends StatelessWidget {
   final Color primaryColor;
@@ -21,6 +22,7 @@ class RecipeCreateUploadCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final hasImageBytes = imageBytes != null;
     final hasImageUrl = imageUrl != null && imageUrl!.trim().isNotEmpty;
     final hasImage = hasImageBytes || hasImageUrl;
@@ -108,7 +110,7 @@ class RecipeCreateUploadCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Upload Recipe Image',
+                          l10n.uploadRecipeImageTitle,
                           style: TextStyle(
                             color: primaryColor,
                             fontSize: 16,
@@ -118,7 +120,7 @@ class RecipeCreateUploadCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Gallery or camera',
+                          l10n.uploadRecipeImageSubtitle,
                           style: TextStyle(
                             color: primaryColor.withValues(alpha: 0.7),
                             fontSize: 12.5,
@@ -200,14 +202,14 @@ class RecipeCreateUploadCard extends StatelessWidget {
                     children: [
                       _ImageActionButton(
                         icon: Icons.edit_rounded,
-                        label: 'Replace',
+                        label: l10n.replaceButtonLabel,
                         onTap: onReplace,
                       ),
                       if (onDelete != null) ...[
                         const SizedBox(width: 8),
                         _ImageActionButton(
                           icon: Icons.delete_outline_rounded,
-                          label: 'Delete',
+                          label: l10n.deleteButtonLabel,
                           onTap: onDelete!,
                           accentColor: const Color(0xFFD85B5B),
                         ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 import '../../providers/recipe_providers.dart';
 
@@ -66,6 +67,7 @@ class _SearchInputState extends State<_SearchInput> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Focus(
       onFocusChange: (isFocused) {
         setState(() {
@@ -116,7 +118,7 @@ class _SearchInputState extends State<_SearchInput> {
               horizontal: 16,
               vertical: 12,
             ),
-            hintText: 'Search recipes...',
+            hintText: l10n.searchRecipesHint,
             hintStyle: TextStyle(
               fontSize: 16,
               color: const Color(0xFF4E677D).withValues(alpha: 0.6),

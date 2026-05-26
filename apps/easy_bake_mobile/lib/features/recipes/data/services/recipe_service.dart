@@ -47,7 +47,9 @@ class RecipeService {
   /// Creates a copy of [recipe] for the current user. If [recipe.imageUrl] is a
   /// non-default remote URL, downloads it and uploads it as multipart so the
   /// saved recipe matches the image shown in the UI (same as [createRecipeWithOptionalImage]).
-  Future<RecipeModel> createRecipeCopyWithRemoteImage(RecipeModel recipe) async {
+  Future<RecipeModel> createRecipeCopyWithRemoteImage(
+    RecipeModel recipe,
+  ) async {
     final url = recipe.imageUrl?.trim();
     if (!_isNetworkRecipeImageUrl(url)) {
       return createRecipe(recipe, reuseExistingHealthScore: true);
@@ -198,7 +200,8 @@ class RecipeService {
       // Backend preprocessors accept JSON strings in multipart fields.
       'instructions': jsonEncode(instructions),
       'ingredients': jsonEncode(ingredients),
-      if (createData.containsKey('healthScore')) 'healthScore': createData['healthScore'],
+      if (createData.containsKey('healthScore'))
+        'healthScore': createData['healthScore'],
       'image': await MultipartFile.fromFile(imageFile.path, filename: fileName),
     });
 
@@ -243,20 +246,12 @@ class RecipeService {
     bool removeExistingImage = false,
   }) async {
     if (imageFilePath == null || imageFilePath.isEmpty) {
-      return updateRecipe(
-        id,
-        recipe,
-        removeExistingImage: removeExistingImage,
-      );
+      return updateRecipe(id, recipe, removeExistingImage: removeExistingImage);
     }
 
     final imageFile = File(imageFilePath);
     if (!await imageFile.exists()) {
-      return updateRecipe(
-        id,
-        recipe,
-        removeExistingImage: removeExistingImage,
-      );
+      return updateRecipe(id, recipe, removeExistingImage: removeExistingImage);
     }
 
     final updateData = recipe.toCreateJson();

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 import 'recipe_details_theme.dart';
 
@@ -16,6 +17,7 @@ class RecipeDetailsTabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SizedBox(
       width: double.infinity,
       height: 54,
@@ -40,8 +42,8 @@ class RecipeDetailsTabBar extends StatelessWidget {
                 duration: const Duration(milliseconds: 160),
                 curve: Curves.easeOutCubic,
                 alignment: isIngredientsSelected
-                    ? Alignment.centerLeft
-                    : Alignment.centerRight,
+                    ? AlignmentDirectional.centerStart
+                    : AlignmentDirectional.centerEnd,
                 child: FractionallySizedBox(
                   widthFactor: 0.5,
                   heightFactor: 1,
@@ -69,7 +71,7 @@ class RecipeDetailsTabBar extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _SegmentButton(
-                      label: 'Ingredients',
+                      label: l10n.ingredientsTabLabel,
                       icon: Icons.shopping_basket_outlined,
                       selected: isIngredientsSelected,
                       onTap: onIngredientsTap,
@@ -77,7 +79,7 @@ class RecipeDetailsTabBar extends StatelessWidget {
                   ),
                   Expanded(
                     child: _SegmentButton(
-                      label: 'Instructions',
+                      label: l10n.instructionsTabLabel,
                       icon: Icons.format_list_numbered_rounded,
                       selected: !isIngredientsSelected,
                       onTap: onInstructionsTap,

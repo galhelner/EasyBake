@@ -1,3 +1,4 @@
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 import 'ai_chef_chat_typing_dots.dart';
@@ -119,6 +120,8 @@ class ChatMessageBuilder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     switch (message.kind) {
       case ChatMessageKind.typing:
         return const AiChefChatTypingDots();
@@ -126,14 +129,14 @@ class ChatMessageBuilder extends StatelessWidget {
         return const AiChefConnectionChecking();
       case ChatMessageKind.recipePreview:
         return AiChefRecipePreview(
-          recipeTitle: message.recipeTitle ?? 'Recipe',
+          recipeTitle: message.recipeTitle ?? l10n.aiChefYourRecipeFallback,
           imageUrl: message.imageUrl ?? '',
           recipePayload: message.recipePayload ?? {},
           onViewRecipe: onOpenRecipe,
         );
       case ChatMessageKind.swapSummary:
         return AiChefSwapSummary(
-          title: message.title ?? 'Suggested substitutions',
+          title: message.title ?? l10n.aiChefSuggestedSubstitutionsTitle,
           swaps: message.swaps ?? [],
         );
       case ChatMessageKind.searchResults:

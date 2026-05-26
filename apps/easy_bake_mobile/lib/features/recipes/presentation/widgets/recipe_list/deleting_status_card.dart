@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 const Color kRecipeDetailsPrimaryBlue = Color(0xFF1F6FC9);
 
@@ -18,6 +19,7 @@ class DeletingStatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       width: 270,
       padding: const EdgeInsets.symmetric(
@@ -46,8 +48,8 @@ class DeletingStatusCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           if (isDeleting) ...[
-            const Text(
-              'Deleting your recipe...',
+            Text(
+              l10n.deletingYourRecipeMessage,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Color(0xFF2E4E69),
@@ -70,8 +72,8 @@ class DeletingStatusCard extends StatelessWidget {
           ] else ...[
             Text(
               deleteSucceeded
-                  ? 'Recipe deleted'
-                  : (deleteErrorMessage ?? 'Could not delete recipe. Please try again.'),
+                  ? l10n.recipeDeletedMessage
+                  : (deleteErrorMessage ?? l10n.couldNotDeleteRecipeMessage),
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: deleteSucceeded ? const Color(0xFF2E4E69) : const Color(0xFFB83232),
@@ -83,7 +85,7 @@ class DeletingStatusCard extends StatelessWidget {
             const SizedBox(height: 12),
             ElevatedButton(
               onPressed: onOk ?? () => Navigator.of(context).pop(),
-              child: const Text('OK'),
+              child: Text(l10n.okButtonLabel),
             ),
           ],
         ],

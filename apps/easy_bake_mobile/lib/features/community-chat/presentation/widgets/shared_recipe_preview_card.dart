@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
+import '../../../profile/presentation/providers/user_preferences_notifier.dart';
 import '../../../recipes/presentation/widgets/recipe_details/save_confirmation_dialog.dart';
 
 class SharedRecipePreviewCard extends StatelessWidget {
@@ -21,8 +24,9 @@ class SharedRecipePreviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final healthColor = _healthColor(healthScore);
-    final healthLabel = _healthLabel(healthScore);
+    final healthLabel = _healthLabel(l10n, healthScore);
     final healthIcon = _healthIcon(healthScore);
 
     return Container(
@@ -58,37 +62,45 @@ class SharedRecipePreviewCard extends StatelessWidget {
               Positioned(
                 top: 8,
                 right: 8,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: healthColor.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: [
-                      BoxShadow(
-                        color: healthColor.withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+                child: Consumer(
+                  builder: (context, ref, child) {
+                    if (!ref.watch(healthyModeEnabledProvider)) {
+                      return const SizedBox.shrink();
+                    }
+
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
                       ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(healthIcon, color: Colors.white, size: 12),
-                      const SizedBox(width: 4),
-                      Text(
-                        healthLabel,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      decoration: BoxDecoration(
+                        color: healthColor.withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: healthColor.withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(healthIcon, color: Colors.white, size: 12),
+                          const SizedBox(width: 4),
+                          Text(
+                            healthLabel,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
@@ -120,21 +132,21 @@ class SharedRecipePreviewCard extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             visualDensity: VisualDensity.compact,
                           ),
-                          child: const Text('View'),
+                          child: Text(l10n.viewButtonLabel),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: OutlinedButton(
-                            onPressed: () => showSaveConfirmationDialog(
-                                  context,
-                                  onSave: onSave,
-                                ),
+                          onPressed: () => showSaveConfirmationDialog(
+                            context,
+                            onSave: onSave,
+                          ),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             visualDensity: VisualDensity.compact,
                           ),
-                          child: const Text('Save'),
+                          child: Text(l10n.saveButtonLabel),
                         ),
                       ),
                     ],
@@ -171,14 +183,14 @@ class SharedRecipePreviewCard extends StatelessWidget {
     return const Color(0xFFC62828);
   }
 
-  String _healthLabel(int score) {
+  String _healthLabel(AppLocalizations l10n, int score) {
     if (score >= 70) {
-      return 'Healthy';
+      return l10n.healthyBadgeLabel;
     }
     if (score >= 40) {
-      return 'Average';
+      return l10n.averageBadgeLabel;
     }
-    return 'Unhealthy';
+    return l10n.unhealthyBadgeLabel;
   }
 
   IconData _healthIcon(int score) {

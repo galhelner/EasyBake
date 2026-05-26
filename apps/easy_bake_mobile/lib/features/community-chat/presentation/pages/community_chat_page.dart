@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 import '../providers/chat_provider.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
@@ -69,6 +70,7 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
   }
 
   Future<void> _showChatFailureDialog(String message) async {
+    final l10n = AppLocalizations.of(context)!;
     if (!mounted || _isFailureDialogOpen) {
       return;
     }
@@ -88,22 +90,20 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
               children: [
                 const Icon(Icons.cloud_off_outlined, color: Color(0xFFB43B3B)),
                 const SizedBox(width: 10),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Community chat is unavailable',
+                    l10n.communityChatUnavailableTitle,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
-            content: Text(
-              '$message\n\nYou can try again later or refresh the chat.',
-            ),
+            content: Text('$message\n\n${l10n.communityChatFailureHint}'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(dialogContext).pop(),
-                child: const Text('Later'),
+                child: Text(l10n.laterButtonLabel),
               ),
               FilledButton(
                 onPressed: () {
@@ -114,7 +114,11 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
                     unawaited(_initializeChat());
                   }
                 },
-                child: Text(shouldRefresh ? 'Refresh' : 'Try again'),
+                child: Text(
+                  shouldRefresh
+                      ? l10n.refreshButtonLabel
+                      : l10n.tryAgainButtonLabel,
+                ),
               ),
             ],
           );
@@ -156,6 +160,7 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final messages = ref.watch(chatMessagesProvider);
     final connectionState = ref.watch(chatConnectionStateProvider);
     final isConnected = connectionState == ChatConnectionState.connected;
@@ -207,14 +212,14 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
               ),
             ),
             const SizedBox(width: 6),
-            const Flexible(
+            Flexible(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Community Chat',
-                    style: TextStyle(
+                    l10n.communityChatHeaderTitle,
+                    style: const TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 15,
                       color: Color(0xFF111B26),
@@ -222,8 +227,8 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
                     ),
                   ),
                   Text(
-                    'Bakers Community',
-                    style: TextStyle(
+                    l10n.communityChatHeaderSubtitle,
+                    style: const TextStyle(
                       fontWeight: FontWeight.w400,
                       fontSize: 12,
                       color: Color(0xFF667C8E),
@@ -236,7 +241,7 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 16),
+            padding: const EdgeInsetsDirectional.only(end: 16),
             child: Center(
               child: ConnectionPill(
                 isConnecting: isConnecting,
@@ -273,9 +278,12 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
                     itemCount: messages.isEmpty ? 1 : messages.length,
                     itemBuilder: (context, index) {
                       if (messages.isEmpty) {
+                        final isOffline =
+                            connectionState == ChatConnectionState.disconnected;
+
                         return SizedBox(
                           height: MediaQuery.of(context).size.height * 0.5,
-                          child: const EmptyState(),
+                          child: EmptyState(isOffline: isOffline),
                         );
                       }
 
@@ -288,6 +296,7 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
                               message.userEmail == currentUserEmail);
 
                       return MessageTile(
+                        key: ValueKey(message.id),
                         message: message,
                         isCurrentUser: isCurrentUser,
                       );

@@ -7,6 +7,11 @@ Return valid JSON only using the exact schema.
 Rules:
 - If the image is a recipe card, cookbook page, screenshot, handwritten recipe, or any clear recipe-like content, set `can_create` to true and return a full `recipe` object.
 - If the image is not a recipe, is too blurry, is missing core information, or cannot be interpreted reliably, set `can_create` to false and return a short user-facing `error_message`.
+- Language preservation is mandatory:
+  - Detect the dominant human language used in the recipe text visible in the image.
+  - Return `recipe.title`, ingredient names/amounts, and `instructions` in that same language.
+  - Do not translate the recipe into another language.
+  - If multiple languages are present, use the language used by most of the recipe text.
 - When `can_create` is true:
   - `recipe` must include: `title`, `ingredients`, `instructions`, `healthScore`.
   - `healthScore` is a placeholder at this stage. Set it to `5`.
@@ -20,5 +25,5 @@ Rules:
   - If the image only has ingredient names (for example: flour, water, yeast, salt), infer a sensible title from those ingredients (for example: "Homemade Bread").
 - When `can_create` is false:
   - `recipe` must be null.
-  - `error_message` should explain that we could not create a recipe from this image.
+  - `error_message` should explain that we could not create a recipe from this image, in the same detected language.
 - Do not add markdown fences or extra text outside JSON.

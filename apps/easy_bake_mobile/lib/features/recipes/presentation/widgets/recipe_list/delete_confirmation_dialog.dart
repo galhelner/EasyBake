@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 Future<void> showDeleteConfirmationDialog(
   BuildContext context, {
@@ -9,6 +10,7 @@ Future<void> showDeleteConfirmationDialog(
     context: context,
     barrierDismissible: true,
     builder: (dialogContext) {
+      final l10n = AppLocalizations.of(dialogContext)!;
       return Dialog(
         backgroundColor: Colors.transparent,
         insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
@@ -44,7 +46,7 @@ Future<void> showDeleteConfirmationDialog(
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      message ?? 'Are you sure you want to delete this recipe?',
+                      message ?? l10n.confirmDeleteRecipeMessage,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: Color(0xFF2E4E69),
@@ -65,7 +67,7 @@ Future<void> showDeleteConfirmationDialog(
                         backgroundColor: Colors.red[400],
                         foregroundColor: Colors.white,
                       ),
-                      child: const Text('Delete'),
+                      child: Text(l10n.deleteButtonLabel),
                     ),
                   ],
                 ),

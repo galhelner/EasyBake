@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 class Composer extends StatelessWidget {
   const Composer({
@@ -18,6 +19,8 @@ class Composer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return SafeArea(
       top: false,
       child: Container(
@@ -83,8 +86,8 @@ class Composer extends StatelessWidget {
                                   ),
                                   child: Semantics(
                                     label: isConnected
-                                        ? 'Share a recipe with the community'
-                                        : 'Connect to share recipes',
+                                      ? l10n.shareRecipeWithCommunityLabel
+                                      : l10n.connectToShareRecipesLabel,
                                     button: true,
                                     enabled: isConnected,
                                     child: Material(
@@ -137,10 +140,10 @@ class Composer extends StatelessWidget {
                                 ),
                               ),
                               hintText: isConnecting
-                                  ? 'Connecting to community chat...'
+                                  ? l10n.composerConnectingHint
                                   : isConnected
-                                  ? 'Share the community...'
-                                  : 'Chat is offline right now',
+                                  ? l10n.composerShareHint
+                                  : l10n.composerOfflineHint,
                               hintStyle: const TextStyle(
                                 color: Color(0xFF7A8EA4),
                                 fontSize: 14,

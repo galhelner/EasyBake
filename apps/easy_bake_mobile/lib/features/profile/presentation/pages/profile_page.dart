@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 import '../../../auth/presentation/pages/auth_page.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
@@ -12,23 +13,24 @@ class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
 
   Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
     final shouldLogout = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Log out?'),
-          content: const Text('Are you sure you want to log out of EasyBake?'),
+          title: Text(l10n.logoutTitle),
+          content: Text(l10n.logoutMessage),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
+              child: Text(l10n.cancelButtonLabel),
             ),
             FilledButton(
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFFC44545),
               ),
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Logout'),
+              child: Text(l10n.logoutButtonLabel),
             ),
           ],
         );
@@ -50,12 +52,14 @@ class ProfilePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
     final authState = ref.watch(authNotifierProvider);
     final recipesAsync = ref.watch(recipesListProvider);
     final fullName = authState.fullName?.trim();
     final userName = (fullName != null && fullName.isNotEmpty)
         ? fullName
-        : 'EasyBake User';
+        : l10n.easyBakeUserFallback;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF2F7F7),
@@ -73,8 +77,8 @@ class ProfilePage extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const Text(
-                          'Profile',
+                        Text(
+                          l10n.profilePageTitle,
                           style: TextStyle(
                             fontSize: 30,
                             fontWeight: FontWeight.w800,
@@ -88,36 +92,8 @@ class ProfilePage extends ConsumerWidget {
                         const SizedBox(height: 16),
                         const PreferencesSection(),
                         const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFFD8E4EE)),
-                          ),
-                          child: const Row(
-                            children: [
-                              Icon(
-                                Icons.upcoming_rounded,
-                                color: Color(0xFF2E4E69),
-                                size: 20,
-                              ),
-                              SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  'More profile options will be added soon.',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Color(0xFF50667B),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 16),
                         // Logout moved into the scrollable content so it's not sticky
-                        ElevatedButton.icon(
+                        ElevatedButton(
                           onPressed: () => _confirmLogout(context, ref),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFC44545),
@@ -128,13 +104,21 @@ class ProfilePage extends ConsumerWidget {
                               borderRadius: BorderRadius.circular(14),
                             ),
                           ),
-                          icon: const Icon(Icons.logout_rounded),
-                          label: const Text(
-                            'Logout',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            textDirection:
+                                isRtl ? TextDirection.rtl : TextDirection.ltr,
+                            children: [
+                              const Icon(Icons.logout_rounded),
+                              const SizedBox(width: 8),
+                              Text(
+                                l10n.logoutButtonShortLabel,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],

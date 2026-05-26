@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 class AuthModeToggle extends StatelessWidget {
   const AuthModeToggle({
@@ -14,6 +15,7 @@ class AuthModeToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SizedBox(
       height: 40,
       child: LayoutBuilder(
@@ -26,8 +28,8 @@ class AuthModeToggle extends StatelessWidget {
                 duration: const Duration(milliseconds: 250),
                 curve: Curves.easeOutCubic,
                 alignment: isRegister
-                    ? Alignment.centerRight
-                    : Alignment.centerLeft,
+                    ? AlignmentDirectional.centerEnd
+                    : AlignmentDirectional.centerStart,
                 child: Container(
                   width: indicatorWidth,
                   decoration: BoxDecoration(
@@ -47,14 +49,14 @@ class AuthModeToggle extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _AuthModeTabLabel(
-                      label: 'Sign In',
+                      label: l10n.signInLabel,
                       selected: !isRegister,
                       onTap: onSignInTap,
                     ),
                   ),
                   Expanded(
                     child: _AuthModeTabLabel(
-                      label: 'Register',
+                      label: l10n.registerLabel,
                       selected: isRegister,
                       onTap: onRegisterTap,
                     ),

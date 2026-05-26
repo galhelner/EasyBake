@@ -124,14 +124,21 @@ class RecipeModel {
   }
 
   Map<String, dynamic> toCreateJson({bool includeHealthScore = false}) {
+    final normalizedIconByName = <String, String>{
+      for (final entry in ingredientIcons.entries)
+        entry.key.trim().toLowerCase(): entry.value.trim(),
+    };
+
     final payloadIngredients = ingredients.map((name) {
       final normalizedName = name.trim();
       final rawAmount = ingredientAmounts[normalizedName];
       final amount = rawAmount?.trim();
+      final icon = normalizedIconByName[normalizedName.toLowerCase()];
 
       return {
         'name': normalizedName,
         if (amount != null && amount.isNotEmpty) 'amount': amount,
+        if (icon != null && icon.isNotEmpty) 'icon': icon,
       };
     }).toList();
 

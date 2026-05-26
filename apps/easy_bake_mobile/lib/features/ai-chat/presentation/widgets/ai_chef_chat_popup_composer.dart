@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 class AiChefChatPopupComposer extends StatelessWidget {
   const AiChefChatPopupComposer({
@@ -16,6 +17,7 @@ class AiChefChatPopupComposer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 14),
       child: DecoratedBox(
@@ -54,7 +56,7 @@ class AiChefChatPopupComposer extends StatelessWidget {
                     ),
                     textAlignVertical: TextAlignVertical.center,
                     decoration: InputDecoration(
-                      hintText: 'Ask the AI Chef',
+                      hintText: l10n.askAiChefHint,
                       hintMaxLines: 1,
                       hintStyle: const TextStyle(
                         color: Color(0xFF7A8EA4),

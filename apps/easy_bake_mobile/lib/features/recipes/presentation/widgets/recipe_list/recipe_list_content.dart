@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 import '../../../domain/models/recipe_model.dart';
 import '../../providers/recipe_providers.dart';
@@ -83,12 +84,13 @@ class _RecipesEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final title = isSearching
-        ? 'No recipes found'
-        : 'Your recipe collection is empty';
+      ? l10n.noRecipesFoundTitle
+      : l10n.noRecipesYetTitle;
     final subtitle = isSearching
-        ? 'Use AI Chef chat to semantically search your recipes.'
-        : 'Tap the + button to add your first recipe, or use AI to create one for you.';
+      ? l10n.noRecipesFoundSubtitle
+      : l10n.noRecipesYetSubtitle;
     final bottomSafeSpace = isSearching ? 120.0 : 20.0;
 
     return Padding(

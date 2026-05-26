@@ -7,6 +7,7 @@ class AiChefChatBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
     const bubbleTopColor = Color(0xFFFFE0B5);
     const bubbleBottomColor = Color(0xFFF4C58D);
     const borderColor = Color(0xFFCD985D);
@@ -72,14 +73,17 @@ class AiChefChatBubble extends StatelessWidget {
           ),
         ),
         Transform.translate(
-          offset: const Offset(-12, -1),
-          child: SizedBox(
-            width: 14,
-            height: 10,
-            child: CustomPaint(
-              painter: _BubbleTailPainter(
-                fillColor: bubbleBottomColor,
-                borderColor: borderColor,
+          offset: Offset(isRtl ? 12 : -12, -1),
+          child: Transform.flip(
+            flipX: isRtl,
+            child: SizedBox(
+              width: 14,
+              height: 10,
+              child: CustomPaint(
+                painter: _BubbleTailPainter(
+                  fillColor: bubbleBottomColor,
+                  borderColor: borderColor,
+                ),
               ),
             ),
           ),

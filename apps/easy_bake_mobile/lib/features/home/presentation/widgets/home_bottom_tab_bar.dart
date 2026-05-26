@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 class HomeBottomTabBar extends StatefulWidget {
   const HomeBottomTabBar({
@@ -23,15 +24,16 @@ class _HomeBottomTabBarState extends State<HomeBottomTabBar> {
     _hoveredIndices = [0, 0, 0];
   }
 
-  String _labelForIndex(int index) {
+  String _labelForIndex(BuildContext context, int index) {
+    final l10n = AppLocalizations.of(context)!;
     switch (index) {
       case 0:
-        return 'Chat';
+        return l10n.communityChatLabel;
       case 2:
-        return 'Profile';
+        return l10n.profileLabel;
       case 1:
       default:
-        return 'Home';
+        return l10n.homeLabel;
     }
   }
 
@@ -69,10 +71,10 @@ class _HomeBottomTabBarState extends State<HomeBottomTabBar> {
 
                 return Stack(
                   children: [
-                    AnimatedPositioned(
+                    AnimatedPositionedDirectional(
                       duration: const Duration(milliseconds: 320),
                       curve: Curves.easeOutCubic,
-                      left:
+                      start:
                           segmentWidth * widget.currentIndex +
                           (segmentWidth - indicatorWidth) / 2,
                       top: indicatorTop,
@@ -88,8 +90,8 @@ class _HomeBottomTabBarState extends State<HomeBottomTabBar> {
                       children: [
                         Expanded(
                           child: _TabIconButton(
-                            tooltip: 'Community Chat',
-                            label: _labelForIndex(0),
+                            tooltip: AppLocalizations.of(context)!.communityChatTooltip,
+                            label: _labelForIndex(context, 0),
                             selected: widget.currentIndex == 0,
                             icon: Icons.forum_rounded,
                             onTap: () => widget.onTabSelected(0),
@@ -103,8 +105,8 @@ class _HomeBottomTabBarState extends State<HomeBottomTabBar> {
                         ),
                         Expanded(
                           child: _TabIconButton(
-                            tooltip: 'Home',
-                            label: _labelForIndex(1),
+                            tooltip: AppLocalizations.of(context)!.homeTooltip,
+                            label: _labelForIndex(context, 1),
                             selected: widget.currentIndex == 1,
                             icon: Icons.home_rounded,
                             onTap: () => widget.onTabSelected(1),
@@ -118,8 +120,8 @@ class _HomeBottomTabBarState extends State<HomeBottomTabBar> {
                         ),
                         Expanded(
                           child: _TabIconButton(
-                            tooltip: 'Profile',
-                            label: _labelForIndex(2),
+                            tooltip: AppLocalizations.of(context)!.profileTooltip,
+                            label: _labelForIndex(context, 2),
                             selected: widget.currentIndex == 2,
                             icon: Icons.person_rounded,
                             onTap: () => widget.onTabSelected(2),

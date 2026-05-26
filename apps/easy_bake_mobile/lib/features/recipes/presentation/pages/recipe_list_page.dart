@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 import '../../../ai-chat/data/services/chat_service.dart';
 import '../../../ai-chat/presentation/pages/ai_chef_chat_popup_page.dart';
@@ -36,17 +37,16 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
   bool _requiresManualRetry = false;
 
   Future<void> _showCreateFromImageErrorDialog() {
+    final l10n = AppLocalizations.of(context)!;
     return showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Could not create recipe'),
-        content: const Text(
-          'We could not create a recipe from this image. Please try again or use another image.',
-        ),
+        title: Text(l10n.couldNotCreateRecipeTitle),
+        content: Text(l10n.couldNotCreateRecipeMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('OK'),
+            child: Text(l10n.okButtonLabel),
           ),
         ],
       ),
@@ -54,6 +54,7 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
   }
 
   Future<ImageSource?> _selectImageSource() {
+    final l10n = AppLocalizations.of(context)!;
     return showModalBottomSheet<ImageSource>(
       context: context,
       builder: (sheetContext) {
@@ -63,13 +64,13 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
             children: [
               ListTile(
                 leading: const Icon(Icons.photo_library_outlined),
-                title: const Text('Upload from Gallery'),
+                title: Text(l10n.uploadFromGalleryLabel),
                 onTap: () =>
                     Navigator.of(sheetContext).pop(ImageSource.gallery),
               ),
               ListTile(
                 leading: const Icon(Icons.camera_alt_outlined),
-                title: const Text('Take a Picture'),
+                title: Text(l10n.takeAPictureLabel),
                 onTap: () => Navigator.of(sheetContext).pop(ImageSource.camera),
               ),
             ],
@@ -80,6 +81,7 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
   }
 
   Future<void> _createRecipeFromImage() async {
+    final l10n = AppLocalizations.of(context)!;
     final source = await _selectImageSource();
     if (!mounted || source == null) {
       return;
@@ -100,7 +102,7 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
         context: context,
         barrierDismissible: false,
         builder: (_) =>
-            const RecipeCreateLoadingDialog(message: 'Creating your recipe...'),
+            RecipeCreateLoadingDialog(message: l10n.creatingYourRecipeMessage),
       );
       loadingDialogShown = true;
 

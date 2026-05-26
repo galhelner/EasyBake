@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 import 'recipe_details_timer_card.dart';
 
@@ -9,6 +10,8 @@ class RecipeDetailsInstructionList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     if (items.isEmpty) {
       return const Text(
         'No instructions available.',
@@ -20,9 +23,9 @@ class RecipeDetailsInstructionList extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         RecipeDetailsTimerCard(instructions: items),
-        const Text(
-          'Cooking Steps',
-          style: TextStyle(
+        Text(
+          l10n.cookingStepsTitle,
+          style: const TextStyle(
             color: Color(0xFF243954),
             fontSize: 16,
             fontWeight: FontWeight.w700,

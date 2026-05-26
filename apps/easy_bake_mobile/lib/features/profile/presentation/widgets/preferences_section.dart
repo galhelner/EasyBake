@@ -1,9 +1,13 @@
+import 'package:easy_bake_mobile/core/localization/app_locale_controller.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../auth/presentation/providers/auth_notifier.dart';
 import '../../domain/models/user_preferences.dart';
 import '../providers/user_preferences_notifier.dart';
+
+enum _LanguageChoice { system, english, hebrew }
 
 class PreferencesSection extends ConsumerWidget {
   const PreferencesSection({super.key});
@@ -26,7 +30,8 @@ class _PreferencesSectionContent extends StatefulWidget {
   });
 
   @override
-  State<_PreferencesSectionContent> createState() => _PreferencesSectionContentState();
+  State<_PreferencesSectionContent> createState() =>
+      _PreferencesSectionContentState();
 }
 
 class _PreferencesSectionContentState extends State<_PreferencesSectionContent> {
@@ -63,7 +68,6 @@ class _PreferencesSectionContentState extends State<_PreferencesSectionContent> 
   Future<void> _saveChatDisplayName() async {
     final newName = _chatDisplayNameController.text.trim();
     if (newName.isEmpty) {
-      // nothing to save, just close editor
       setState(() {
         _isEditingChatNameActive = false;
       });
@@ -83,7 +87,7 @@ class _PreferencesSectionContentState extends State<_PreferencesSectionContent> 
         _isEditingChatNameActive = false;
       });
     } catch (_) {
-      // keep editing state so user can retry; optionally show an error later
+      // Keep editing so the user can retry.
     } finally {
       if (mounted) {
         setState(() {
@@ -107,11 +111,27 @@ class _PreferencesSectionContentState extends State<_PreferencesSectionContent> 
     });
   }
 
+  void _setLanguageChoice(_LanguageChoice choice) {
+    if (choice == _LanguageChoice.system) {
+      setAppLocale(null);
+      return;
+    }
+
+    if (choice == _LanguageChoice.english) {
+      setAppLocale(const Locale('en'));
+      return;
+    }
+
+    setAppLocale(const Locale('he'));
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final authState = widget.ref.watch(authNotifierProvider);
     final chatDisplayName = authState.displayName?.trim();
-    final hasCustomChatName = chatDisplayName != null && chatDisplayName.isNotEmpty;
+    final hasCustomChatName =
+        chatDisplayName != null && chatDisplayName.isNotEmpty;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -139,22 +159,25 @@ class _PreferencesSectionContentState extends State<_PreferencesSectionContent> 
                 ),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Preferences',
-                      style: TextStyle(
+                      l10n.preferencesSectionTitle,
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF1F334A),
                       ),
                     ),
-                    SizedBox(height: 3),
+                    const SizedBox(height: 3),
                     Text(
-                      'Customize your experience',
-                      style: TextStyle(fontSize: 13, color: Color(0xFF5D7489)),
+                      l10n.customizeYourExperienceSubtitle,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF5D7489),
+                      ),
                     ),
                   ],
                 ),
@@ -172,17 +195,17 @@ class _PreferencesSectionContentState extends State<_PreferencesSectionContent> 
                 horizontal: 12,
                 vertical: 8,
               ),
-              title: const Text(
-                'Healthy Mode',
-                style: TextStyle(
+              title: Text(
+                l10n.healthyModeTitle,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: Color(0xFF1F334A),
                 ),
               ),
-              subtitle: const Text(
-                'Show health badges on recipe cards',
-                style: TextStyle(
+              subtitle: Text(
+                l10n.healthyModeSubtitle,
+                style: const TextStyle(
                   fontSize: 12,
                   color: Color(0xFF5D7489),
                 ),
@@ -190,15 +213,17 @@ class _PreferencesSectionContentState extends State<_PreferencesSectionContent> 
               trailing: Switch(
                 value: widget.preferences.healthyModeEnabled,
                 onChanged: (value) {
-                  widget.ref.read(userPreferencesNotifierProvider.notifier).toggleHealthyMode(value);
+                  widget.ref
+                      .read(userPreferencesNotifierProvider.notifier)
+                      .toggleHealthyMode(value);
                 },
                 activeThumbColor: const Color(0xFF2E4E69),
-                activeTrackColor: const Color(0xFF2E4E69).withValues(alpha: 0.3),
+                activeTrackColor:
+                    const Color(0xFF2E4E69).withValues(alpha: 0.3),
               ),
             ),
           ),
           const SizedBox(height: 12),
-          // Match Healthy Mode style exactly (Container + ListTile)
           Container(
             decoration: BoxDecoration(
               color: const Color(0xFFF8FAFC),
@@ -209,21 +234,21 @@ class _PreferencesSectionContentState extends State<_PreferencesSectionContent> 
                 horizontal: 12,
                 vertical: 8,
               ),
-              title: const Text(
-                'Chat Display Name',
-                style: TextStyle(
+              title: Text(
+                l10n.chatDisplayNameLabel,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: Color(0xFF1F334A),
                 ),
               ),
-                subtitle: _isEditingChatNameActive
+              subtitle: _isEditingChatNameActive
                   ? TextField(
                       controller: _chatDisplayNameController,
                       maxLength: 50,
                       textCapitalization: TextCapitalization.words,
                       decoration: InputDecoration(
-                        hintText: 'Enter your chat display name',
+                        hintText: l10n.enterChatDisplayNameHint,
                         hintStyle: const TextStyle(
                           color: Color(0xFF8A9CAF),
                           fontSize: 14,
@@ -239,11 +264,15 @@ class _PreferencesSectionContentState extends State<_PreferencesSectionContent> 
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: Color(0xFFC9D9E8)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFC9D9E8),
+                          ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: Color(0xFFC9D9E8)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFC9D9E8),
+                          ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
@@ -268,24 +297,27 @@ class _PreferencesSectionContentState extends State<_PreferencesSectionContent> 
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'This is the name displayed in the community chat',
-                          style: TextStyle(
+                        Text(
+                          l10n.chatDisplayNameDescription,
+                          style: const TextStyle(
                             fontSize: 12,
                             color: Color(0xFF5D7489),
                           ),
                         ),
                         const SizedBox(height: 6),
-                        // Prominent pill showing the current display name value
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(color: const Color(0xFFD7E3EF)),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF113257).withValues(alpha: 0.03),
+                                color:
+                                    const Color(0xFF113257).withValues(alpha: 0.03),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),
@@ -295,17 +327,28 @@ class _PreferencesSectionContentState extends State<_PreferencesSectionContent> 
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                hasCustomChatName ? Icons.verified_user_rounded : Icons.person_outline_rounded,
+                                hasCustomChatName
+                                    ? Icons.verified_user_rounded
+                                    : Icons.person_outline_rounded,
                                 size: 16,
-                                color: hasCustomChatName ? const Color(0xFF2E6A48) : const Color(0xFF67809A),
+                                color: hasCustomChatName
+                                    ? const Color(0xFF2E6A48)
+                                    : const Color(0xFF67809A),
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                hasCustomChatName ? chatDisplayName : 'Using your full profile name by default',
+                                hasCustomChatName
+                                    ? chatDisplayName
+                                    : l10n.usingFullProfileNameByDefaultMessage,
                                 style: TextStyle(
                                   fontSize: 14,
-                                  fontWeight: hasCustomChatName ? FontWeight.w700 : FontWeight.w600,
-                                  color: hasCustomChatName ? const Color(0xFF16344B) : const Color(0xFF667D91),
+                                  fontWeight:
+                                      hasCustomChatName
+                                          ? FontWeight.w700
+                                          : FontWeight.w600,
+                                  color: hasCustomChatName
+                                      ? const Color(0xFF16344B)
+                                      : const Color(0xFF667D91),
                                 ),
                               ),
                             ],
@@ -323,8 +366,12 @@ class _PreferencesSectionContentState extends State<_PreferencesSectionContent> 
                       ),
                       child: IconButton(
                         onPressed: _startEditing,
-                        icon: const Icon(Icons.edit_rounded, size: 18, color: Color(0xFF2E4E69)),
-                        tooltip: 'Edit',
+                        icon: const Icon(
+                          Icons.edit_rounded,
+                          size: 18,
+                          color: Color(0xFF2E4E69),
+                        ),
+                        tooltip: l10n.editTooltip,
                       ),
                     )
                   : Row(
@@ -339,8 +386,12 @@ class _PreferencesSectionContentState extends State<_PreferencesSectionContent> 
                           ),
                           child: IconButton(
                             onPressed: _isSaving ? null : _cancelEditing,
-                            icon: const Icon(Icons.close_rounded, size: 18, color: Color(0xFF7A4340)),
-                            tooltip: 'Cancel',
+                            icon: const Icon(
+                              Icons.close_rounded,
+                              size: 18,
+                              color: Color(0xFF7A4340),
+                            ),
+                            tooltip: l10n.cancelTooltip,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -364,12 +415,152 @@ class _PreferencesSectionContentState extends State<_PreferencesSectionContent> 
                                 )
                               : IconButton(
                                   onPressed: _saveChatDisplayName,
-                                  icon: const Icon(Icons.check_rounded, size: 18, color: Colors.white),
-                                  tooltip: 'Save',
+                                  icon: const Icon(
+                                    Icons.check_rounded,
+                                    size: 18,
+                                    color: Colors.white,
+                                  ),
+                                  tooltip: l10n.saveTooltip,
                                 ),
                         ),
                       ],
                     ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEAF3FA),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.language_rounded,
+                        color: Color(0xFF2E4E69),
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.languageSectionTitle,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1F334A),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            l10n.customizeYourExperienceSubtitle,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF5D7489),
+                              height: 1.3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                ValueListenableBuilder<Locale?>(
+                  valueListenable: appLocaleNotifier,
+                  builder: (context, locale, _) {
+                    final selectedChoice = locale == null
+                        ? _LanguageChoice.system
+                        : locale.languageCode == 'he'
+                            ? _LanguageChoice.hebrew
+                            : _LanguageChoice.english;
+
+                    return DropdownMenu<_LanguageChoice>(
+                      initialSelection: selectedChoice,
+                      expandedInsets: EdgeInsets.zero,
+                      width: 240,
+                      enableSearch: false,
+                      menuHeight: 180,
+                      textStyle: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1F334A),
+                      ),
+                      inputDecorationTheme: InputDecorationTheme(
+                        filled: true,
+                        fillColor: Colors.white,
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 14,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFD7E3EF)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFD7E3EF)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF2E4E69),
+                            width: 1.4,
+                          ),
+                        ),
+                      ),
+                      leadingIcon: const Icon(
+                        Icons.public_rounded,
+                        size: 18,
+                        color: Color(0xFF5F7890),
+                      ),
+                      trailingIcon: const Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        size: 20,
+                        color: Color(0xFF5F7890),
+                      ),
+                      dropdownMenuEntries: [
+                        DropdownMenuEntry<_LanguageChoice>(
+                          value: _LanguageChoice.system,
+                          label: l10n.languageSystemDefaultLabel,
+                          leadingIcon: const Icon(Icons.auto_mode_rounded, size: 18),
+                        ),
+                        DropdownMenuEntry<_LanguageChoice>(
+                          value: _LanguageChoice.english,
+                          label: l10n.languageEnglishLabel,
+                          leadingIcon: const Icon(Icons.translate_rounded, size: 18),
+                        ),
+                        DropdownMenuEntry<_LanguageChoice>(
+                          value: _LanguageChoice.hebrew,
+                          label: l10n.languageHebrewLabel,
+                          leadingIcon: const Icon(Icons.translate_rounded, size: 18),
+                        ),
+                      ],
+                      onSelected: (choice) {
+                        if (choice == null) {
+                          return;
+                        }
+                        _setLanguageChoice(choice);
+                      },
+                    );
+                  },
+                ),
+              ],
             ),
           ),
         ],

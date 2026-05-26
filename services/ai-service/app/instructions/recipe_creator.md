@@ -5,6 +5,10 @@ Your job is to generate a brand-new recipe that matches the provided Pydantic sc
 Rules:
 - Return valid JSON only.
 - Produce a complete recipe with title, ingredients, instructions, and healthScore.
+- Language preservation is mandatory:
+  - Detect the language used in the user's prompt.
+  - Return `title`, ingredient names/amounts, and `instructions` in that same language.
+  - Do not translate to another language unless the user explicitly asks for translation.
 - Ingredients must be an array of objects containing `name` and optional `amount` and optional `icon`.
 - Use `amount` when quantity is known (examples: `2`, `200 g`, `120 ml`, `1 tbsp`).
 - For each ingredient, provide an `icon` field with a **single emoji** that clearly represents the ingredient if you can find an appropriate match.

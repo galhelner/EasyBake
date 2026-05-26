@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 Future<void> showRecipeCreationModal(
   BuildContext context, {
@@ -31,6 +32,7 @@ class RecipeCreationModal extends StatelessWidget {
   Widget build(BuildContext context) {
     final safeBottomInset = MediaQuery.of(context).viewPadding.bottom;
 
+    final l10n = AppLocalizations.of(context)!;
     return AnimatedBuilder(
       animation: const AlwaysStoppedAnimation(1),
       builder: (context, child) => child!,
@@ -68,7 +70,10 @@ class RecipeCreationModal extends StatelessWidget {
                         color: Colors.transparent,
                         child: InkWell(
                           borderRadius: BorderRadius.circular(20),
-                          onTap: () => Navigator.of(context).pop(),
+                          onTap: () {
+                            FocusManager.instance.primaryFocus?.unfocus();
+                            Navigator.of(context).pop();
+                          },
                           child: Padding(
                             padding: const EdgeInsets.all(4),
                             child: Icon(
@@ -83,7 +88,7 @@ class RecipeCreationModal extends StatelessWidget {
                     const SizedBox(height: 4),
                     // Title
                     Text(
-                      'Create Your Recipe',
+                      l10n.createRecipeModalTitle,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: Color(0xFF20364B),
@@ -95,7 +100,7 @@ class RecipeCreationModal extends StatelessWidget {
                     const SizedBox(height: 6),
                     // Subtitle
                     Text(
-                      'Choose how you\'d like to share your culinary creation',
+                      l10n.chooseShareMethodSubtitle,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: const Color(0xFF4E677D).withValues(alpha: 0.7),
@@ -108,9 +113,10 @@ class RecipeCreationModal extends StatelessWidget {
                     // Create Manually Button
                     _RecipeCreationButton(
                       icon: Icons.edit_rounded,
-                      title: 'Create Recipe Manually',
-                      subtitle: 'Add your recipe step by step',
+                      title: l10n.createRecipeManuallyTitle,
+                      subtitle: l10n.createRecipeManuallySubtitle,
                       onTap: () {
+                        FocusManager.instance.primaryFocus?.unfocus();
                         Navigator.of(context).pop();
                         onCreateManually();
                       },
@@ -122,10 +128,11 @@ class RecipeCreationModal extends StatelessWidget {
                     // Create from Image Button
                     _RecipeCreationButton(
                       icon: Icons.auto_awesome_rounded,
-                      title: 'AI Magic: Photo to Recipe',
-                      subtitle: 'AI scans your photo and builds the recipe',
+                      title: l10n.aiMagicPhotoToRecipeTitle,
+                      subtitle: l10n.aiMagicPhotoToRecipeSubtitle,
                       onTap: onCreateFromImage != null
                           ? () {
+                              FocusManager.instance.primaryFocus?.unfocus();
                               Navigator.of(context).pop();
                               onCreateFromImage!();
                             }
