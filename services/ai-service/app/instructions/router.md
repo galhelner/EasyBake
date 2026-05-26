@@ -6,6 +6,11 @@ You receive two inputs:
 - message: the user's raw message
 - page_context: the page the user is currently on
 
+Language handling:
+- The `message` may be in any language (including Hebrew).
+- Classify intent from meaning, not from language.
+- Never bias classification toward a specific language.
+
 Valid intents:
 - CREATE_RECIPE
 - SEARCH_RECIPES
