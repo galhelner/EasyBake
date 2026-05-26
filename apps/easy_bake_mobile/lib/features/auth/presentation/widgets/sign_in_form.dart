@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 import 'auth_input_field.dart';
 
@@ -54,6 +55,8 @@ class _SignInFormState extends State<SignInForm> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         return Form(
@@ -75,13 +78,13 @@ class _SignInFormState extends State<SignInForm> {
                 AuthInputField(
                   controller: _emailController,
                   icon: Icons.email_outlined,
-                  hint: 'Email',
+                  hint: l10n.emailHint,
                   hintFontSize: 15,
                   keyboardType: TextInputType.emailAddress,
                   onChanged: (_) => _onFieldChanged(),
                   validator: (value) {
                     if (value == null || !value.contains('@')) {
-                      return _showErrors ? 'Enter a valid email' : null;
+                      return _showErrors ? l10n.signInErrorInvalidEmail : null;
                     }
                     return null;
                   },
@@ -90,7 +93,7 @@ class _SignInFormState extends State<SignInForm> {
                 AuthInputField(
                   controller: _passwordController,
                   icon: Icons.lock_outline,
-                  hint: 'Password',
+                  hint: l10n.passwordHint,
                   hintFontSize: 15,
                   obscureText: _obscurePassword,
                   onToggleObscure: () {
@@ -99,7 +102,9 @@ class _SignInFormState extends State<SignInForm> {
                   onChanged: (_) => _onFieldChanged(),
                   validator: (value) {
                     if (value == null || value.length < 8) {
-                      return _showErrors ? 'Min 8 characters' : null;
+                      return _showErrors
+                          ? l10n.signInErrorMinPasswordLength
+                          : null;
                     }
                     return null;
                   },
@@ -132,9 +137,9 @@ class _SignInFormState extends State<SignInForm> {
                               strokeWidth: 2,
                             ),
                           )
-                        : const Text(
-                            'Sign In',
-                            style: TextStyle(
+                        : Text(
+                            l10n.signInLabel,
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.3,

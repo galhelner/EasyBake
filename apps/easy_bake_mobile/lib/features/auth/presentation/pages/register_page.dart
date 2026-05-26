@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 import '../widgets/auth_input_field.dart';
 
@@ -90,22 +91,26 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   String? _validateName(String? value) {
+    final l10n = AppLocalizations.of(context)!;
+
     if (value == null || value.trim().isEmpty) {
-      return 'Please enter your name';
+      return l10n.registerErrorNameRequired;
     }
     if (value.trim().length < 2) {
-      return 'Name must be at least 2 characters';
+      return l10n.registerErrorNameTooShort;
     }
     return null;
   }
 
   String? _validateEmail(String? value) {
+    final l10n = AppLocalizations.of(context)!;
+
     final email = value?.trim() ?? '';
     if (email.isEmpty) {
-      return 'Please enter your email';
+      return l10n.registerErrorEmailRequired;
     }
     if (!email.contains('@') || !email.contains('.')) {
-      return 'Please enter a valid email';
+      return l10n.registerErrorEmailInvalid;
     }
     return null;
   }
@@ -237,6 +242,8 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         return ConstrainedBox(
@@ -251,7 +258,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 200),
                       child: Text(
-                        'Step ${_currentPage + 1} of 3',
+                        l10n.registerStepIndicatorLabel(_currentPage + 1, 3),
                         key: ValueKey<int>(_currentPage),
                         style: const TextStyle(
                           fontSize: 13,
@@ -273,9 +280,9 @@ class _RegisterPageState extends State<RegisterPage> {
                     setState(() => _currentPage = page);
                   },
                   children: [
-                    _buildIdentityStep(),
-                    _buildCommunicationStep(),
-                    _buildSecurityStep(),
+                    _buildIdentityStep(l10n),
+                    _buildCommunicationStep(l10n),
+                    _buildSecurityStep(l10n),
                   ],
                 ),
               ),
@@ -295,7 +302,7 @@ class _RegisterPageState extends State<RegisterPage> {
             duration: const Duration(milliseconds: 250),
             curve: Curves.easeOut,
             height: 6,
-            margin: EdgeInsets.only(right: index < 2 ? 8 : 0),
+            margin: EdgeInsetsDirectional.only(end: index < 2 ? 8 : 0),
             decoration: BoxDecoration(
               color: isActive ? _kActionBlue : _kProgressTrack,
               borderRadius: BorderRadius.circular(999),
@@ -306,7 +313,7 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Widget _buildIdentityStep() {
+  Widget _buildIdentityStep(AppLocalizations l10n) {
     return Form(
       key: _nameFormKey,
       child: Column(
@@ -328,7 +335,7 @@ class _RegisterPageState extends State<RegisterPage> {
           AuthInputField(
             controller: _nameController,
             icon: Icons.person_outline,
-            hint: 'Full Name',
+            hint: l10n.fullNameHint,
             hintFontSize: 14,
             validator: (value) {
               if (!_showNameStepErrorLogo) {
@@ -357,9 +364,9 @@ class _RegisterPageState extends State<RegisterPage> {
                       Colors.white.withValues(alpha: 0.14),
                     ),
                   ),
-              child: const Text(
-                'Next',
-                style: TextStyle(
+              child: Text(
+                l10n.nextButtonLabel,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.3,
@@ -372,7 +379,7 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Widget _buildCommunicationStep() {
+  Widget _buildCommunicationStep(AppLocalizations l10n) {
     return Form(
       key: _emailFormKey,
       child: Column(
@@ -395,7 +402,7 @@ class _RegisterPageState extends State<RegisterPage> {
           AuthInputField(
             controller: _emailController,
             icon: Icons.email_outlined,
-            hint: 'Email Address',
+            hint: l10n.emailAddressHint,
             hintFontSize: 14,
             keyboardType: TextInputType.emailAddress,
             validator: (value) {
@@ -422,9 +429,9 @@ class _RegisterPageState extends State<RegisterPage> {
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    child: const Text(
-                      'Back',
-                      style: TextStyle(
+                    child: Text(
+                      l10n.backButtonLabel,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.3,
@@ -461,8 +468,8 @@ class _RegisterPageState extends State<RegisterPage> {
                               strokeWidth: 2,
                             ),
                           )
-                        : const Text(
-                            'Next',
+                        : Text(
+                          l10n.nextButtonLabel,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
@@ -479,7 +486,7 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Widget _buildSecurityStep() {
+  Widget _buildSecurityStep(AppLocalizations l10n) {
     return Form(
       key: _passwordFormKey,
       child: Column(
@@ -503,7 +510,7 @@ class _RegisterPageState extends State<RegisterPage> {
           AuthInputField(
             controller: _passwordController,
             icon: Icons.lock_outline,
-            hint: 'Password',
+            hint: l10n.passwordHint,
             hintFontSize: 14,
             obscureText: _obscurePassword,
             onToggleObscure: () {
@@ -518,10 +525,10 @@ class _RegisterPageState extends State<RegisterPage> {
 
               final password = value ?? '';
               if (password.isEmpty) {
-                return 'Please enter a password';
+                return l10n.registerErrorPasswordRequired;
               }
               if (password.length < 8) {
-                return 'Min 8 characters';
+                return l10n.registerErrorPasswordMinLength;
               }
               return null;
             },
@@ -531,7 +538,7 @@ class _RegisterPageState extends State<RegisterPage> {
           AuthInputField(
             controller: _confirmPasswordController,
             icon: Icons.lock_reset_outlined,
-            hint: 'Confirm Password',
+            hint: l10n.confirmPasswordHint,
             hintFontSize: 14,
             obscureText: _obscureConfirmPassword,
             onToggleObscure: () {
@@ -546,10 +553,10 @@ class _RegisterPageState extends State<RegisterPage> {
 
               final confirmPassword = value ?? '';
               if (confirmPassword.isEmpty) {
-                return 'Please confirm your password';
+                return l10n.registerErrorConfirmPasswordRequired;
               }
               if (confirmPassword != _passwordController.text) {
-                return 'Passwords do not match';
+                return l10n.registerErrorPasswordMismatch;
               }
               return null;
             },
@@ -570,8 +577,8 @@ class _RegisterPageState extends State<RegisterPage> {
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    child: const Text(
-                      'Back',
+                    child: Text(
+                      l10n.backButtonLabel,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -609,8 +616,8 @@ class _RegisterPageState extends State<RegisterPage> {
                               strokeWidth: 2,
                             ),
                           )
-                        : const Text(
-                            'Register',
+                        : Text(
+                          l10n.registerLabel,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
