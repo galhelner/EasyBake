@@ -16,6 +16,28 @@ enum ChatEventType {
   done,
 }
 
+enum ChatErrorKind {
+  emptyPrompt,
+  sendFailed,
+  emptyResponse,
+  streamInterrupted,
+  assistantCouldNotComplete,
+  couldNotReadServerResponse,
+  responseUnsupportedFormat,
+  unexpectedResponseFormat,
+  failedToParseServerResponse,
+  requestFailed,
+  serverSlow,
+  cannotReachServer,
+  requestCancelled,
+  unauthorized,
+  serverIssue,
+  notFound,
+  rateLimited,
+  validation,
+  generic,
+}
+
 class ChatEvent {
   const ChatEvent._({
     required this.type,
@@ -24,7 +46,7 @@ class ChatEvent {
     this.metadata,
     this.recipe,
     this.searchResults,
-    this.message,
+    this.errorKind,
     this.isConnectionIssue = false,
   });
 
@@ -43,10 +65,13 @@ class ChatEvent {
   const ChatEvent.searchResults(List<dynamic> results)
     : this._(type: ChatEventType.searchResults, searchResults: results);
 
-  const ChatEvent.error(String message, {bool isConnectionIssue = false})
+  const ChatEvent.error(
+    ChatErrorKind errorKind, {
+    bool isConnectionIssue = false,
+  })
     : this._(
         type: ChatEventType.error,
-        message: message,
+        errorKind: errorKind,
         isConnectionIssue: isConnectionIssue,
       );
 
@@ -58,7 +83,7 @@ class ChatEvent {
   final Map<String, dynamic>? metadata;
   final Map<String, dynamic>? recipe;
   final List<dynamic>? searchResults;
-  final String? message;
+  final ChatErrorKind? errorKind;
   final bool isConnectionIssue;
 }
 
@@ -77,7 +102,7 @@ class ChatService {
   }) async* {
     final normalizedPrompt = prompt.trim();
     if (normalizedPrompt.isEmpty) {
-      yield const ChatEvent.error('Please type a message first.');
+      yield const ChatEvent.error(ChatErrorKind.emptyPrompt);
       yield const ChatEvent.done();
       return;
     }
@@ -105,25 +130,21 @@ class ChatService {
         ),
       );
     } on DioException catch (error) {
-      final message = _extractFriendlyDioError(error);
       yield ChatEvent.error(
-        message,
+        _errorKindFromDioError(error),
         isConnectionIssue: _isConnectionIssue(error),
       );
       yield const ChatEvent.done();
       return;
     } catch (_) {
-      yield const ChatEvent.error(
-        'Could not send your message. Please try again.',
-        isConnectionIssue: true,
-      );
+      yield const ChatEvent.error(ChatErrorKind.sendFailed, isConnectionIssue: true);
       yield const ChatEvent.done();
       return;
     }
 
     final body = response.data;
     if (body == null) {
-      yield const ChatEvent.error('Empty response from server.');
+      yield const ChatEvent.error(ChatErrorKind.emptyResponse);
       yield const ChatEvent.done();
       return;
     }
@@ -164,7 +185,7 @@ class ChatService {
         yield* _parseSseEventBlock(buffer);
       }
     } catch (_) {
-      yield const ChatEvent.error('Stream interrupted. Please try again.');
+      yield const ChatEvent.error(ChatErrorKind.streamInterrupted);
     }
 
     yield const ChatEvent.done();
@@ -194,8 +215,7 @@ class ChatService {
           final type = decoded['type']?.toString();
           if (type == 'error') {
             yield ChatEvent.error(
-              decoded['message']?.toString() ??
-                  'The assistant could not complete this response.',
+              _errorKindFromServerError(decoded['message']?.toString()),
             );
             continue;
           }
@@ -248,16 +268,14 @@ class ChatService {
         collected.addAll(chunk);
       }
     } catch (_) {
-      yield const ChatEvent.error(
-        'Could not read server response. Please try again.',
-      );
+      yield const ChatEvent.error(ChatErrorKind.couldNotReadServerResponse);
       yield const ChatEvent.done();
       return;
     }
 
     final text = utf8.decode(collected, allowMalformed: true).trim();
     if (text.isEmpty) {
-      yield const ChatEvent.error('Empty response from server.');
+      yield const ChatEvent.error(ChatErrorKind.emptyResponse);
       yield const ChatEvent.done();
       return;
     }
@@ -267,19 +285,17 @@ class ChatService {
       if (decoded is Map<String, dynamic>) {
         if (decoded['error'] != null) {
           final rawError = decoded['error'].toString();
-          yield ChatEvent.error(_toFriendlyErrorMessage(rawError));
+          yield ChatEvent.error(_errorKindFromRawError(rawError));
         } else if (_looksLikeRecipe(decoded)) {
           yield ChatEvent.recipeCreated(decoded);
         } else {
-          yield const ChatEvent.error(
-            'Response received in an unsupported format.',
-          );
+          yield const ChatEvent.error(ChatErrorKind.responseUnsupportedFormat);
         }
       } else {
-        yield const ChatEvent.error('Unexpected response format from server.');
+        yield const ChatEvent.error(ChatErrorKind.unexpectedResponseFormat);
       }
     } catch (_) {
-      yield const ChatEvent.error('Failed to parse server response.');
+      yield const ChatEvent.error(ChatErrorKind.failedToParseServerResponse);
     }
 
     yield const ChatEvent.done();
@@ -311,71 +327,93 @@ class ChatService {
         message.contains('connection');
   }
 
-  String _extractFriendlyDioError(DioException error) {
+  ChatErrorKind _errorKindFromDioError(DioException error) {
     if (error.type == DioExceptionType.connectionTimeout ||
         error.type == DioExceptionType.sendTimeout ||
         error.type == DioExceptionType.receiveTimeout) {
-      return 'The server is taking too long to respond. Please try again in a moment.';
+      return ChatErrorKind.serverSlow;
     }
 
     if (error.type == DioExceptionType.connectionError) {
-      return 'Cannot reach the server right now. Please check your connection and try again.';
+      return ChatErrorKind.cannotReachServer;
     }
 
     if (error.type == DioExceptionType.cancel) {
-      return 'Request was cancelled. Please try again.';
+      return ChatErrorKind.requestCancelled;
     }
 
     final statusCode = error.response?.statusCode;
     final data = error.response?.data;
     if (data is Map<String, dynamic> && data['error'] != null) {
-      return _toFriendlyErrorMessage(
+      return _errorKindFromRawError(
         data['error'].toString(),
         statusCode: statusCode,
       );
     }
 
     if (data is String && data.trim().isNotEmpty) {
-      return _toFriendlyErrorMessage(data.trim(), statusCode: statusCode);
+      return _errorKindFromRawError(data.trim(), statusCode: statusCode);
     }
 
-    return _toFriendlyErrorMessage(
+    return _errorKindFromRawError(
       error.message ?? 'Request failed. Please try again.',
       statusCode: statusCode,
     );
   }
 
-  String _toFriendlyErrorMessage(String raw, {int? statusCode}) {
+  ChatErrorKind _errorKindFromServerError(String? raw) {
+    final normalized = raw?.toLowerCase() ?? '';
+
+    if (normalized.contains('could not complete')) {
+      return ChatErrorKind.assistantCouldNotComplete;
+    }
+
+    return ChatErrorKind.generic;
+  }
+
+  ChatErrorKind _errorKindFromRawError(String raw, {int? statusCode}) {
     final normalized = raw.toLowerCase();
 
     if (statusCode == 401 || normalized.contains('unauthorized')) {
-      return 'Your session has expired. Please sign in again.';
+      return ChatErrorKind.unauthorized;
     }
 
     if (statusCode == 403) {
-      return 'The server hit an issue while handling your request. Please try again shortly.';
+      return ChatErrorKind.serverIssue;
     }
 
     if (statusCode == 404) {
-      return 'I could not find what you requested. Please try again.';
+      return ChatErrorKind.notFound;
     }
 
     if (statusCode == 429 ||
         normalized.contains('rate limit') ||
         normalized.contains('resource_exhausted') ||
         normalized.contains('quota')) {
-      return 'I am a bit busy right now. Please try again in a few seconds.';
+        return ChatErrorKind.rateLimited;
     }
 
     if (statusCode != null && statusCode >= 500) {
-      return 'The server hit an issue while handling your request. Please try again shortly.';
+        return ChatErrorKind.serverIssue;
     }
 
     if (normalized.contains('validation') || normalized.contains('invalid')) {
-      return 'I could not process that message. Please rephrase and try again.';
+        return ChatErrorKind.validation;
     }
 
-    return 'Something went wrong on our side. Please try again.';
+      if (normalized.contains('request failed')) {
+        return ChatErrorKind.requestFailed;
+      }
+
+      if (normalized.contains('could not read server response')) {
+        return ChatErrorKind.couldNotReadServerResponse;
+      }
+
+      if (normalized.contains('failed to parse')) {
+        return ChatErrorKind.failedToParseServerResponse;
+      }
+
+      return ChatErrorKind.generic;
   }
 
   Future<bool> pingService() async {

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 import '../../../auth/presentation/providers/auth_notifier.dart';
 import '../../../recipes/domain/models/recipe_model.dart';
@@ -124,14 +125,15 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
       return;
     }
 
+    final l10n = AppLocalizations.of(context)!;
     final authState = ProviderScope.containerOf(
       context,
       listen: false,
     ).read(authNotifierProvider);
-    final displayName = authState.displayName?.trim();
-    final greeting = displayName != null && displayName.isNotEmpty
-        ? 'Hello $displayName!\nHow can I help you?'
-        : 'How can I help you?';
+    final fullName = authState.fullName?.trim();
+    final greeting = fullName != null && fullName.isNotEmpty
+      ? l10n.aiChefGreetingWithName(fullName)
+        : l10n.aiChefGreetingWithoutName;
 
     setState(() {
       _isServiceOnline = isOnline;
@@ -141,9 +143,7 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
         ..add(
           isOnline
               ? ChatMessage.text(greeting)
-              : const ChatMessage.text(
-                  'Recipe service is currently unavailable. Please tap Refresh and try again.',
-                ),
+              : ChatMessage.text(l10n.aiChefServiceUnavailableMessage),
         );
     });
     _scrollToBottom();
@@ -193,6 +193,8 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
   }
 
   void _handleChatEvent(ChatEvent event) {
+    final l10n = AppLocalizations.of(context)!;
+
     if (!mounted) {
       return;
     }
@@ -227,9 +229,7 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
           setState(() {
             _isServiceOnline = true;
             _removeTypingIndicator();
-            _messages.add(
-              const ChatMessage.text('Sure! I am creating the recipe for you'),
-            );
+            _messages.add(ChatMessage.text(l10n.aiChefCreatingRecipeMessage));
             _messages.add(const ChatMessage.typing());
             _typingMessageIndex = _messages.length - 1;
             _recipeIntentAnnounced = true;
@@ -238,7 +238,8 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
         }
       case ChatEventType.recipeCreated:
         final recipe = event.recipe;
-        final recipeTitle = recipe?['title']?.toString() ?? 'your recipe';
+        final recipeTitle =
+            recipe?['title']?.toString() ?? l10n.aiChefYourRecipeFallback;
         const imageUrl = 'assets/default_recipe.jpg';
 
         setState(() {
@@ -279,8 +280,11 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
         });
         _scrollToBottom();
       case ChatEventType.error:
-        final errorMessage =
-            event.message ?? 'Something went wrong while chatting.';
+        final errorMessage = _localizeChatErrorMessage(
+          event.errorKind,
+          l10n,
+          event.isConnectionIssue,
+        );
 
         setState(() {
           _isServiceOnline = !event.isConnectionIssue;
@@ -302,7 +306,7 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
           _isServiceOnline = true;
           _messages.add(
             ChatMessage.swapSummary(
-              title: 'Suggested substitutions',
+              title: l10n.aiChefSuggestedSubstitutionsTitle,
               swaps: swapSuggestions,
             ),
           );
@@ -318,6 +322,57 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
           _isAwaitingResponse = false;
         });
         _scrollToBottom();
+    }
+  }
+
+  String _localizeChatErrorMessage(
+    ChatErrorKind? errorKind,
+    AppLocalizations l10n,
+    bool isConnectionIssue,
+  ) {
+    switch (errorKind) {
+      case ChatErrorKind.emptyPrompt:
+        return l10n.aiChefErrorPleaseTypeMessageFirst;
+      case ChatErrorKind.sendFailed:
+        return l10n.aiChefErrorCouldNotSendMessage;
+      case ChatErrorKind.emptyResponse:
+        return l10n.aiChefErrorEmptyResponse;
+      case ChatErrorKind.streamInterrupted:
+        return l10n.aiChefErrorStreamInterrupted;
+      case ChatErrorKind.assistantCouldNotComplete:
+        return l10n.aiChefErrorAssistantCouldNotComplete;
+      case ChatErrorKind.couldNotReadServerResponse:
+        return l10n.aiChefErrorCouldNotReadServerResponse;
+      case ChatErrorKind.responseUnsupportedFormat:
+        return l10n.aiChefErrorResponseUnsupportedFormat;
+      case ChatErrorKind.unexpectedResponseFormat:
+        return l10n.aiChefErrorUnexpectedResponseFormat;
+      case ChatErrorKind.failedToParseServerResponse:
+        return l10n.aiChefErrorFailedToParseServerResponse;
+      case ChatErrorKind.requestFailed:
+        return l10n.aiChefErrorRequestFailed;
+      case ChatErrorKind.serverSlow:
+        return l10n.aiChefErrorServerSlow;
+      case ChatErrorKind.cannotReachServer:
+        return l10n.aiChefErrorCannotReachServer;
+      case ChatErrorKind.requestCancelled:
+        return l10n.aiChefErrorRequestCancelled;
+      case ChatErrorKind.unauthorized:
+        return l10n.aiChefErrorUnauthorized;
+      case ChatErrorKind.serverIssue:
+        return l10n.aiChefErrorServerIssue;
+      case ChatErrorKind.notFound:
+        return l10n.aiChefErrorNotFound;
+      case ChatErrorKind.rateLimited:
+        return l10n.aiChefErrorRateLimited;
+      case ChatErrorKind.validation:
+        return l10n.aiChefErrorValidation;
+      case ChatErrorKind.generic:
+      case null:
+        if (isConnectionIssue) {
+          return l10n.aiChefErrorCannotReachServer;
+        }
+        return l10n.aiChefGenericErrorMessage;
     }
   }
 
@@ -433,12 +488,13 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
               boxShadow: const [
                 BoxShadow(
                   color: Color(0x80000000),
-                  blurRadius: 24,
+                  blurRadius: 28,
                   offset: Offset(0, 14),
                 ),
               ],
             ),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 AiChefChatPopupHeader(
                   isCheckingInitialConnection: _isCheckingInitialConnection,
@@ -447,100 +503,100 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
                   onRefreshConnection: _refreshConnectionStatus,
                   onClose: () => Navigator.of(context).pop(),
                 ),
-                const SizedBox(height: 12),
                 Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    child: ListView.separated(
-                      controller: _scrollController,
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.manual,
-                      itemCount: _messages.length,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(height: 20),
-                      itemBuilder: (context, index) {
-                        final message = _messages[index];
-                        final isAi = message.sender == ChatSender.ai;
-                        final isFirstMessage = index == 0;
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                    itemCount: _messages.length,
+                    itemBuilder: (context, index) {
+                      final message = _messages[index];
+                      final isAi = message.sender == ChatSender.ai;
+                      final bubbleRadius = BorderRadiusDirectional.only(
+                        topStart: Radius.circular(isAi ? 3 : 12),
+                        topEnd: Radius.circular(isAi ? 12 : 3),
+                        bottomStart: const Radius.circular(12),
+                        bottomEnd: const Radius.circular(12),
+                      );
 
-                        return Padding(
-                          padding: EdgeInsets.only(
-                            top: isFirstMessage && isAi ? 13 : 0,
-                          ),
-                          child: Align(
-                            alignment: isAi
-                                ? Alignment.centerLeft
-                                : Alignment.centerRight,
-                            child: Row(
-                            mainAxisAlignment: isAi
-                                ? MainAxisAlignment.start
-                                : MainAxisAlignment.end,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (isAi)
-                                Transform.translate(
-                                  offset: const Offset(0, -13),
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(right: 8),
-                                    child: Image.asset(
-                                      'assets/ai_chef_logo.png',
-                                      width: 28,
-                                      height: 28,
-                                      fit: BoxFit.contain,
-                                    ),
-                                  ),
-                                ),
-                              Flexible(
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 10,
-                                  ).copyWith(
-                                    bottom: isAi ? 13 : 10,
-                                  ),
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Align(
+                          alignment: isAi
+                              ? AlignmentDirectional.centerStart
+                              : AlignmentDirectional.centerEnd,
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxWidth: dialogWidth * 0.82,
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: isAi
+                                  ? CrossAxisAlignment.start
+                                  : CrossAxisAlignment.end,
+                              children: [
+                                Container(
+                                  width: 30,
+                                  height: 30,
+                                  margin: const EdgeInsets.only(bottom: 6),
+                                  padding: const EdgeInsets.all(4),
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    color: isAi
+                                        ? const Color(0xFFF3F7FA)
+                                        : const Color(0xFFEAF2F5),
                                     border: Border.all(
-                                      color: const Color(0xFF2B3D5A),
-                                    ),
-                                    borderRadius: BorderRadius.only(
-                                      topLeft: Radius.circular(isAi ? 3 : 12),
-                                      topRight: Radius.circular(isAi ? 12 : 3),
-                                      bottomLeft: const Radius.circular(12),
-                                      bottomRight: const Radius.circular(12),
+                                      color: isAi
+                                          ? const Color(0xFFB8CAD8)
+                                          : const Color(0xFF9FB5C6),
                                     ),
                                   ),
-                                  child: ChatMessageBuilder(
-                                    message: message,
-                                    onOpenRecipe: () {
-                                      final payload = message.recipePayload;
-                                      if (payload == null) {
-                                        return;
-                                      }
-                                      widget.onOpenRecipeCreated(payload);
-                                    },
-                                    onRecipeTap: _openRecipeDetailsFromSearch,
+                                  child: isAi
+                                      ? Image.asset(
+                                          'assets/ai_chef_logo.png',
+                                          fit: BoxFit.contain,
+                                        )
+                                      : const Icon(
+                                          Icons.person_rounded,
+                                          size: 18,
+                                          color: Color(0xFF5E7388),
+                                        ),
+                                ),
+                                Padding(
+                                  padding: EdgeInsetsDirectional.only(
+                                    start: isAi ? 18 : 0,
+                                    end: isAi ? 0 : 18,
+                                  ),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 10,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      border: Border.all(
+                                        color: const Color(0xFF2B3D5A),
+                                      ),
+                                      borderRadius: bubbleRadius,
+                                    ),
+                                    child: ChatMessageBuilder(
+                                      message: message,
+                                      onOpenRecipe: () {
+                                        final payload = message.recipePayload;
+                                        if (payload == null) {
+                                          return;
+                                        }
+                                        widget.onOpenRecipeCreated(payload);
+                                      },
+                                      onRecipeTap: _openRecipeDetailsFromSearch,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              if (!isAi)
-                                Transform.translate(
-                                  offset: const Offset(0, -12),
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(left: 8),
-                                    child: Icon(
-                                      Icons.person,
-                                      color: Color(0xFF2B3D5A),
-                                      size: 24,
-                                    ),
-                                  ),
-                                ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       );
                     },
-                    ),
                   ),
                 ),
                 AiChefChatPopupComposer(
@@ -562,6 +618,8 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
       return;
     }
 
+    final l10n = AppLocalizations.of(context)!;
+
     setState(() {
       _isRefreshingConnection = true;
     });
@@ -582,9 +640,7 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
 
     setState(() {
       _messages.add(
-        const ChatMessage.text(
-          'Connection restored. You can continue chatting.',
-        ),
+        ChatMessage.text(l10n.aiChefConnectionRestoredMessage),
       );
     });
     _scrollToBottom();
@@ -605,10 +661,12 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
       return;
     }
 
+    final l10n = AppLocalizations.of(context)!;
+
     setState(() {
       _messages.add(
         ChatMessage.text(
-          'Great! I\'ve saved your recipe: $recipeName',
+          l10n.aiChefRecipeSavedConfirmation(recipeName),
         ),
       );
     });
