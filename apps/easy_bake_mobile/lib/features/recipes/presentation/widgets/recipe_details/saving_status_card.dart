@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 import 'recipe_details_theme.dart';
 
@@ -18,6 +19,7 @@ class SavingStatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       width: 270,
       padding: const EdgeInsets.symmetric(
@@ -46,8 +48,8 @@ class SavingStatusCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           if (isSaving) ...[
-            const Text(
-              'Saving your recipe...',
+            Text(
+              l10n.savingYourRecipeMessage,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Color(0xFF2E4E69),
@@ -70,8 +72,8 @@ class SavingStatusCard extends StatelessWidget {
           ] else ...[
             Text(
               saveSucceeded
-                  ? 'Recipe saved'
-                  : (saveErrorMessage ?? 'Could not save recipe. Please try again.'),
+                  ? l10n.recipeSavedMessage
+                  : (saveErrorMessage ?? l10n.couldNotSaveRecipeMessage),
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: saveSucceeded ? const Color(0xFF2E4E69) : const Color(0xFFB83232),
@@ -83,7 +85,7 @@ class SavingStatusCard extends StatelessWidget {
             const SizedBox(height: 12),
             ElevatedButton(
               onPressed: onOk ?? () => Navigator.of(context).pop(),
-              child: const Text('OK'),
+              child: Text(l10n.okButtonLabel),
             ),
           ],
         ],

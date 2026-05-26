@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 import 'recipe_details_theme.dart';
 import 'save_confirmation_dialog.dart';
@@ -21,23 +22,24 @@ class RecipeDetailsTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
         InkWell(
           borderRadius: BorderRadius.circular(12),
           onTap: onBack,
-          child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 2, vertical: 8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 8),
             child: Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.arrow_back_ios_new,
                   size: 16,
                   color: kRecipeDetailsPrimaryBlue,
                 ),
-                SizedBox(width: 4),
+                const SizedBox(width: 4),
                 Text(
-                  'Back',
+                  l10n.backButtonLabel,
                   style: TextStyle(
                     fontSize: 16,
                     color: kRecipeDetailsPrimaryBlue,
@@ -100,7 +102,7 @@ class RecipeDetailsTopBar extends StatelessWidget {
               side: const BorderSide(color: Color(0xFFE4EAF2)),
             ),
             offset: const Offset(0, 10),
-            tooltip: 'Recipe actions',
+            tooltip: l10n.recipeActionsTooltip,
             icon: Container(
               width: 42,
               height: 42,
@@ -128,15 +130,15 @@ class RecipeDetailsTopBar extends StatelessWidget {
                     : kRecipeDetailsPrimaryBlue,
               ),
             ),
-            itemBuilder: (context) => const [
+            itemBuilder: (context) => [
               PopupMenuItem<String>(
                 height: 68,
                 padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 value: 'edit',
                 child: _RecipeMenuItem(
                   icon: Icons.edit_outlined,
-                  label: 'Edit',
-                  subtitle: 'Update title, image, or steps',
+                  label: l10n.editActionLabel,
+                  subtitle: l10n.updateRecipeSubtitle,
                   iconColor: kRecipeDetailsPrimaryBlue,
                   textColor: Color(0xFF1B2A41),
                   backgroundColor: Color(0xFFF5F9FF),
@@ -149,8 +151,8 @@ class RecipeDetailsTopBar extends StatelessWidget {
                 value: 'delete',
                 child: _RecipeMenuItem(
                   icon: Icons.delete_outline,
-                  label: 'Delete',
-                  subtitle: 'Remove this recipe permanently',
+                  label: l10n.deleteActionLabel,
+                  subtitle: l10n.removeRecipePermanentlySubtitle,
                   iconColor: Color(0xFFD14343),
                   textColor: Color(0xFFB83232),
                   backgroundColor: Color(0xFFFFF4F4),

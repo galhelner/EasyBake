@@ -1,3 +1,4 @@
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class RecipeCreateHeader extends StatelessWidget {
@@ -16,6 +17,8 @@ class RecipeCreateHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -47,7 +50,7 @@ class RecipeCreateHeader extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        'Back',
+                        l10n.backButtonLabel,
                         style: TextStyle(
                           color: primaryColor,
                           fontSize: 14,
@@ -71,7 +74,9 @@ class RecipeCreateHeader extends StatelessWidget {
         const SizedBox(height: 12),
         // Title
         Text(
-          isEditMode ? 'Edit Recipe' : 'Create New Recipe',
+          isEditMode
+              ? l10n.createRecipeHeaderEditTitle
+              : l10n.createRecipeHeaderCreateTitle,
           textAlign: TextAlign.center,
           style: TextStyle(
             color: primaryColor,
@@ -84,8 +89,8 @@ class RecipeCreateHeader extends StatelessWidget {
         // Subtitle
         Text(
           isEditMode
-              ? 'Update your culinary creation'
-              : 'Share your culinary creation',
+            ? l10n.createRecipeHeaderEditSubtitle
+            : l10n.createRecipeHeaderCreateSubtitle,
           textAlign: TextAlign.center,
           style: TextStyle(
             color: primaryColor.withValues(alpha: 0.6),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 class RecipeCreateDynamicSection extends StatefulWidget {
   final String title;
@@ -44,7 +45,9 @@ class _RecipeCreateDynamicSectionState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isEditingActive = _isEditing && widget.itemCount > widget.minItemCount;
+    final isIngredientsSection = widget.title == l10n.ingredientsTabLabel;
 
     return Container(
       decoration: BoxDecoration(
@@ -78,7 +81,7 @@ class _RecipeCreateDynamicSectionState
                   ),
                   child: Center(
                     child: Icon(
-                      widget.title == 'Ingredients'
+                      isIngredientsSection
                           ? Icons.shopping_bag_outlined
                           : Icons.list_alt_outlined,
                       size: 22,
@@ -103,7 +106,7 @@ class _RecipeCreateDynamicSectionState
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${widget.itemCount} item${widget.itemCount != 1 ? 's' : ''}',
+                        l10n.recipeItemsCount(widget.itemCount),
                         style: TextStyle(
                           color: widget.primaryColor.withValues(alpha: 0.6),
                           fontSize: 12,

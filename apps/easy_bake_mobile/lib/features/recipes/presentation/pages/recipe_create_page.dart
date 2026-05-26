@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
 import 'dart:typed_data';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 import '../../data/services/recipe_service.dart';
 import '../../domain/models/ingredient_suggestion_model.dart';
@@ -236,11 +237,13 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
     try {
       final ingredients = _collectValues(_ingredientControllers);
       final ingredientAmounts = _collectIngredientAmountsByName();
+      final ingredientIcons = _collectIngredientIconsByName();
       final instructions = _collectValues(_instructionControllers);
 
       final recipe = RecipeModel(
         title: _titleController.text.trim(),
         ingredients: ingredients,
+        ingredientIcons: ingredientIcons,
         ingredientAmounts: ingredientAmounts,
         instructions: instructions,
         healthScore: 5,
@@ -268,11 +271,13 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
     } catch (e) {
       final ingredients = _collectValues(_ingredientControllers);
       final ingredientAmounts = _collectIngredientAmountsByName();
+      final ingredientIcons = _collectIngredientIconsByName();
       final instructions = _collectValues(_instructionControllers);
 
       final attemptedRecipe = RecipeModel(
         title: _titleController.text.trim(),
         ingredients: ingredients,
+        ingredientIcons: ingredientIcons,
         ingredientAmounts: ingredientAmounts,
         instructions: instructions,
         healthScore: 5,
@@ -600,6 +605,30 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
     return result;
   }
 
+  Map<String, String> _collectIngredientIconsByName() {
+    final result = <String, String>{};
+    final rowCount =
+        _ingredientControllers.length < _ingredientSelectedIcons.length
+        ? _ingredientControllers.length
+        : _ingredientSelectedIcons.length;
+
+    for (var i = 0; i < rowCount; i++) {
+      final name = _ingredientControllers[i].text.trim();
+      if (name.isEmpty) {
+        continue;
+      }
+
+      final icon = _ingredientSelectedIcons[i].trim();
+      if (icon.isEmpty) {
+        continue;
+      }
+
+      result[name] = icon;
+    }
+
+    return result;
+  }
+
   void _addIngredientField() {
     setState(() {
       _ingredientControllers.add(TextEditingController());
@@ -689,6 +718,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
   }
 
   Widget _buildIngredientItem(BuildContext context, int index) {
+    final l10n = AppLocalizations.of(context)!;
     final isCompactLayout = MediaQuery.of(context).size.width < 420;
 
     if (isCompactLayout) {
@@ -696,7 +726,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
         children: [
           RecipeCreateInputField(
             controller: _ingredientControllers[index],
-            hintText: 'Ingredient #${index + 1}',
+            hintText: l10n.recipeIngredientHint(index + 1),
             primaryColor: _kPrimaryBlue,
             hintColor: _kHintText,
             hasError: _ingredientError != null,
@@ -714,7 +744,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
           const SizedBox(height: 8),
           RecipeCreateInputField(
             controller: _ingredientAmountControllers[index],
-            hintText: 'Amount (e.g. 200 g, 120 ml, 2)',
+            hintText: l10n.recipeIngredientAmountExampleHint,
             primaryColor: _kPrimaryBlue,
             hintColor: _kHintText,
             minLines: 1,
@@ -733,7 +763,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
             children: [
               RecipeCreateInputField(
                 controller: _ingredientControllers[index],
-                hintText: 'Ingredient #${index + 1}',
+                hintText: l10n.recipeIngredientHint(index + 1),
                 primaryColor: _kPrimaryBlue,
                 hintColor: _kHintText,
                 hasError: _ingredientError != null,
@@ -756,7 +786,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
           width: 110,
           child: RecipeCreateInputField(
             controller: _ingredientAmountControllers[index],
-            hintText: 'Amount',
+            hintText: l10n.recipeIngredientAmountHint,
             primaryColor: _kPrimaryBlue,
             hintColor: _kHintText,
             minLines: 1,
@@ -769,9 +799,10 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
   }
 
   Widget _buildInstructionItem(BuildContext context, int index) {
+    final l10n = AppLocalizations.of(context)!;
     return RecipeCreateInputField(
       controller: _instructionControllers[index],
-      hintText: 'Instruction Step #${index + 1}',
+      hintText: l10n.recipeInstructionHint(index + 1),
       primaryColor: _kPrimaryBlue,
       hintColor: _kHintText,
       minLines: 1,
@@ -794,6 +825,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
   }
 
   Future<void> _showImageSourceOptions() async {
+    final l10n = AppLocalizations.of(context)!;
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
       builder: (sheetContext) {
@@ -803,14 +835,14 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
             children: [
               ListTile(
                 leading: const Icon(Icons.photo_library_outlined),
-                title: const Text('Upload from Gallery'),
+                title: Text(l10n.uploadFromGalleryLabel),
                 onTap: () {
                   Navigator.of(sheetContext).pop(ImageSource.gallery);
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.camera_alt_outlined),
-                title: const Text('Take a Picture'),
+                title: Text(l10n.takeAPictureLabel),
                 onTap: () {
                   Navigator.of(sheetContext).pop(ImageSource.camera);
                 },
@@ -959,6 +991,8 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: _kPageBackground,
       body: GestureDetector(
@@ -991,7 +1025,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                       const SizedBox(height: 20),
                       RecipeCreateInputField(
                         controller: _titleController,
-                        hintText: 'Recipe Title',
+                        hintText: l10n.recipeTitleHint,
                         primaryColor: _kPrimaryBlue,
                         hintColor: _kHintText,
                         hasError: _titleError != null,
@@ -1045,7 +1079,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                       ),
                       const SizedBox(height: 20),
                       RecipeCreateDynamicSection(
-                        title: 'Ingredients',
+                        title: l10n.ingredientsTabLabel,
                         itemCount: _ingredientControllers.length,
                         minItemCount: 1,
                         itemBuilder: _buildIngredientItem,
@@ -1056,7 +1090,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                       ),
                       const SizedBox(height: 28),
                       RecipeCreateDynamicSection(
-                        title: 'Instructions',
+                        title: l10n.instructionsTabLabel,
                         itemCount: _instructionControllers.length,
                         minItemCount: 0,
                         itemBuilder: _buildInstructionItem,
@@ -1090,8 +1124,8 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                                     color: Colors.white,
                                   ),
                                 )
-                              : const Text(
-                                  'Save Recipe',
+                                : Text(
+                                  l10n.saveButtonLabel,
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -1139,8 +1173,8 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                             const SizedBox(height: 12),
                             Text(
                               _isEditMode
-                                  ? 'Saving your changes...'
-                                  : 'Creating your recipe...',
+                                ? l10n.savingYourRecipeMessage
+                                : l10n.creatingYourRecipeMessage,
                               textAlign: TextAlign.center,
                               style: const TextStyle(
                                 color: Color(0xFF2E4E69),

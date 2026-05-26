@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 import '../../../data/services/recipe_service.dart';
 import '../../../domain/models/recipe_model.dart';
@@ -28,12 +29,13 @@ class RecipeCardDeleteOverlay extends ConsumerStatefulWidget {
 class _RecipeCardDeleteOverlayState
     extends ConsumerState<RecipeCardDeleteOverlay> {
   Future<void> _showDeleteConfirmationAndDelete() async {
+    final l10n = AppLocalizations.of(context)!;
     final recipeId = widget.recipe.id;
     if (recipeId == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Cannot delete: recipe ID is missing'),
+          SnackBar(
+            content: Text(l10n.deleteRecipeMissingIdMessage),
             backgroundColor: Colors.red,
           ),
         );
@@ -80,6 +82,8 @@ class _RecipeCardDeleteOverlayState
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
+        final l10n = AppLocalizations.of(dialogContext)!;
+
         return StatefulBuilder(builder: (ctx, setState) {
           if (isDeleting) {
             Future.microtask(() async {
@@ -96,7 +100,7 @@ class _RecipeCardDeleteOverlayState
                 }
               } catch (error) {
                 deleteSucceeded = false;
-                deleteErrorMessage = _userFacingDeleteError(error);
+                deleteErrorMessage = _userFacingDeleteError(l10n, error);
                 if (dialogContext.mounted) {
                   setState(() {
                     isDeleting = false;
@@ -125,7 +129,7 @@ class _RecipeCardDeleteOverlayState
     );
   }
 
-  String _userFacingDeleteError(Object error) {
+  String _userFacingDeleteError(AppLocalizations l10n, Object error) {
     if (error is DioException) {
       final data = error.response?.data;
       if (data is Map<String, dynamic> && data['error'] != null) {
@@ -133,15 +137,15 @@ class _RecipeCardDeleteOverlayState
       }
       
       if (error.response?.statusCode == 401) {
-        return 'Unauthorized. Please check your app configuration.';
+        return l10n.deleteRecipeUnauthorizedMessage;
       }
       
       if (error.response?.statusCode == 404) {
-        return 'Recipe not found.';
+        return l10n.deleteRecipeNotFoundMessage;
       }
     }
     
-    return 'Could not delete recipe. Please try again.';
+    return l10n.couldNotDeleteRecipeMessage;
   }
 
   @override
@@ -183,9 +187,9 @@ class _RecipeCardDeleteOverlayState
                 child: ElevatedButton.icon(
                   onPressed: _showDeleteConfirmationAndDelete,
                   icon: const Icon(Icons.delete_outline, size: 16),
-                  label: const Text(
-                    'Delete',
-                    style: TextStyle(fontSize: 13),
+                  label: Text(
+                    AppLocalizations.of(context)!.deleteButtonLabel,
+                    style: const TextStyle(fontSize: 13),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red[400],

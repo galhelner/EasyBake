@@ -13,12 +13,10 @@ class RecipeScaleToggle extends StatelessWidget {
   bool get _isPresetScale =>
       currentScale == 1 || currentScale == 2 || currentScale == 3;
 
-  /// Calculates the horizontal alignment for the selection box.
-  /// -1.0 is far left (x1), 0.0 is center (x2), 1.0 is far right (x3).
-  double? _getAlignmentX() {
-    if (currentScale == 1) return -1.0;
-    if (currentScale == 2) return 0.0;
-    if (currentScale == 3) return 1.0;
+  AlignmentGeometry? _getSelectionAlignment() {
+    if (currentScale == 1) return AlignmentDirectional.centerStart;
+    if (currentScale == 2) return AlignmentDirectional.center;
+    if (currentScale == 3) return AlignmentDirectional.centerEnd;
     return null;
   }
 
@@ -42,7 +40,7 @@ class RecipeScaleToggle extends StatelessWidget {
                 AnimatedAlign(
                   duration: const Duration(milliseconds: 200),
                   curve: Curves.easeOutCubic,
-                  alignment: Alignment(_getAlignmentX()!, 0),
+                  alignment: _getSelectionAlignment()!,
                   child: FractionallySizedBox(
                     widthFactor: 1 / 3, // Exactly one third of the width
                     heightFactor: 1.0,

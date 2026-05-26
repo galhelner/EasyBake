@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 import '../../../ai-chat/data/services/chat_service.dart';
 import '../../../ai-chat/presentation/pages/ai_chef_chat_popup_page.dart';
@@ -16,6 +17,7 @@ import '../widgets/recipe_details/recipe_details_tab_bar.dart';
 import '../widgets/recipe_details/recipe_details_theme.dart';
 import '../widgets/recipe_details/recipe_details_top_bar.dart';
 import '../widgets/recipe_details/saving_status_card.dart';
+import '../widgets/recipe_list/delete_confirmation_dialog.dart';
 import 'recipe_create_page.dart';
 
 enum _RecipeDetailTab { ingredients, instructions }
@@ -126,84 +128,67 @@ class _RecipeDetailsPageState extends ConsumerState<RecipeDetailsPage> {
   }
 
   Future<void> _confirmAndDelete() async {
+    final l10n = AppLocalizations.of(context)!;
     final id = _recipe.id;
     if (id == null || id.isEmpty) {
       if (!mounted) {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('This recipe cannot be deleted yet.')),
+        SnackBar(content: Text(l10n.recipeCannotBeDeletedYetMessage)),
       );
       return;
     }
 
-    final shouldDelete = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Delete Recipe?'),
-          content: const Text(
-            'This action cannot be undone. Do you want to delete this recipe?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Delete'),
-            ),
-          ],
-        );
+    await showDeleteConfirmationDialog(
+      context,
+      onDelete: () async {
+        if (!mounted) {
+          return;
+        }
+
+        setState(() {
+          _isDeleting = true;
+        });
+
+        try {
+          await ref.read(recipeServiceProvider).deleteRecipe(id);
+          ref.invalidate(recipesListProvider);
+          if (!mounted) {
+            return;
+          }
+          Navigator.of(context).pop();
+        } on DioException catch (error) {
+          if (!mounted) {
+            return;
+          }
+          final status = error.response?.statusCode;
+          final message = status == 404
+              ? l10n.recipeNotFoundMessage
+              : l10n.couldNotDeleteRecipeMessage;
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(message)));
+        } catch (_) {
+          if (!mounted) {
+            return;
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.couldNotDeleteRecipeMessage)),
+          );
+        } finally {
+          if (mounted) {
+            setState(() {
+              _isDeleting = false;
+            });
+          }
+        }
       },
     );
-
-    if (shouldDelete != true || !mounted) {
-      return;
-    }
-
-    setState(() {
-      _isDeleting = true;
-    });
-
-    try {
-      await ref.read(recipeServiceProvider).deleteRecipe(id);
-      ref.invalidate(recipesListProvider);
-      if (!mounted) {
-        return;
-      }
-      Navigator.of(context).pop();
-    } on DioException catch (error) {
-      if (!mounted) {
-        return;
-      }
-      final status = error.response?.statusCode;
-      final message = status == 404
-          ? 'Recipe not found. It may have already been deleted.'
-          : 'Could not delete recipe. Please try again.';
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not delete recipe. Please try again.'),
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isDeleting = false;
-        });
-      }
-    }
   }
 
   String _userFacingSaveError(Object error) {
+    final l10n = AppLocalizations.of(context)!;
     if (error is DioException) {
       final data = error.response?.data;
       if (data is Map) {
@@ -215,10 +200,10 @@ class _RecipeDetailsPageState extends ConsumerState<RecipeDetailsPage> {
       if (error.type == DioExceptionType.connectionTimeout ||
           error.type == DioExceptionType.receiveTimeout ||
           error.type == DioExceptionType.sendTimeout) {
-        return 'Request timed out. Please try again.';
+        return l10n.requestTimedOutMessage;
       }
     }
-    return 'Could not save recipe. Please try again.';
+    return l10n.couldNotSaveRecipeMessage;
   }
 
   Future<void> showSavingDialogAndSave() async {
@@ -281,6 +266,8 @@ class _RecipeDetailsPageState extends ConsumerState<RecipeDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     final ingredients = _recipe.ingredients;
     final instructions = _recipe.instructions;
 
@@ -400,8 +387,8 @@ class _RecipeDetailsPageState extends ConsumerState<RecipeDetailsPage> {
                             fit: BoxFit.contain,
                           ),
                           const SizedBox(height: 12),
-                          const Text(
-                            'Deleting your recipe...',
+                          Text(
+                            l10n.deletingYourRecipeMessage,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: Color(0xFF2E4E69),

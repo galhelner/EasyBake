@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 Future<void> showSaveConfirmationDialog(
   BuildContext context, {
@@ -9,6 +10,8 @@ Future<void> showSaveConfirmationDialog(
     context: context,
     barrierDismissible: true,
     builder: (dialogContext) {
+      final l10n = AppLocalizations.of(dialogContext)!;
+
       return Dialog(
         backgroundColor: Colors.transparent,
         insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
@@ -44,7 +47,7 @@ Future<void> showSaveConfirmationDialog(
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      message ?? 'Do you want to save this recipe?',
+                      message ?? l10n.saveRecipeConfirmationMessage,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: Color(0xFF2E4E69),
@@ -59,7 +62,7 @@ Future<void> showSaveConfirmationDialog(
                         Navigator.of(dialogContext).pop();
                         onSave();
                       },
-                      child: const Text('Save'),
+                      child: Text(l10n.saveButtonLabel),
                     ),
                   ],
                 ),

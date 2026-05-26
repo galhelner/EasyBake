@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:vibration/vibration.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 import '../../../../../core/services/notification_service.dart';
 import 'recipe_details_theme.dart';
@@ -206,19 +207,20 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
     final minutes = duration.inMinutes.remainder(60);
     final secs = duration.inSeconds.remainder(60);
 
-    if (hours > 0 && minutes > 0) {
-      return '${hours}h ${minutes}m';
-    }
-    if (hours > 0) {
-      return '${hours}h';
-    }
-    if (duration.inMinutes > 0 && secs > 0) {
-      return '${duration.inMinutes}m ${secs}s';
-    }
-    if (duration.inMinutes > 0) {
-      return '${duration.inMinutes}m';
-    }
-    return '${duration.inSeconds}s';
+      final l10n = AppLocalizations.of(context)!;
+      if (hours > 0 && minutes > 0) {
+        return '$hours${l10n.timerHourUnitShort} $minutes${l10n.timerMinuteUnitShort}';
+      }
+      if (hours > 0) {
+        return '$hours${l10n.timerHourUnitShort}';
+      }
+      if (duration.inMinutes > 0 && secs > 0) {
+        return '${duration.inMinutes}${l10n.timerMinuteUnitShort} $secs${l10n.timerSecondUnitShort}';
+      }
+      if (duration.inMinutes > 0) {
+        return '${duration.inMinutes}${l10n.timerMinuteUnitShort}';
+      }
+      return '$secs${l10n.timerSecondUnitShort}';
   }
 
   void _startOrResume() {
@@ -310,6 +312,7 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
   }
 
   Future<void> _showTimerCompleteDialog() async {
+    final l10n = AppLocalizations.of(context)!;
     await _showCompletionNotification();
     await _playCompletionFeedback();
 
@@ -355,19 +358,19 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  'Timer Complete!',
-                  style: TextStyle(
+                Text(
+                  l10n.timerCompleteTitle,
+                  style: const TextStyle(
                     color: kRecipeDetailsPrimaryBlue,
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Your step is ready for the next action.',
+                Text(
+                  l10n.timerCompleteMessage,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Color(0xFF4A607A),
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -382,7 +385,7 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
                       foregroundColor: Colors.white,
                     ),
                     onPressed: () => Navigator.of(dialogContext).pop(),
-                    child: const Text('Great'),
+                    child: Text(l10n.timerCompleteButtonLabel),
                   ),
                 ),
               ],
@@ -396,25 +399,27 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
   Future<void> _scheduleCompletionNotification({
     required int secondsFromNow,
   }) async {
+    final l10n = AppLocalizations.of(context)!;
     // Notification plugin is now initialized globally in main().
     // Simply delegate to NotificationService which uses InterruptionLevel.active
     // to reduce system impact and prevent iOS apsd conflicts.
     await NotificationService().scheduleNotification(
       id: _kTimerNotificationId,
-      title: 'EasyBake Timer Done',
-      body: 'Your timer has finished. Check your recipe step.',
+      title: l10n.timerNotificationTitle,
+      body: l10n.timerNotificationBody,
       secondsFromNow: secondsFromNow,
       payload: 'recipe_timer_done',
     );
   }
 
   Future<void> _showCompletionNotification() async {
+    final l10n = AppLocalizations.of(context)!;
     // Use the globally initialized NotificationService.
     // InterruptionLevel.active is used to minimize system overhead.
     await NotificationService().showNotification(
       id: _kTimerNotificationId,
-      title: 'EasyBake Timer Done',
-      body: 'Your timer has finished. Check your recipe step.',
+      title: l10n.timerNotificationTitle,
+      body: l10n.timerNotificationBody,
       payload: 'recipe_timer_done',
     );
   }
@@ -489,6 +494,7 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
   }
 
   Future<void> _openCustomDurationPicker() async {
+    final l10n = AppLocalizations.of(context)!;
     int hours = _selectedDurationSeconds ~/ 3600;
     int minutes = (_selectedDurationSeconds % 3600) ~/ 60;
     int seconds = _selectedDurationSeconds % 60;
@@ -533,9 +539,9 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'Set custom timer',
-                                style: TextStyle(
+                              Text(
+                                l10n.timerSetCustomTitle,
+                                style: const TextStyle(
                                   color: kRecipeDetailsPrimaryBlue,
                                   fontSize: 18,
                                   fontWeight: FontWeight.w700,
@@ -627,7 +633,7 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
                             onPressed: () => Navigator.of(context).pop<int>(null),
-                            child: const Text('Cancel'),
+                            child: Text(l10n.cancelButtonLabel),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -647,7 +653,7 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
                               }
                               Navigator.of(context).pop<int>(total);
                             },
-                            child: const Text('Apply'),
+                            child: Text(l10n.applyButtonLabel),
                           ),
                         ),
                       ],
@@ -678,6 +684,7 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final progress = _selectedDurationSeconds == 0
         ? 0.0
         : (_remainingSeconds / _selectedDurationSeconds).clamp(0.0, 1.0);
@@ -758,13 +765,13 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
                           ),
                         ),
                         const SizedBox(width: 10),
-                        const Expanded(
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Kitchen Timer',
-                                style: TextStyle(
+                                l10n.timerKitchenTitle,
+                                style: const TextStyle(
                                   color: kRecipeDetailsPrimaryBlue,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w700,
@@ -772,8 +779,8 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
                               ),
                               SizedBox(height: 2),
                               Text(
-                                'Perfect for proofing, resting, and baking',
-                                style: TextStyle(
+                                l10n.timerKitchenSubtitle,
+                                style: const TextStyle(
                                   color: Color(0xFF4A607A),
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
@@ -783,7 +790,7 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
                           ),
                         ),
                         IconButton(
-                          tooltip: 'Close timer',
+                          tooltip: l10n.timerCloseTooltip,
                           onPressed: () {
                             setState(() {
                               _isExpanded = false;
@@ -853,7 +860,7 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
                             const SizedBox(width: 8),
                           ],
                           ActionChip(
-                            label: const Text('Custom'),
+                            label: Text(l10n.timerCustomButtonLabel),
                             avatar: const Icon(
                               Icons.edit_calendar_outlined,
                               size: 18,
@@ -879,7 +886,11 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
                                   ? Icons.pause_rounded
                                   : Icons.play_arrow_rounded,
                             ),
-                            label: Text(_isRunning ? 'Pause' : 'Start'),
+                            label: Text(
+                              _isRunning
+                                  ? l10n.timerPauseButtonLabel
+                                  : l10n.timerStartButtonLabel,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -894,7 +905,7 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
                           ),
                           onPressed: _reset,
                           icon: const Icon(Icons.replay_rounded),
-                          label: const Text('Reset'),
+                          label: Text(l10n.timerResetButtonLabel),
                         ),
                       ],
                     ),
@@ -906,7 +917,7 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
               key: const ValueKey('timer-collapsed'),
               padding: const EdgeInsets.only(bottom: 18),
               child: Tooltip(
-                message: 'Open timer',
+                message: l10n.timerOpenTooltip,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(999),
                   onTap: () {
