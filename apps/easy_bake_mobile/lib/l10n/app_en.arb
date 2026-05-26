@@ -1,0 +1,846 @@
+{
+  "@@locale": "en",
+  "appName": "EasyBake",
+  "communityChatTooltip": "Community Chat",
+  "communityChatLabel": "Chat",
+  "communityChatHeaderTitle": "Community Chat",
+  "communityChatHeaderSubtitle": "Bakers Community",
+  "composerConnectingHint": "Connecting to community chat...",
+  "composerShareHint": "Share the community...",
+  "composerOfflineHint": "Chat is offline right now",
+  "shareRecipeWithCommunityLabel": "Share a recipe with the community",
+  "connectToShareRecipesLabel": "Connect to share recipes",
+  "connectionPillConnectingLabel": "Connecting...",
+  "connectionPillOnlineLabel": "Online",
+  "connectionPillOfflineLabel": "Offline",
+  "homeTooltip": "Home",
+  "homeLabel": "Home",
+  "profileTooltip": "Profile",
+  "profileLabel": "Profile",
+  "signInLabel": "Sign In",
+  "registerLabel": "Register",
+  "fullNameHint": "Full Name",
+  "@fullNameHint": {
+    "description": "Hint text for the full name field on the register form."
+  },
+  "emailHint": "Email",
+  "@emailHint": {
+    "description": "Hint text for the email field on the sign-in form."
+  },
+  "emailAddressHint": "Email Address",
+  "@emailAddressHint": {
+    "description": "Hint text for the email field on the register form."
+  },
+  "passwordHint": "Password",
+  "@passwordHint": {
+    "description": "Hint text for password fields on the auth forms."
+  },
+  "confirmPasswordHint": "Confirm Password",
+  "@confirmPasswordHint": {
+    "description": "Hint text for the confirm password field on the register form."
+  },
+  "nextButtonLabel": "Next",
+  "@nextButtonLabel": {
+    "description": "Label for the next step button in the register form."
+  },
+  "signInErrorInvalidEmail": "Enter a valid email",
+  "@signInErrorInvalidEmail": {
+    "description": "Validation message shown when the sign-in email is invalid."
+  },
+  "signInErrorMinPasswordLength": "Min 8 characters",
+  "@signInErrorMinPasswordLength": {
+    "description": "Validation message shown when the sign-in password is too short."
+  },
+  "registerErrorNameRequired": "Please enter your name",
+  "@registerErrorNameRequired": {
+    "description": "Validation message shown when the register name field is empty."
+  },
+  "registerErrorNameTooShort": "Name must be at least 2 characters",
+  "@registerErrorNameTooShort": {
+    "description": "Validation message shown when the register name is too short."
+  },
+  "registerErrorEmailRequired": "Please enter your email",
+  "@registerErrorEmailRequired": {
+    "description": "Validation message shown when the register email field is empty."
+  },
+  "registerErrorEmailInvalid": "Please enter a valid email",
+  "@registerErrorEmailInvalid": {
+    "description": "Validation message shown when the register email is invalid."
+  },
+  "registerErrorPasswordRequired": "Please enter a password",
+  "@registerErrorPasswordRequired": {
+    "description": "Validation message shown when the register password field is empty."
+  },
+  "registerErrorPasswordMinLength": "Min 8 characters",
+  "@registerErrorPasswordMinLength": {
+    "description": "Validation message shown when the register password is too short."
+  },
+  "registerErrorConfirmPasswordRequired": "Please confirm your password",
+  "@registerErrorConfirmPasswordRequired": {
+    "description": "Validation message shown when the confirm password field is empty."
+  },
+  "registerErrorPasswordMismatch": "Passwords do not match",
+  "@registerErrorPasswordMismatch": {
+    "description": "Validation message shown when the register passwords do not match."
+  },
+  "registerStepIndicatorLabel": "Step {current} of {total}",
+  "@registerStepIndicatorLabel": {
+    "description": "Title shown above the register progress indicator.",
+    "placeholders": {
+      "current": {},
+      "total": {}
+    }
+  },
+  "gotItButtonLabel": "Got it",
+  "@gotItButtonLabel": {
+    "description": "Confirmation button label shown in auth dialogs."
+  },
+  "authWrongCredentialsTitle": "Wrong credentials",
+  "@authWrongCredentialsTitle": {
+    "description": "Title shown when the sign-in credentials are invalid."
+  },
+  "authWrongCredentialsMessage": "The email or password is incorrect. Please try again.",
+  "@authWrongCredentialsMessage": {
+    "description": "Message shown when the sign-in credentials are invalid."
+  },
+  "authGenericErrorTitle": "Oops! Something went wrong",
+  "@authGenericErrorTitle": {
+    "description": "Generic title shown for auth-related errors."
+  },
+  "authRetrySoonMessage": "Please try again in a moment.",
+  "@authRetrySoonMessage": {
+    "description": "Message shown when an auth request fails temporarily."
+  },
+  "authUnexpectedErrorMessage": "An unexpected error occurred. Please try again.",
+  "@authUnexpectedErrorMessage": {
+    "description": "Message shown when an auth request fails unexpectedly."
+  },
+  "emailAlreadyExistsTitle": "Email already exists",
+  "@emailAlreadyExistsTitle": {
+    "description": "Title shown when the register email is already in use."
+  },
+  "emailAlreadyExistsMessage": "A user with this email is already registered.",
+  "@emailAlreadyExistsMessage": {
+    "description": "Message shown when the register email is already in use."
+  },
+  "logoutTitle": "Log out?",
+  "logoutMessage": "Are you sure you want to log out of EasyBake?",
+  "cancelButtonLabel": "Cancel",
+  "logoutButtonLabel": "Logout",
+  "profilePageTitle": "Profile",
+  "easyBakeUserFallback": "EasyBake User",
+  "askAiChefHint": "Ask the AI Chef",
+  "viewRecipeButtonLabel": "View recipe",
+  "couldNotCreateRecipeTitle": "Could not create recipe",
+  "couldNotCreateRecipeMessage": "We could not create a recipe from this image. Please try again or use another image.",
+  "okButtonLabel": "OK",
+  "uploadFromGalleryLabel": "Upload from Gallery",
+  "takeAPictureLabel": "Take a Picture",
+  "recipeTitleHint": "Recipe Title",
+  "uploadRecipeImageTitle": "Upload Recipe Image",
+  "uploadRecipeImageSubtitle": "Gallery or camera",
+  "recipeIngredientHint": "Ingredient #{index}",
+  "recipeIngredientAmountHint": "Amount",
+  "recipeIngredientAmountExampleHint": "Amount (e.g. 200 g, 120 ml, 2)",
+  "recipeInstructionHint": "Instruction Step #{index}",
+  "recipeItemsCount": "{count, plural, =0{No items} =1{1 item} other{{count} items}}",
+  "creatingYourRecipeMessage": "Creating your recipe...",
+  "recipeCannotBeDeletedYetMessage": "This recipe cannot be deleted yet.",
+  "deleteRecipeTitle": "Delete Recipe?",
+  "deleteRecipeMessage": "This action cannot be undone. Do you want to delete this recipe?",
+  "deleteButtonLabel": "Delete",
+  "recipeNotFoundMessage": "Recipe not found. It may have already been deleted.",
+  "couldNotDeleteRecipeMessage": "Could not delete recipe. Please try again.",
+  "requestTimedOutMessage": "Request timed out. Please try again.",
+  "couldNotSaveRecipeMessage": "Could not save recipe. Please try again.",
+  "communityChatFailureHint": "You can try again later or refresh the chat.",
+  "communityChatUnavailableTitle": "Community chat is unavailable",
+  "communityChatUnavailableMessage": "Community chat is temporarily unavailable. Please refresh or try again later.",
+  "communityChatRefreshFailedMessage": "We could not refresh community chat right now. Please try again later.",
+  "communityChatIdentityMessage": "We could not identify your account for chat.",
+  "communityChatSendFailedMessage": "Could not send your message right now. Please try again later.",
+  "communityChatEmptyTitle": "No messages yet",
+  "communityChatEmptySubtitle": "Start the conversation in this room.",
+  "communityChatOfflineTitle": "Community chat is offline",
+  "communityChatOfflineSubtitle": "Pull down to refresh to try reconnecting and see messages again.",
+  "recipePreviewUnavailableTitle": "Recipe preview unavailable",
+  "recipePreviewNoLongerAvailableMessage": "This shared recipe is no longer available.",
+  "recipePreviewRefreshHint": "Pull down to refresh the chat to try loading the shared recipe again.",
+  "laterButtonLabel": "Later",
+  "refreshButtonLabel": "Refresh",
+  "tryAgainButtonLabel": "Try again",
+  "searchRecipesHint": "Search recipes...",
+  "chooseShareMethodSubtitle": "Choose how you'd like to share your culinary creation",
+  "createRecipeManuallyTitle": "Create Recipe Manually",
+  "createRecipeManuallySubtitle": "Add your recipe step by step",
+  "aiMagicPhotoToRecipeTitle": "AI Magic: Photo to Recipe",
+  "aiMagicPhotoToRecipeSubtitle": "AI scans your photo and builds the recipe",
+  "createRecipeHeaderCreateTitle": "Create New Recipe",
+  "createRecipeHeaderEditTitle": "Edit Recipe",
+  "createRecipeHeaderCreateSubtitle": "Share your culinary creation",
+  "createRecipeHeaderEditSubtitle": "Update your culinary creation",
+  "replaceButtonLabel": "Replace",
+  "shareRecipeTitle": "Share a recipe",
+  "shareRecipeSubtitle": "Choose one of your recipes to send to the community.",
+  "closeTooltip": "Close",
+  "couldNotLoadRecipesRightNowMessage": "Could not load your recipes right now.",
+  "noRecipesYetMessage": "You do not have any recipes to share yet.",
+  "noRecipesFoundTitle": "No recipes found",
+  "noRecipesFoundSubtitle": "Use AI Chef chat to semantically search your recipes.",
+  "noRecipesYetTitle": "Your recipe collection is empty",
+  "noRecipesYetSubtitle": "Tap the + button to add your first recipe, or use AI to create one for you.",
+  "viewButtonLabel": "View",
+  "saveButtonLabel": "Save",
+  "ingredientsTabLabel": "Ingredients",
+  "instructionsTabLabel": "Instructions",
+  "recipeActionsTooltip": "Recipe actions",
+  "editActionLabel": "Edit",
+  "updateRecipeSubtitle": "Update title, image, or steps",
+  "deleteActionLabel": "Delete",
+  "removeRecipePermanentlySubtitle": "Remove this recipe permanently",
+  "customScaleTitle": "Custom Scale",
+  "enterDesiredScaleHint": "Enter your desired scale",
+  "applyButtonLabel": "Apply",
+  "noIngredientsAvailableMessage": "No ingredients available.",
+  "backButtonLabel": "Back",
+  "chatDisplayNameLabel": "Chat Display Name",
+  "enterChatDisplayNameHint": "Enter your chat display name",
+  "chatDisplayNameDescription": "This is the name displayed in the community chat",
+  "usingFullProfileNameByDefaultMessage": "Using your full profile name by default",
+  "editTooltip": "Edit",
+  "cancelTooltip": "Cancel",
+  "saveTooltip": "Save",
+  "savingYourRecipeMessage": "Saving your recipe...",
+  "recipeSavedMessage": "Recipe saved",
+  "deletingYourRecipeMessage": "Deleting your recipe...",
+  "recipeDeletedMessage": "Recipe deleted",
+  "cookingStepsTitle": "Cooking Steps",
+  "@cookingStepsTitle": {
+    "description": "Heading shown above the recipe instruction steps in recipe details."
+  },
+  "recipeScalesTitle": "Recipe scales",
+  "@recipeScalesTitle": {
+    "description": "Section title shown above the recipe scale controls in recipe details."
+  },
+  "customScaleButtonLabel": "Custom",
+  "@customScaleButtonLabel": {
+    "description": "Label for the button that opens the custom scale dialog in recipe details."
+  },
+  "timerKitchenTitle": "Kitchen Timer",
+  "@timerKitchenTitle": {
+    "description": "Title shown in the recipe details timer card."
+  },
+  "timerKitchenSubtitle": "Perfect for proofing, resting, and baking",
+  "@timerKitchenSubtitle": {
+    "description": "Subtitle shown under the recipe details timer title."
+  },
+  "timerCustomButtonLabel": "Custom",
+  "@timerCustomButtonLabel": {
+    "description": "Label for the custom timer chip in recipe details."
+  },
+  "timerSetCustomTitle": "Set custom timer",
+  "@timerSetCustomTitle": {
+    "description": "Title shown in the custom timer bottom sheet."
+  },
+  "timerCompleteTitle": "Timer Complete!",
+  "@timerCompleteTitle": {
+    "description": "Title shown when the recipe timer finishes."
+  },
+  "timerCompleteMessage": "Your step is ready for the next action.",
+  "@timerCompleteMessage": {
+    "description": "Message shown when the recipe timer finishes."
+  },
+  "timerCompleteButtonLabel": "Great",
+  "@timerCompleteButtonLabel": {
+    "description": "Confirmation button label shown when the timer completes."
+  },
+  "timerNotificationTitle": "EasyBake Timer Done",
+  "@timerNotificationTitle": {
+    "description": "Notification title shown when the recipe timer finishes."
+  },
+  "timerNotificationBody": "Your timer has finished. Check your recipe step.",
+  "@timerNotificationBody": {
+    "description": "Notification body shown when the recipe timer finishes."
+  },
+  "timerOpenTooltip": "Open timer",
+  "@timerOpenTooltip": {
+    "description": "Tooltip shown for the collapsed timer button."
+  },
+  "timerCloseTooltip": "Close timer",
+  "@timerCloseTooltip": {
+    "description": "Tooltip shown for the timer close button."
+  },
+  "timerStartButtonLabel": "Start",
+  "@timerStartButtonLabel": {
+    "description": "Label shown on the timer start button."
+  },
+  "timerPauseButtonLabel": "Pause",
+  "@timerPauseButtonLabel": {
+    "description": "Label shown on the timer pause button."
+  },
+  "timerResetButtonLabel": "Reset",
+  "@timerResetButtonLabel": {
+    "description": "Label shown on the timer reset button."
+  },
+  "timerHourUnitShort": "h",
+  "@timerHourUnitShort": {
+    "description": "Short hour unit used in timer duration chips."
+  },
+  "timerMinuteUnitShort": "m",
+  "@timerMinuteUnitShort": {
+    "description": "Short minute unit used in timer duration chips."
+  },
+  "timerSecondUnitShort": "s",
+  "@timerSecondUnitShort": {
+    "description": "Short second unit used in timer duration chips."
+  },
+  "confirmDeleteRecipeMessage": "Are you sure you want to delete this recipe?",
+  "saveRecipeConfirmationMessage": "Do you want to save this recipe?",
+  "deleteRecipeMissingIdMessage": "Cannot delete: recipe ID is missing",
+  "deleteRecipeUnauthorizedMessage": "Unauthorized. Please check your app configuration.",
+  "deleteRecipeNotFoundMessage": "Recipe not found.",
+  "profileHeaderGreetingSubtitle": "Welcome back to EasyBake",
+  "summaryCardSavedRecipes": "{count, plural, =0{No saved recipes} =1{1 saved recipe} other{{count} saved recipes}}",
+  "summaryCardSubtitle": "Your personal recipe collection",
+  "summaryCardLoadingMessage": "Loading your recipe summary...",
+  "summaryCardUnavailableMessage": "Recipe summary unavailable right now",
+  "logoutButtonShortLabel": "Logout",
+  "createRecipeModalTitle": "Create Your Recipe",
+  "aiChefPopupTitle": "EasyBake AI Chef",
+  "aiChefPopupSubtitle": "Chat assistant",
+  "aiChefPopupCheckingLabel": "Checking...",
+  "aiChefPopupRefreshLabel": "Refresh",
+  "aiChefGreetingWithoutName": "How can I help you?",
+  "aiChefGreetingWithName": "Hello {displayName}!\nHow can I help you?",
+  "aiChefServiceUnavailableMessage": "Recipe service is currently unavailable. Please tap Refresh and try again.",
+  "aiChefCreatingRecipeMessage": "Sure! I am creating the recipe for you",
+  "aiChefGenericErrorMessage": "Something went wrong while chatting.",
+  "aiChefErrorPleaseTypeMessageFirst": "Please type a message first.",
+  "aiChefErrorCouldNotSendMessage": "Could not send your message. Please try again.",
+  "aiChefErrorEmptyResponse": "Empty response from server.",
+  "aiChefErrorStreamInterrupted": "Stream interrupted. Please try again.",
+  "aiChefErrorAssistantCouldNotComplete": "The assistant could not complete this response.",
+  "aiChefErrorCouldNotReadServerResponse": "Could not read server response. Please try again.",
+  "aiChefErrorResponseUnsupportedFormat": "Response received in an unsupported format.",
+  "aiChefErrorUnexpectedResponseFormat": "Unexpected response format from server.",
+  "aiChefErrorFailedToParseServerResponse": "Failed to parse server response.",
+  "aiChefErrorRequestFailed": "Request failed. Please try again.",
+  "aiChefErrorServerSlow": "The server is taking too long to respond. Please try again in a moment.",
+  "aiChefErrorCannotReachServer": "Cannot reach the server right now. Please check your connection and try again.",
+  "aiChefErrorRequestCancelled": "Request was cancelled. Please try again.",
+  "aiChefErrorUnauthorized": "Your session has expired. Please sign in again.",
+  "aiChefErrorServerIssue": "The server hit an issue while handling your request. Please try again shortly.",
+  "aiChefErrorNotFound": "I could not find what you requested. Please try again.",
+  "aiChefErrorRateLimited": "I am a bit busy right now. Please try again in a few seconds.",
+  "aiChefErrorValidation": "I could not process that message. Please rephrase and try again.",
+  "aiChefErrorGeneric": "Something went wrong on our side. Please try again.",
+  "aiChefSuggestedSubstitutionsTitle": "Suggested substitutions",
+  "aiChefYourRecipeFallback": "your recipe",
+  "aiChefConnectionRestoredMessage": "Connection restored. You can continue chatting.",
+  "aiChefRecipeSavedConfirmation": "Great! I've saved your recipe: {recipeName}",
+  "shareRecipeIngredientsCount": "{count, plural, =0{No ingredients} =1{1 ingredient} other{{count} ingredients}}",
+  "preferencesSectionTitle": "Preferences",
+  "customizeYourExperienceSubtitle": "Customize your experience",
+  "languageSectionTitle": "Language",
+  "languageSystemDefaultLabel": "System default",
+  "languageEnglishLabel": "English",
+  "languageHebrewLabel": "עברית",
+  "@languageSectionTitle": {
+    "description": "Title for the language selection section in Preferences."
+  },
+  "@languageSystemDefaultLabel": {
+    "description": "Label for choosing the system default language option."
+  },
+  "@languageEnglishLabel": {
+    "description": "Label for choosing English language."
+  },
+  "@languageHebrewLabel": {
+    "description": "Label for choosing Hebrew language."
+  },
+  "healthyModeTitle": "Healthy Mode",
+  "healthyModeSubtitle": "Show health badges on recipe cards",
+  "healthyBadgeLabel": "Healthy",
+  "@healthyBadgeLabel": {
+    "description": "Label shown on recipe cards for high health scores."
+  },
+  "averageBadgeLabel": "Average",
+  "@averageBadgeLabel": {
+    "description": "Label shown on recipe cards for medium health scores."
+  },
+  "unhealthyBadgeLabel": "Unhealthy",
+  "@unhealthyBadgeLabel": {
+    "description": "Label shown on recipe cards for low health scores."
+  },
+  "welcomeUser": "Welcome, {username}!",
+  "@welcomeUser": {
+    "description": "Greeting shown when welcoming the signed-in user.",
+    "placeholders": {
+      "username": {}
+    }
+  },
+  "@appName": {
+    "description": "No description provided for @appName."
+  },
+  "@communityChatTooltip": {
+    "description": "No description provided for @communityChatTooltip."
+  },
+  "@communityChatLabel": {
+    "description": "No description provided for @communityChatLabel."
+  },
+  "@communityChatHeaderTitle": {
+    "description": "Title shown in the community chat app bar."
+  },
+  "@communityChatHeaderSubtitle": {
+    "description": "Subtitle shown in the community chat app bar."
+  },
+  "@composerConnectingHint": {
+    "description": "Hint shown in the chat composer while the app is connecting."
+  },
+  "@composerShareHint": {
+    "description": "Hint shown in the chat composer when sharing is available."
+  },
+  "@composerOfflineHint": {
+    "description": "Hint shown in the chat composer when chat is offline."
+  },
+  "@shareRecipeWithCommunityLabel": {
+    "description": "Accessibility label for the button that opens recipe sharing."
+  },
+  "@connectToShareRecipesLabel": {
+    "description": "Accessibility label for the disabled recipe sharing button."
+  },
+  "@connectionPillConnectingLabel": {
+    "description": "Text shown in the chat connection pill while connecting."
+  },
+  "@connectionPillOnlineLabel": {
+    "description": "Text shown in the chat connection pill when online."
+  },
+  "@connectionPillOfflineLabel": {
+    "description": "Text shown in the chat connection pill when offline."
+  },
+  "@homeTooltip": {
+    "description": "No description provided for @homeTooltip."
+  },
+  "@homeLabel": {
+    "description": "No description provided for @homeLabel."
+  },
+  "@profileTooltip": {
+    "description": "No description provided for @profileTooltip."
+  },
+  "@profileLabel": {
+    "description": "No description provided for @profileLabel."
+  },
+  "@signInLabel": {
+    "description": "No description provided for @signInLabel."
+  },
+  "@registerLabel": {
+    "description": "No description provided for @registerLabel."
+  },
+  "@logoutTitle": {
+    "description": "No description provided for @logoutTitle."
+  },
+  "@logoutMessage": {
+    "description": "No description provided for @logoutMessage."
+  },
+  "@cancelButtonLabel": {
+    "description": "No description provided for @cancelButtonLabel."
+  },
+  "@logoutButtonLabel": {
+    "description": "No description provided for @logoutButtonLabel."
+  },
+  "@profilePageTitle": {
+    "description": "No description provided for @profilePageTitle."
+  },
+  "@easyBakeUserFallback": {
+    "description": "No description provided for @easyBakeUserFallback."
+  },
+  "@askAiChefHint": {
+    "description": "No description provided for @askAiChefHint."
+  },
+  "@viewRecipeButtonLabel": {
+    "description": "No description provided for @viewRecipeButtonLabel."
+  },
+  "@couldNotCreateRecipeTitle": {
+    "description": "No description provided for @couldNotCreateRecipeTitle."
+  },
+  "@couldNotCreateRecipeMessage": {
+    "description": "No description provided for @couldNotCreateRecipeMessage."
+  },
+  "@okButtonLabel": {
+    "description": "No description provided for @okButtonLabel."
+  },
+  "@uploadFromGalleryLabel": {
+    "description": "No description provided for @uploadFromGalleryLabel."
+  },
+  "@takeAPictureLabel": {
+    "description": "No description provided for @takeAPictureLabel."
+  },
+  "@recipeTitleHint": {
+    "description": "Placeholder shown in the recipe title field on the create recipe page."
+  },
+  "@uploadRecipeImageTitle": {
+    "description": "Title shown on the recipe image upload card."
+  },
+  "@uploadRecipeImageSubtitle": {
+    "description": "Subtitle shown on the recipe image upload card."
+  },
+  "@recipeIngredientHint": {
+    "description": "Placeholder shown in each ingredient name field on the create recipe page.",
+    "placeholders": {
+      "index": {}
+    }
+  },
+  "@recipeIngredientAmountHint": {
+    "description": "Placeholder shown in each ingredient amount field on the create recipe page."
+  },
+  "@recipeIngredientAmountExampleHint": {
+    "description": "Placeholder shown in compact ingredient amount fields on the create recipe page."
+  },
+  "@recipeInstructionHint": {
+    "description": "Placeholder shown in each instruction field on the create recipe page.",
+    "placeholders": {
+      "index": {}
+    }
+  },
+  "@recipeItemsCount": {
+    "description": "Count label shown under create recipe section titles.",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@creatingYourRecipeMessage": {
+    "description": "No description provided for @creatingYourRecipeMessage."
+  },
+  "@recipeCannotBeDeletedYetMessage": {
+    "description": "No description provided for @recipeCannotBeDeletedYetMessage."
+  },
+  "@deleteRecipeTitle": {
+    "description": "No description provided for @deleteRecipeTitle."
+  },
+  "@deleteRecipeMessage": {
+    "description": "No description provided for @deleteRecipeMessage."
+  },
+  "@deleteButtonLabel": {
+    "description": "No description provided for @deleteButtonLabel."
+  },
+  "@recipeNotFoundMessage": {
+    "description": "No description provided for @recipeNotFoundMessage."
+  },
+  "@couldNotDeleteRecipeMessage": {
+    "description": "No description provided for @couldNotDeleteRecipeMessage."
+  },
+  "@requestTimedOutMessage": {
+    "description": "No description provided for @requestTimedOutMessage."
+  },
+  "@couldNotSaveRecipeMessage": {
+    "description": "No description provided for @couldNotSaveRecipeMessage."
+  },
+  "@communityChatFailureHint": {
+    "description": "No description provided for @communityChatFailureHint."
+  },
+  "@communityChatUnavailableTitle": {
+    "description": "No description provided for @communityChatUnavailableTitle."
+  },
+  "@laterButtonLabel": {
+    "description": "No description provided for @laterButtonLabel."
+  },
+  "@refreshButtonLabel": {
+    "description": "No description provided for @refreshButtonLabel."
+  },
+  "@tryAgainButtonLabel": {
+    "description": "No description provided for @tryAgainButtonLabel."
+  },
+  "@searchRecipesHint": {
+    "description": "No description provided for @searchRecipesHint."
+  },
+  "@chooseShareMethodSubtitle": {
+    "description": "No description provided for @chooseShareMethodSubtitle."
+  },
+  "@createRecipeManuallyTitle": {
+    "description": "No description provided for @createRecipeManuallyTitle."
+  },
+  "@createRecipeManuallySubtitle": {
+    "description": "No description provided for @createRecipeManuallySubtitle."
+  },
+  "@aiMagicPhotoToRecipeTitle": {
+    "description": "No description provided for @aiMagicPhotoToRecipeTitle."
+  },
+  "@aiMagicPhotoToRecipeSubtitle": {
+    "description": "No description provided for @aiMagicPhotoToRecipeSubtitle."
+  },
+  "@createRecipeHeaderCreateTitle": {
+    "description": "Title shown on the create recipe page in create mode."
+  },
+  "@createRecipeHeaderEditTitle": {
+    "description": "Title shown on the create recipe page in edit mode."
+  },
+  "@createRecipeHeaderCreateSubtitle": {
+    "description": "Subtitle shown on the create recipe page in create mode."
+  },
+  "@createRecipeHeaderEditSubtitle": {
+    "description": "Subtitle shown on the create recipe page in edit mode."
+  },
+  "@replaceButtonLabel": {
+    "description": "No description provided for @replaceButtonLabel."
+  },
+  "@shareRecipeTitle": {
+    "description": "No description provided for @shareRecipeTitle."
+  },
+  "@shareRecipeSubtitle": {
+    "description": "No description provided for @shareRecipeSubtitle."
+  },
+  "@closeTooltip": {
+    "description": "No description provided for @closeTooltip."
+  },
+  "@couldNotLoadRecipesRightNowMessage": {
+    "description": "No description provided for @couldNotLoadRecipesRightNowMessage."
+  },
+  "@noRecipesYetMessage": {
+    "description": "No description provided for @noRecipesYetMessage."
+  },
+  "@noRecipesFoundTitle": {
+    "description": "Title shown when a recipe search returns no results."
+  },
+  "@noRecipesFoundSubtitle": {
+    "description": "Subtitle shown when a recipe search returns no results."
+  },
+  "@noRecipesYetTitle": {
+    "description": "Title shown when the recipe list is empty."
+  },
+  "@noRecipesYetSubtitle": {
+    "description": "Subtitle shown when the recipe list is empty."
+  },
+  "@viewButtonLabel": {
+    "description": "No description provided for @viewButtonLabel."
+  },
+  "@saveButtonLabel": {
+    "description": "No description provided for @saveButtonLabel."
+  },
+  "@ingredientsTabLabel": {
+    "description": "No description provided for @ingredientsTabLabel."
+  },
+  "@instructionsTabLabel": {
+    "description": "No description provided for @instructionsTabLabel."
+  },
+  "@recipeActionsTooltip": {
+    "description": "No description provided for @recipeActionsTooltip."
+  },
+  "@editActionLabel": {
+    "description": "No description provided for @editActionLabel."
+  },
+  "@updateRecipeSubtitle": {
+    "description": "No description provided for @updateRecipeSubtitle."
+  },
+  "@deleteActionLabel": {
+    "description": "No description provided for @deleteActionLabel."
+  },
+  "@removeRecipePermanentlySubtitle": {
+    "description": "No description provided for @removeRecipePermanentlySubtitle."
+  },
+  "@customScaleTitle": {
+    "description": "No description provided for @customScaleTitle."
+  },
+  "@enterDesiredScaleHint": {
+    "description": "No description provided for @enterDesiredScaleHint."
+  },
+  "@applyButtonLabel": {
+    "description": "No description provided for @applyButtonLabel."
+  },
+  "@noIngredientsAvailableMessage": {
+    "description": "No description provided for @noIngredientsAvailableMessage."
+  },
+  "@backButtonLabel": {
+    "description": "No description provided for @backButtonLabel."
+  },
+  "@chatDisplayNameLabel": {
+    "description": "No description provided for @chatDisplayNameLabel."
+  },
+  "@enterChatDisplayNameHint": {
+    "description": "No description provided for @enterChatDisplayNameHint."
+  },
+  "@chatDisplayNameDescription": {
+    "description": "No description provided for @chatDisplayNameDescription."
+  },
+  "@usingFullProfileNameByDefaultMessage": {
+    "description": "No description provided for @usingFullProfileNameByDefaultMessage."
+  },
+  "@editTooltip": {
+    "description": "No description provided for @editTooltip."
+  },
+  "@cancelTooltip": {
+    "description": "No description provided for @cancelTooltip."
+  },
+  "@saveTooltip": {
+    "description": "No description provided for @saveTooltip."
+  },
+  "@savingYourRecipeMessage": {
+    "description": "No description provided for @savingYourRecipeMessage."
+  },
+  "@recipeSavedMessage": {
+    "description": "No description provided for @recipeSavedMessage."
+  },
+  "@deletingYourRecipeMessage": {
+    "description": "No description provided for @deletingYourRecipeMessage."
+  },
+  "@recipeDeletedMessage": {
+    "description": "No description provided for @recipeDeletedMessage."
+  },
+  "@confirmDeleteRecipeMessage": {
+    "description": "No description provided for @confirmDeleteRecipeMessage."
+  },
+  "@saveRecipeConfirmationMessage": {
+    "description": "Confirmation prompt shown before saving a recipe."
+  },
+  "@deleteRecipeMissingIdMessage": {
+    "description": "Message shown when a recipe cannot be deleted because it has no ID."
+  },
+  "@deleteRecipeUnauthorizedMessage": {
+    "description": "Message shown when delete is blocked by an authorization issue."
+  },
+  "@deleteRecipeNotFoundMessage": {
+    "description": "Message shown when the recipe to delete could not be found."
+  },
+  "@profileHeaderGreetingSubtitle": {
+    "description": "Subtitle shown under the user's name in the profile header."
+  },
+  "@summaryCardSavedRecipes": {
+    "description": "Summary card title showing how many recipes the user has saved.",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@summaryCardSubtitle": {
+    "description": "Subtitle shown on the profile summary card."
+  },
+  "@summaryCardLoadingMessage": {
+    "description": "Loading message shown while summary card data is being fetched."
+  },
+  "@summaryCardUnavailableMessage": {
+    "description": "Message shown when the profile summary card cannot be loaded."
+  },
+  "@logoutButtonShortLabel": {
+    "description": "Label for the logout button on the profile page."
+  },
+  "@createRecipeModalTitle": {
+    "description": "Title shown at the top of the recipe creation popup."
+  },
+  "@aiChefPopupTitle": {
+    "description": "Title shown at the top of the AI chef chat popup."
+  },
+  "@aiChefPopupSubtitle": {
+    "description": "Subtitle shown under the AI chef popup title."
+  },
+  "@aiChefPopupCheckingLabel": {
+    "description": "Status pill text shown while checking connection in the AI chef popup."
+  },
+  "@aiChefPopupRefreshLabel": {
+    "description": "Button text used to refresh the AI chef popup connection."
+  },
+  "@aiChefGreetingWithoutName": {
+    "description": "Greeting shown by the AI chef popup when the user has no display name."
+  },
+  "@aiChefGreetingWithName": {
+    "description": "Greeting shown by the AI chef popup when the user has a display name.",
+    "placeholders": {
+      "displayName": {}
+    }
+  },
+  "@aiChefServiceUnavailableMessage": {
+    "description": "Message shown when the AI chef service is unavailable."
+  },
+  "@aiChefCreatingRecipeMessage": {
+    "description": "Message shown when the AI chef starts creating a recipe."
+  },
+  "@aiChefGenericErrorMessage": {
+    "description": "Fallback error message shown in the AI chef chat."
+  },
+  "@aiChefErrorPleaseTypeMessageFirst": {
+    "description": "Error shown when the user submits an empty AI chef message."
+  },
+  "@aiChefErrorCouldNotSendMessage": {
+    "description": "Error shown when the app cannot send an AI chef message."
+  },
+  "@aiChefErrorEmptyResponse": {
+    "description": "Error shown when the AI chef server returns an empty response."
+  },
+  "@aiChefErrorStreamInterrupted": {
+    "description": "Error shown when a streamed AI chef response is interrupted."
+  },
+  "@aiChefErrorAssistantCouldNotComplete": {
+    "description": "Error shown when the assistant could not complete a response."
+  },
+  "@aiChefErrorCouldNotReadServerResponse": {
+    "description": "Error shown when the app cannot read the AI chef server response."
+  },
+  "@aiChefErrorResponseUnsupportedFormat": {
+    "description": "Error shown when the AI chef server response is in an unsupported format."
+  },
+  "@aiChefErrorUnexpectedResponseFormat": {
+    "description": "Error shown when the AI chef server response format is unexpected."
+  },
+  "@aiChefErrorFailedToParseServerResponse": {
+    "description": "Error shown when the AI chef server response cannot be parsed."
+  },
+  "@aiChefErrorRequestFailed": {
+    "description": "Fallback error shown when an AI chef request fails."
+  },
+  "@aiChefErrorServerSlow": {
+    "description": "Error shown when the AI chef server is slow to respond."
+  },
+  "@aiChefErrorCannotReachServer": {
+    "description": "Error shown when the AI chef server cannot be reached."
+  },
+  "@aiChefErrorRequestCancelled": {
+    "description": "Error shown when the AI chef request is cancelled."
+  },
+  "@aiChefErrorUnauthorized": {
+    "description": "Error shown when the user's session has expired."
+  },
+  "@aiChefErrorServerIssue": {
+    "description": "Error shown when the server has an issue handling the request."
+  },
+  "@aiChefErrorNotFound": {
+    "description": "Error shown when the requested item cannot be found."
+  },
+  "@aiChefErrorRateLimited": {
+    "description": "Error shown when the AI chef service is rate limited or busy."
+  },
+  "@aiChefErrorValidation": {
+    "description": "Error shown when the user's message failed validation."
+  },
+  "@aiChefErrorGeneric": {
+    "description": "Generic fallback error shown for AI chef failures."
+  },
+  "@aiChefSuggestedSubstitutionsTitle": {
+    "description": "Title shown above suggested substitutions in the AI chef chat."
+  },
+  "@aiChefYourRecipeFallback": {
+    "description": "Fallback label used when the AI chef creates a recipe without a title."
+  },
+  "@aiChefConnectionRestoredMessage": {
+    "description": "Message shown when the AI chef chat reconnects successfully."
+  },
+  "@aiChefRecipeSavedConfirmation": {
+    "description": "Message shown after the app saves a recipe from the AI chef chat.",
+    "placeholders": {
+      "recipeName": {}
+    }
+  },
+  "@shareRecipeIngredientsCount": {
+    "description": "Ingredient count label shown on each recipe tile in the share recipe dialog.",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@preferencesSectionTitle": {
+    "description": "No description provided for @preferencesSectionTitle."
+  },
+  "@customizeYourExperienceSubtitle": {
+    "description": "No description provided for @customizeYourExperienceSubtitle."
+  },
+  "@healthyModeTitle": {
+    "description": "No description provided for @healthyModeTitle."
+  },
+  "@healthyModeSubtitle": {
+    "description": "No description provided for @healthyModeSubtitle."
+  }
+}
