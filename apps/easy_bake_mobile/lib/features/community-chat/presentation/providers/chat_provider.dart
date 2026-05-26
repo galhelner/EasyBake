@@ -1,10 +1,12 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:easy_bake_mobile/core/localization/app_locale_controller.dart';
 import 'package:easy_bake_mobile/core/network/api_client.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 import '../../data/services/services.dart';
 import '../../domain/models/models.dart';
@@ -17,7 +19,11 @@ final sharedRecipeByIdProvider = FutureProvider.family<RecipeModel, String>((
   recipeId,
 ) async {
   final service = ref.read(recipeServiceProvider);
-  return service.fetchRecipeById(recipeId);
+  try {
+    return await service.fetchRecipeById(recipeId);
+  } catch (error) {
+    rethrow;
+  }
 });
 
 // Messages notifier
@@ -133,13 +139,24 @@ class ChatErrorNotifier extends Notifier<String?> {
   }
 }
 
-const _chatUnavailableMessage =
-    'Community chat is temporarily unavailable. Please refresh or try again later.';
-const _chatRefreshFailedMessage =
-    'We could not refresh community chat right now. Please try again later.';
-const _chatIdentityMessage = 'We could not identify your account for chat.';
-const _chatSendFailedMessage =
-    'Could not send your message right now. Please try again later.';
+AppLocalizations _chatLocalizations() {
+  final locale =
+      appLocaleNotifier.value ??
+      WidgetsBinding.instance.platformDispatcher.locale;
+  return lookupAppLocalizations(locale);
+}
+
+String _chatUnavailableMessage() =>
+    _chatLocalizations().communityChatUnavailableMessage;
+
+String _chatRefreshFailedMessage() =>
+    _chatLocalizations().communityChatRefreshFailedMessage;
+
+String _chatIdentityMessage() =>
+    _chatLocalizations().communityChatIdentityMessage;
+
+String _chatSendFailedMessage() =>
+    _chatLocalizations().communityChatSendFailedMessage;
 
 // Connection status
 final chatConnectionStateProvider =
@@ -217,6 +234,20 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
           messages,
           preservePendingMessages: preservePendingMessages,
         );
+
+    final recipeIds = ref
+        .read(chatMessagesProvider)
+        .where(
+          (message) =>
+              message.type == ChatMessageType.recipe &&
+              (message.recipeId?.trim().isNotEmpty ?? false),
+        )
+        .map((message) => message.recipeId!.trim())
+        .toSet();
+
+    for (final recipeId in recipeIds) {
+      ref.invalidate(sharedRecipeByIdProvider(recipeId));
+    }
   }
 
   Future<void> initializeChat() async {
@@ -290,7 +321,9 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
       };
 
       chatService.onError = (error) {
-        ref.read(chatErrorProvider.notifier).setError(_chatUnavailableMessage);
+        ref
+            .read(chatErrorProvider.notifier)
+            .setError(_chatUnavailableMessage());
       };
 
       chatService.onConnectionStateChanged = (isConnected) {
@@ -319,7 +352,7 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
       ref
           .read(chatConnectionStateProvider.notifier)
           .setState(ChatConnectionState.disconnected);
-      ref.read(chatErrorProvider.notifier).setError(_chatUnavailableMessage);
+      ref.read(chatErrorProvider.notifier).setError(_chatUnavailableMessage());
       state = null;
     }
   }
@@ -341,14 +374,16 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
       await _loadMessageHistory();
       ref.read(chatErrorProvider.notifier).setError(null);
     } catch (e) {
-      ref.read(chatErrorProvider.notifier).setError(_chatRefreshFailedMessage);
+      ref
+          .read(chatErrorProvider.notifier)
+          .setError(_chatRefreshFailedMessage());
     }
   }
 
   void sendMessage(String content) {
     final chatService = state;
     if (chatService == null) {
-      ref.read(chatErrorProvider.notifier).setError(_chatUnavailableMessage);
+      ref.read(chatErrorProvider.notifier).setError(_chatUnavailableMessage());
       return;
     }
 
@@ -356,7 +391,7 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
     final userId = authState.userId?.trim() ?? '';
     final userEmail = authState.email?.trim() ?? '';
     if (userId.isEmpty && userEmail.isEmpty) {
-      ref.read(chatErrorProvider.notifier).setError(_chatIdentityMessage);
+      ref.read(chatErrorProvider.notifier).setError(_chatIdentityMessage());
       return;
     }
 
@@ -382,7 +417,7 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
 
     final sent = chatService.sendMessage(content: trimmedContent);
     if (!sent) {
-      ref.read(chatErrorProvider.notifier).setError(_chatSendFailedMessage);
+      ref.read(chatErrorProvider.notifier).setError(_chatSendFailedMessage());
       ref.read(chatMessagesProvider.notifier).removePendingMessage(localId);
     }
   }
@@ -390,7 +425,7 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
   void sendRecipeMessage(String recipeId) {
     final chatService = state;
     if (chatService == null) {
-      ref.read(chatErrorProvider.notifier).setError(_chatUnavailableMessage);
+      ref.read(chatErrorProvider.notifier).setError(_chatUnavailableMessage());
       return;
     }
 
@@ -398,7 +433,7 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
     final userId = authState.userId?.trim() ?? '';
     final userEmail = authState.email?.trim() ?? '';
     if (userId.isEmpty && userEmail.isEmpty) {
-      ref.read(chatErrorProvider.notifier).setError(_chatIdentityMessage);
+      ref.read(chatErrorProvider.notifier).setError(_chatIdentityMessage());
       return;
     }
 
@@ -429,7 +464,7 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
     );
 
     if (!sent) {
-      ref.read(chatErrorProvider.notifier).setError(_chatSendFailedMessage);
+      ref.read(chatErrorProvider.notifier).setError(_chatSendFailedMessage());
       ref.read(chatMessagesProvider.notifier).removePendingMessage(localId);
     }
   }

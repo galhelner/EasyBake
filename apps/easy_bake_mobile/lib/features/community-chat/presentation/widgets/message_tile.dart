@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 import '../../domain/models/models.dart';
 import '../providers/chat_provider.dart';
@@ -9,6 +10,7 @@ import '../../../recipes/presentation/pages/recipe_details_page.dart';
 import '../../../recipes/data/services/recipe_service.dart';
 import '../../../recipes/presentation/providers/recipe_providers.dart';
 import '../../../recipes/presentation/widgets/recipe_details/saving_status_card.dart';
+import '../../../recipes/domain/models/recipe_model.dart';
 import 'chat_avatar.dart';
 import 'shared_recipe_preview_card.dart';
 
@@ -151,7 +153,6 @@ class MessageTile extends ConsumerWidget {
                             (message.recipeId?.trim().isNotEmpty ?? false))
                           _RecipePreviewCard(
                             recipeId: message.recipeId!,
-                            fallbackText: message.content,
                             isCurrentUser: isCurrentUser,
                           )
                         else
@@ -226,16 +227,15 @@ class MessageTile extends ConsumerWidget {
 class _RecipePreviewCard extends ConsumerWidget {
   const _RecipePreviewCard({
     required this.recipeId,
-    required this.fallbackText,
     required this.isCurrentUser,
   });
 
   final String recipeId;
-  final String fallbackText;
   final bool isCurrentUser;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final recipeAsync = ref.watch(sharedRecipeByIdProvider(recipeId));
 
     return recipeAsync.when(
@@ -243,106 +243,148 @@ class _RecipePreviewCard extends ConsumerWidget {
         height: 152,
         child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
       ),
-      error: (error, stackTrace) => Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF6FAFF),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFD6E3F2)),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.menu_book_rounded, color: Color(0xFF6D87A0)),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                fallbackText,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF314354),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
+      error: (error, stackTrace) => _buildUnavailableCard(
+        context,
+        l10n,
+        _recipePreviewMessageForError(l10n, error),
       ),
       data: (recipe) {
-        Future<void> showSavingDialogAndSave(BuildContext context) async {
-          final service = ref.read(recipeServiceProvider);
+        return _buildSharedPreview(context, ref, recipe);
+      },
+    );
+  }
 
-          var isSaving = true;
-          var saveSucceeded = false;
-          String? saveErrorMessage;
+  String _recipePreviewMessageForError(
+    AppLocalizations l10n,
+    Object error,
+  ) {
+    if (error is DioException && error.response?.statusCode == 404) {
+      return l10n.recipePreviewNoLongerAvailableMessage;
+    }
+    return l10n.recipePreviewRefreshHint;
+  }
 
-          await showDialog<void>(
-            context: context,
-            barrierDismissible: false,
-            builder: (dialogContext) {
-              return StatefulBuilder(builder: (ctx, setState) {
-                if (isSaving) {
-                  Future.microtask(() async {
-                    try {
-                      await service.createRecipeCopyWithRemoteImage(recipe);
-                      saveSucceeded = true;
-                      if (dialogContext.mounted) {
-                        setState(() {
-                          isSaving = false;
-                        });
-                      }
-                      ref.invalidate(recipesListProvider);
-                    } catch (e) {
-                      saveSucceeded = false;
-                      saveErrorMessage = _userFacingRecipeSaveError(e);
-                      if (dialogContext.mounted) {
-                        setState(() {
-                          isSaving = false;
-                        });
-                      }
+  Widget _buildSharedPreview(
+    BuildContext context,
+    WidgetRef ref,
+    RecipeModel recipe,
+  ) {
+    Future<void> showSavingDialogAndSave(BuildContext context) async {
+      final service = ref.read(recipeServiceProvider);
+
+      var isSaving = true;
+      var saveSucceeded = false;
+      String? saveErrorMessage;
+
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) {
+          return StatefulBuilder(
+            builder: (ctx, setState) {
+              if (isSaving) {
+                Future.microtask(() async {
+                  try {
+                    await service.createRecipeCopyWithRemoteImage(recipe);
+                    saveSucceeded = true;
+                    if (dialogContext.mounted) {
+                      setState(() {
+                        isSaving = false;
+                      });
                     }
-                  });
-                }
+                    ref.invalidate(recipesListProvider);
+                  } catch (e) {
+                    saveSucceeded = false;
+                    saveErrorMessage = _userFacingRecipeSaveError(e);
+                    if (dialogContext.mounted) {
+                      setState(() {
+                        isSaving = false;
+                      });
+                    }
+                  }
+                });
+              }
 
-                return Dialog(
-                  backgroundColor: Colors.transparent,
-                  insetPadding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 24,
+              return Dialog(
+                backgroundColor: Colors.transparent,
+                insetPadding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 24,
+                ),
+                child: Center(
+                  child: SavingStatusCard(
+                    isSaving: isSaving,
+                    saveSucceeded: saveSucceeded,
+                    saveErrorMessage: saveErrorMessage,
+                    onOk: () => Navigator.of(dialogContext).pop(),
                   ),
-                  child: Center(
-                    child: SavingStatusCard(
-                      isSaving: isSaving,
-                      saveSucceeded: saveSucceeded,
-                      saveErrorMessage: saveErrorMessage,
-                      onOk: () => Navigator.of(dialogContext).pop(),
-                    ),
-                  ),
-                );
-              });
+                ),
+              );
             },
           );
-        }
+        },
+      );
+    }
 
-        return SharedRecipePreviewCard(
-          title: recipe.title,
-          imageUrl: recipe.imageUrl,
-          healthScore: recipe.healthScore,
-          showButtons: !isCurrentUser,
-          onView: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => RecipeDetailsPage(
-                  initialRecipe: recipe,
-                  showSaveButton: true,
-                  popRouteAfterSaveAcknowledged: true,
-                ),
-              ),
-            );
-          },
-          onSave: () => showSavingDialogAndSave(context),
+    return SharedRecipePreviewCard(
+      title: recipe.title,
+      imageUrl: recipe.imageUrl,
+      healthScore: recipe.healthScore,
+      showButtons: !isCurrentUser,
+      onView: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => RecipeDetailsPage(
+              initialRecipe: recipe,
+              showSaveButton: true,
+              popRouteAfterSaveAcknowledged: true,
+            ),
+          ),
         );
       },
+      onSave: () => showSavingDialogAndSave(context),
+    );
+  }
+
+  Widget _buildUnavailableCard(
+    BuildContext context,
+    AppLocalizations l10n,
+    String message,
+  ) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF6FAFF),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFD6E3F2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.cloud_off_outlined, color: Color(0xFF6D87A0)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  l10n.recipePreviewUnavailableTitle,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF314354),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            message,
+            style: const TextStyle(fontSize: 13, color: Color(0xFF5B6E83)),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -367,11 +409,11 @@ class _BubbleShell extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(14, 10, 10, 6),
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(isCurrentUser ? 18 : 4),
-              topRight: Radius.circular(isCurrentUser ? 4 : 18),
-              bottomLeft: const Radius.circular(18),
-              bottomRight: const Radius.circular(18),
+            borderRadius: BorderRadiusDirectional.only(
+              topStart: Radius.circular(isCurrentUser ? 18 : 4),
+              topEnd: Radius.circular(isCurrentUser ? 4 : 18),
+              bottomStart: const Radius.circular(18),
+              bottomEnd: const Radius.circular(18),
             ),
             boxShadow: [
               BoxShadow(

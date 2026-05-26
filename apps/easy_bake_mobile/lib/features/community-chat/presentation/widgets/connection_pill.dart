@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 class ConnectionPill extends StatelessWidget {
   const ConnectionPill({
@@ -12,6 +13,8 @@ class ConnectionPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     if (isConnecting) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -23,10 +26,10 @@ class ConnectionPill extends StatelessWidget {
             width: 1,
           ),
         ),
-        child: const Row(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(
+            const SizedBox(
               width: 10,
               height: 10,
               child: CircularProgressIndicator(
@@ -34,9 +37,9 @@ class ConnectionPill extends StatelessWidget {
                 valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1565C0)),
               ),
             ),
-            SizedBox(width: 6),
+            const SizedBox(width: 6),
             Text(
-              'Connecting...',
+              l10n.connectionPillConnectingLabel,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
@@ -71,7 +74,9 @@ class ConnectionPill extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            isConnected ? 'Online' : 'Offline',
+            isConnected
+                ? l10n.connectionPillOnlineLabel
+                : l10n.connectionPillOfflineLabel,
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w500,
