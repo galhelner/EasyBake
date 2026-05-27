@@ -67,6 +67,19 @@ async function loadRecipeControllerModule(): Promise<RecipeModuleLoad> {
 	const mockLoggerInfo = jest.fn();
 	const mockLoggerWarn = jest.fn();
 
+	// Default axios.post mock to avoid calling the real AI service in unit tests.
+	// Individual tests may override this with mockResolvedValueOnce as needed.
+	mockAxiosPost.mockImplementation(async (...args: any[]) => {
+		const url = typeof args[0] === 'string' ? args[0] : String(args[0]);
+		if (url.includes('/embeddings')) {
+			return { data: { embedding: [1, 2, 3] } };
+		}
+		if (url.includes('/analyze-health-score')) {
+			return { data: { health_score: 50 } };
+		}
+		return { data: {} };
+	});
+
 	jest.doMock('axios', () => ({
 		__esModule: true,
 		default: {
