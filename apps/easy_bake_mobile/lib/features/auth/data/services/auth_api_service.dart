@@ -37,24 +37,7 @@ class AuthApiService {
     }
 
     final fullName = user?['fullName'] as String?;
-
-    // Fetch the user's profile from chat-service to get the authoritative displayName
-    String? displayName = fullName;
-    try {
-      final chatBaseUrl = _getChatServiceBaseUrl();
-      final chatDio = Dio(
-        BaseOptions(
-          baseUrl: chatBaseUrl,
-          headers: {'Authorization': 'Bearer $accessToken'},
-        ),
-      );
-      final profileResponse = await chatDio.get('/profile');
-      final profileData = profileResponse.data as Map<String, dynamic>?;
-      displayName = profileData?['displayName'] as String? ?? displayName;
-    } catch (e) {
-      // Fall back to fullName if profile fetch fails
-      displayName = user?['fullName'] as String?;
-    }
+    final displayName = user?['displayName'] as String?;
 
     return AuthState(
       accessToken: accessToken,
@@ -84,24 +67,7 @@ class AuthApiService {
     }
 
     final userFullName = user?['fullName'] as String?;
-
-    // Fetch the user's profile from chat-service to get the authoritative displayName
-    String? displayName = userFullName;
-    try {
-      final chatBaseUrl = _getChatServiceBaseUrl();
-      final chatDio = Dio(
-        BaseOptions(
-          baseUrl: chatBaseUrl,
-          headers: {'Authorization': 'Bearer $accessToken'},
-        ),
-      );
-      final profileResponse = await chatDio.get('/profile');
-      final profileData = profileResponse.data as Map<String, dynamic>?;
-      displayName = profileData?['displayName'] as String? ?? displayName;
-    } catch (e) {
-      // Fall back to fullName if profile fetch fails
-      displayName = userFullName;
-    }
+    final displayName = user?['displayName'] as String?;
 
     return AuthState(
       accessToken: accessToken,
@@ -110,27 +76,6 @@ class AuthApiService {
       fullName: userFullName,
       displayName: displayName,
     );
-  }
-
-  String _getChatServiceBaseUrl() {
-    // Match the logic from api_client.dart for chat service URL
-    const devMode = bool.fromEnvironment('DEV_MODE', defaultValue: false);
-    const localChatBaseUrlOverride = String.fromEnvironment(
-      'LOCAL_CHAT_BASE_URL',
-      defaultValue: '',
-    );
-
-    if (localChatBaseUrlOverride.isNotEmpty) {
-      return localChatBaseUrlOverride.trim();
-    }
-
-    if (devMode) {
-      // Use localhost for dev
-      return 'http://localhost:4001';
-    }
-
-    // Use production URL
-    return 'https://easybake-chat-service-hbh2ehahebd0b3au.swedencentral-01.azurewebsites.net';
   }
 }
 

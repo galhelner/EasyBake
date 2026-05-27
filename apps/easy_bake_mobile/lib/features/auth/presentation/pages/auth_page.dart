@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -83,14 +85,14 @@ class _AuthPageState extends ConsumerState<AuthPage> {
             displayName: authState.displayName,
           );
 
-      await _requestNotificationPermissionAfterFirstLogin();
-
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const HomeTabsPage()),
           (route) => false,
         );
       }
+
+      unawaited(_requestNotificationPermissionAfterFirstLogin());
     } catch (error) {
       if (mounted) {
         await _showAuthErrorDialog(_authErrorDialogData(error));
@@ -121,14 +123,14 @@ class _AuthPageState extends ConsumerState<AuthPage> {
             displayName: authState.displayName,
           );
 
-      await _requestNotificationPermissionAfterFirstLogin();
-
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const HomeTabsPage()),
           (route) => false,
         );
       }
+
+      unawaited(_requestNotificationPermissionAfterFirstLogin());
     } catch (error) {
       if (mounted) {
         await _showAuthErrorDialog(
@@ -538,7 +540,10 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                   ),
                   child: Text(
                     l10n.gotItButtonLabel,
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),

@@ -106,8 +106,9 @@ class ProfilePage extends ConsumerWidget {
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
-                            textDirection:
-                                isRtl ? TextDirection.rtl : TextDirection.ltr,
+                            textDirection: isRtl
+                                ? TextDirection.rtl
+                                : TextDirection.ltr,
                             children: [
                               const Icon(Icons.logout_rounded),
                               const SizedBox(width: 8),
