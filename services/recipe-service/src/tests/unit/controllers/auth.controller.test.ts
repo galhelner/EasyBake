@@ -136,6 +136,7 @@ describe('auth controller', () => {
 			authId: 'auth-1',
 			email: 'user@example.com',
 			fullName: 'John Doe',
+			displayName: 'John Doe',
 		});
 
 		const req = {
@@ -161,17 +162,24 @@ describe('auth controller', () => {
 			update: {
 				email: 'user@example.com',
 				fullName: 'John Doe',
+				displayName: 'John Doe',
 			},
 			create: {
 				authId: 'auth-1',
 				email: 'user@example.com',
 				fullName: 'John Doe',
+				displayName: 'John Doe',
 			},
 		});
 		expect(mockLoggerInfo).toHaveBeenCalledWith('New user registered: John Doe (user@example.com)');
 		expect(res.status).toHaveBeenCalledWith(201);
 		expect(res.json).toHaveBeenCalledWith({
-			user: { id: 'auth-1', email: 'user@example.com', fullName: 'John Doe' },
+			user: {
+				id: 'auth-1',
+				email: 'user@example.com',
+				fullName: 'John Doe',
+				displayName: 'John Doe',
+			},
 			access_token: 'access-1',
 			refresh_token: 'refresh-1',
 		});
@@ -239,6 +247,7 @@ describe('auth controller', () => {
 			id: 'db-2',
 			email: 'chef@example.com',
 			fullName: 'Chef User',
+			displayName: 'Chef User',
 		});
 
 		const req = { body: { email: 'chef@example.com', password: 'password123' } };
@@ -251,11 +260,13 @@ describe('auth controller', () => {
 			update: {
 				email: 'chef@example.com',
 				fullName: undefined,
+				displayName: undefined,
 			},
 			create: {
 				authId: 'auth-2',
 				email: 'chef@example.com',
 				fullName: undefined,
+				displayName: undefined,
 			},
 		});
 		expect(res.status).toHaveBeenCalledWith(200);
@@ -266,6 +277,7 @@ describe('auth controller', () => {
 				id: 'db-2',
 				email: 'chef@example.com',
 				fullName: 'Chef User',
+				displayName: 'Chef User',
 			},
 		});
 	});

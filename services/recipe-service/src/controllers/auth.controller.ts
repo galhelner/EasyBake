@@ -33,6 +33,11 @@ const extractDisplayName = (userMetadata: unknown): string | undefined => {
     return displayName.trim();
   }
 
+  const camelDisplayName = metadata['displayName'];
+  if (typeof camelDisplayName === 'string' && camelDisplayName.trim().length > 0) {
+    return camelDisplayName.trim();
+  }
+
   const fullName = metadata['fullName'];
   if (typeof fullName === 'string' && fullName.trim().length > 0) {
     return fullName.trim();
@@ -105,14 +110,20 @@ export const register = async (req: AuthenticatedRequest, res: Response): Promis
     const normalizedSupabaseEmail = normalizeEmail(
       supabaseUser.email ?? normalizedEmail,
     );
+    const displayName = extractDisplayName(supabaseUser.user_metadata) ?? fullName;
 
     await prisma.user.upsert({
       where: { authId: supabaseUser.id },
-      update: { email: normalizedSupabaseEmail, fullName },
+      update: {
+        email: normalizedSupabaseEmail,
+        fullName,
+        displayName,
+      },
       create: {
         authId: supabaseUser.id,
         email: normalizedSupabaseEmail,
         fullName,
+        displayName,
       },
     });
 
@@ -120,7 +131,12 @@ export const register = async (req: AuthenticatedRequest, res: Response): Promis
 
     // Session may be null when email confirmation is required.
     res.status(201).json({
-      user: { id: supabaseUser.id, email: supabaseUser.email, fullName },
+      user: {
+        id: supabaseUser.id,
+        email: supabaseUser.email,
+        fullName,
+        displayName,
+      },
       access_token: data.session?.access_token ?? null,
       refresh_token: data.session?.refresh_token ?? null,
     });
@@ -159,20 +175,24 @@ export const login = async (req: AuthenticatedRequest, res: Response): Promise<v
 
     const supabaseUserId = data.user?.id;
     let user = null;
+    const displayName = extractDisplayName(data.user?.user_metadata);
     if (supabaseUserId) {
       const synchronizedEmail = normalizeEmail(data.user?.email ?? normalizedEmail);
-      const synchronizedFullName = extractDisplayName(data.user?.user_metadata);
+      const synchronizedFullName = displayName ?? data.user?.user_metadata?.fullName;
+      const synchronizedDisplayName = displayName ?? synchronizedFullName;
 
       user = await prisma.user.upsert({
         where: { authId: supabaseUserId },
         update: {
           email: synchronizedEmail,
           fullName: synchronizedFullName,
+          displayName: synchronizedDisplayName,
         },
         create: {
           authId: supabaseUserId,
           email: synchronizedEmail,
           fullName: synchronizedFullName,
+          displayName: synchronizedDisplayName,
         },
       });
     }
@@ -180,7 +200,14 @@ export const login = async (req: AuthenticatedRequest, res: Response): Promise<v
     res.status(200).json({
       access_token: data.session.access_token,
       refresh_token: data.session.refresh_token,
-      user: user ? { id: user.id, email: user.email, fullName: user.fullName } : null,
+      user: user
+        ? {
+            id: user.id,
+            email: user.email,
+            fullName: user.fullName,
+            displayName: (user as { displayName?: string | null }).displayName ?? user.fullName,
+          }
+        : null,
     });
   } catch (err) {
     logger.error(`Login error: ${err instanceof Error ? err.message : String(err)}`);

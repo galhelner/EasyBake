@@ -14,6 +14,7 @@ model User {
   authId    String   @unique
   email     String?  @unique
   fullName  String?
+  displayName String?
   recipes   Recipe[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
