@@ -175,24 +175,32 @@ export const login = async (req: AuthenticatedRequest, res: Response): Promise<v
 
     const supabaseUserId = data.user?.id;
     let user = null;
-    const displayName = extractDisplayName(data.user?.user_metadata);
+    const displayNameFromMetadata = extractDisplayName(data.user?.user_metadata);
     if (supabaseUserId) {
       const synchronizedEmail = normalizeEmail(data.user?.email ?? normalizedEmail);
-      const synchronizedFullName = displayName ?? data.user?.user_metadata?.fullName;
-      const synchronizedDisplayName = displayName ?? synchronizedFullName;
+      const synchronizedFullName = displayNameFromMetadata ?? data.user?.user_metadata?.fullName;
+
+      // For create we want to ensure a displayName exists (fallback to fullName).
+      const createDisplayName = displayNameFromMetadata ?? synchronizedFullName;
+
+      // For update, only overwrite displayName when the provider supplied one.
+      const updateData: any = {
+        email: synchronizedEmail,
+        fullName: synchronizedFullName,
+      } as Record<string, unknown>;
+
+      if (displayNameFromMetadata !== undefined) {
+        updateData.displayName = displayNameFromMetadata;
+      }
 
       user = await prisma.user.upsert({
         where: { authId: supabaseUserId },
-        update: {
-          email: synchronizedEmail,
-          fullName: synchronizedFullName,
-          displayName: synchronizedDisplayName,
-        },
+        update: updateData,
         create: {
           authId: supabaseUserId,
           email: synchronizedEmail,
           fullName: synchronizedFullName,
-          displayName: synchronizedDisplayName,
+          displayName: createDisplayName,
         },
       });
     }
