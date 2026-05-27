@@ -259,14 +259,12 @@ describe('auth controller', () => {
 			where: { authId: 'auth-2' },
 			update: {
 				email: 'chef@example.com',
-				fullName: undefined,
-				displayName: undefined,
 			},
 			create: {
 				authId: 'auth-2',
 				email: 'chef@example.com',
-				fullName: undefined,
-				displayName: undefined,
+				fullName: 'chef@example.com',
+				displayName: 'chef@example.com',
 			},
 		});
 		expect(res.status).toHaveBeenCalledWith(200);

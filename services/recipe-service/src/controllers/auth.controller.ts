@@ -22,30 +22,6 @@ const emailExistsBodySchema = z.object({
 
 const normalizeEmail = (email: string): string => email.trim().toLowerCase();
 
-const extractDisplayName = (userMetadata: unknown): string | undefined => {
-  if (!userMetadata || typeof userMetadata !== 'object') {
-    return undefined;
-  }
-
-  const metadata = userMetadata as Record<string, unknown>;
-  const displayName = metadata['display_name'];
-  if (typeof displayName === 'string' && displayName.trim().length > 0) {
-    return displayName.trim();
-  }
-
-  const camelDisplayName = metadata['displayName'];
-  if (typeof camelDisplayName === 'string' && camelDisplayName.trim().length > 0) {
-    return camelDisplayName.trim();
-  }
-
-  const fullName = metadata['fullName'];
-  if (typeof fullName === 'string' && fullName.trim().length > 0) {
-    return fullName.trim();
-  }
-
-  return undefined;
-};
-
 export const emailExists = async (req: Request, res: Response): Promise<void> => {
   const parsed = emailExistsBodySchema.safeParse(req.body);
   if (!parsed.success) {
@@ -110,20 +86,18 @@ export const register = async (req: AuthenticatedRequest, res: Response): Promis
     const normalizedSupabaseEmail = normalizeEmail(
       supabaseUser.email ?? normalizedEmail,
     );
-    const displayName = extractDisplayName(supabaseUser.user_metadata) ?? fullName;
-
     await prisma.user.upsert({
       where: { authId: supabaseUser.id },
       update: {
         email: normalizedSupabaseEmail,
         fullName,
-        displayName,
+        displayName: fullName,
       },
       create: {
         authId: supabaseUser.id,
         email: normalizedSupabaseEmail,
         fullName,
-        displayName,
+        displayName: fullName,
       },
     });
 
@@ -135,7 +109,7 @@ export const register = async (req: AuthenticatedRequest, res: Response): Promis
         id: supabaseUser.id,
         email: supabaseUser.email,
         fullName,
-        displayName,
+        displayName: fullName,
       },
       access_token: data.session?.access_token ?? null,
       refresh_token: data.session?.refresh_token ?? null,
@@ -175,22 +149,20 @@ export const login = async (req: AuthenticatedRequest, res: Response): Promise<v
 
     const supabaseUserId = data.user?.id;
     let user = null;
-    const displayNameFromMetadata = extractDisplayName(data.user?.user_metadata);
     if (supabaseUserId) {
       const synchronizedEmail = normalizeEmail(data.user?.email ?? normalizedEmail);
-      const synchronizedFullName = displayNameFromMetadata ?? data.user?.user_metadata?.fullName;
+      const synchronizedFullName =
+        typeof data.user?.user_metadata?.fullName === 'string' &&
+        data.user.user_metadata.fullName.trim().length > 0
+          ? data.user.user_metadata.fullName.trim()
+          : undefined;
 
-      // For create we want to ensure a displayName exists (fallback to fullName).
-      const createDisplayName = displayNameFromMetadata ?? synchronizedFullName;
-
-      // For update, only overwrite displayName when the provider supplied one.
-      const updateData: any = {
+      const updateData: { email: string; fullName?: string } = {
         email: synchronizedEmail,
-        fullName: synchronizedFullName,
-      } as Record<string, unknown>;
+      };
 
-      if (displayNameFromMetadata !== undefined) {
-        updateData.displayName = displayNameFromMetadata;
+      if (synchronizedFullName) {
+        updateData.fullName = synchronizedFullName;
       }
 
       user = await prisma.user.upsert({
@@ -199,8 +171,8 @@ export const login = async (req: AuthenticatedRequest, res: Response): Promise<v
         create: {
           authId: supabaseUserId,
           email: synchronizedEmail,
-          fullName: synchronizedFullName,
-          displayName: createDisplayName,
+          fullName: synchronizedFullName ?? normalizedEmail,
+          displayName: synchronizedFullName ?? normalizedEmail,
         },
       });
     }
@@ -213,7 +185,7 @@ export const login = async (req: AuthenticatedRequest, res: Response): Promise<v
             id: user.id,
             email: user.email,
             fullName: user.fullName,
-            displayName: (user as { displayName?: string | null }).displayName ?? user.fullName,
+            displayName: (user as { displayName?: string | null }).displayName,
           }
         : null,
     });
