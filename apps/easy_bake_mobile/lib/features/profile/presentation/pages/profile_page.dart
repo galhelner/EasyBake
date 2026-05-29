@@ -6,6 +6,7 @@ import '../../../auth/presentation/pages/auth_page.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
 import '../../../recipes/presentation/providers/recipe_providers.dart';
 import '../widgets/profile_header.dart';
+import '../widgets/logout_confirmation_dialog.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/preferences_section.dart';
 
@@ -13,28 +14,12 @@ class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
 
   Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
-    final l10n = AppLocalizations.of(context)!;
     final shouldLogout = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(l10n.logoutTitle),
-          content: Text(l10n.logoutMessage),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(l10n.cancelButtonLabel),
-            ),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFC44545),
-              ),
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(l10n.logoutButtonLabel),
-            ),
-          ],
-        );
-      },
+      builder: (dialogContext) => LogoutConfirmationDialog(
+        onCancel: () => Navigator.of(dialogContext).pop(false),
+        onConfirm: () => Navigator.of(dialogContext).pop(true),
+      ),
     );
 
     if (shouldLogout == true) {
