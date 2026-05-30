@@ -21,123 +21,184 @@ class _HomeBottomTabBarState extends State<HomeBottomTabBar> {
   @override
   void initState() {
     super.initState();
-    _hoveredIndices = [0, 0, 0];
+    _hoveredIndices = List<int>.filled(5, 0);
   }
 
   String _labelForIndex(BuildContext context, int index) {
     final l10n = AppLocalizations.of(context)!;
     switch (index) {
       case 0:
-        return l10n.communityChatLabel;
-      case 2:
         return l10n.profileLabel;
       case 1:
+        return l10n.communityChatLabel;
+      case 2:
+        return l10n.homeLabel;
+      case 3:
+        return l10n.recipesLabel;
+      case 4:
+        return l10n.shoppingListLabel;
       default:
         return l10n.homeLabel;
+    }
+  }
+
+  String _tooltipForIndex(BuildContext context, int index) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (index) {
+      case 0:
+        return l10n.profileTooltip;
+      case 1:
+        return l10n.communityChatTooltip;
+      case 2:
+        return l10n.homeTooltip;
+      case 3:
+        return l10n.recipesLabel;
+      case 4:
+        return l10n.shoppingListLabel;
+      default:
+        return l10n.homeTooltip;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
-    const barHeight = 62.0;
+    const barHeight = 68.0;
 
-    return SizedBox(
-      height: barHeight + bottomInset + 12,
-      child: ColoredBox(
-        color: const Color(0xFFEDF1F6),
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(12, 8, 12, bottomInset + 12),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              color: const Color(0xFFEDF1F6),
-              border: Border.all(color: const Color(0xFFD8E4EE), width: 1.2),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF2E4E69).withValues(alpha: 0.06),
-                  blurRadius: 12,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final segmentWidth = constraints.maxWidth / 3;
-                const double indicatorWidth = 78.0;
-                const double indicatorHeight = 46.0;
-                final double indicatorTop =
-                    (constraints.maxHeight - indicatorHeight) / 2;
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: SizedBox(
+        height: barHeight + bottomInset + 12,
+        child: ColoredBox(
+          color: const Color(0xFFF0F5FA),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(12, 8, 12, bottomInset + 12),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+                color: const Color(0xFFF8FBFE),
+                border: Border.all(color: const Color(0xFFD7E4EF), width: 1.1),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF17324B).withValues(alpha: 0.08),
+                    blurRadius: 20,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  const double edgeInset = 8.0;
+                  const double indicatorWidth = 68.0;
+                  const double indicatorHeight = 48.0;
+                  final double indicatorTop =
+                      (constraints.maxHeight - indicatorHeight) / 2;
+                  final double innerWidth = constraints.maxWidth - (edgeInset * 2);
+                  final double segmentWidth = innerWidth / 5;
+                  final double indicatorStart =
+                      (segmentWidth * widget.currentIndex) +
+                      ((segmentWidth - indicatorWidth) / 2);
 
-                return Stack(
-                  children: [
-                    AnimatedPositionedDirectional(
-                      duration: const Duration(milliseconds: 320),
-                      curve: Curves.easeOutCubic,
-                      start:
-                          segmentWidth * widget.currentIndex +
-                          (segmentWidth - indicatorWidth) / 2,
-                      top: indicatorTop,
-                      width: indicatorWidth,
-                      height: indicatorHeight,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(color: const Color(0xFFB6D8E8)),
-                      ),
-                    ),
-                    // Tab buttons
-                    Row(
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: edgeInset),
+                    child: Stack(
                       children: [
-                        Expanded(
-                          child: _TabIconButton(
-                            tooltip: AppLocalizations.of(context)!.communityChatTooltip,
-                            label: _labelForIndex(context, 0),
-                            selected: widget.currentIndex == 0,
-                            icon: Icons.forum_rounded,
-                            onTap: () => widget.onTabSelected(0),
-                            isHovered: _hoveredIndices[0] > 0,
-                            onHoverChange: (hovering) {
-                              setState(() {
-                                _hoveredIndices[0] = hovering ? 1 : 0;
-                              });
-                            },
+                        AnimatedPositionedDirectional(
+                          duration: const Duration(milliseconds: 320),
+                          curve: Curves.easeOutCubic,
+                          start: indicatorStart,
+                          top: indicatorTop,
+                          width: indicatorWidth,
+                          height: indicatorHeight,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: Container(color: const Color(0xFFD9EAF8)),
                           ),
                         ),
-                        Expanded(
-                          child: _TabIconButton(
-                            tooltip: AppLocalizations.of(context)!.homeTooltip,
-                            label: _labelForIndex(context, 1),
-                            selected: widget.currentIndex == 1,
-                            icon: Icons.home_rounded,
-                            onTap: () => widget.onTabSelected(1),
-                            isHovered: _hoveredIndices[1] > 0,
-                            onHoverChange: (hovering) {
-                              setState(() {
-                                _hoveredIndices[1] = hovering ? 1 : 0;
-                              });
-                            },
-                          ),
-                        ),
-                        Expanded(
-                          child: _TabIconButton(
-                            tooltip: AppLocalizations.of(context)!.profileTooltip,
-                            label: _labelForIndex(context, 2),
-                            selected: widget.currentIndex == 2,
-                            icon: Icons.person_rounded,
-                            onTap: () => widget.onTabSelected(2),
-                            isHovered: _hoveredIndices[2] > 0,
-                            onHoverChange: (hovering) {
-                              setState(() {
-                                _hoveredIndices[2] = hovering ? 1 : 0;
-                              });
-                            },
-                          ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _TabIconButton(
+                                tooltip: _tooltipForIndex(context, 0),
+                                label: _labelForIndex(context, 0),
+                                selected: widget.currentIndex == 0,
+                                icon: Icons.person_rounded,
+                                onTap: () => widget.onTabSelected(0),
+                                isHovered: _hoveredIndices[0] > 0,
+                                onHoverChange: (hovering) {
+                                  setState(() {
+                                    _hoveredIndices[0] = hovering ? 1 : 0;
+                                  });
+                                },
+                              ),
+                            ),
+                            Expanded(
+                              child: _TabIconButton(
+                                tooltip: _tooltipForIndex(context, 1),
+                                label: _labelForIndex(context, 1),
+                                selected: widget.currentIndex == 1,
+                                icon: Icons.forum_rounded,
+                                onTap: () => widget.onTabSelected(1),
+                                isHovered: _hoveredIndices[1] > 0,
+                                onHoverChange: (hovering) {
+                                  setState(() {
+                                    _hoveredIndices[1] = hovering ? 1 : 0;
+                                  });
+                                },
+                              ),
+                            ),
+                            Expanded(
+                              child: _TabIconButton(
+                                tooltip: _tooltipForIndex(context, 2),
+                                label: _labelForIndex(context, 2),
+                                selected: widget.currentIndex == 2,
+                                icon: Icons.home_rounded,
+                                onTap: () => widget.onTabSelected(2),
+                                isHovered: _hoveredIndices[2] > 0,
+                                onHoverChange: (hovering) {
+                                  setState(() {
+                                    _hoveredIndices[2] = hovering ? 1 : 0;
+                                  });
+                                },
+                              ),
+                            ),
+                            Expanded(
+                              child: _TabIconButton(
+                                tooltip: _tooltipForIndex(context, 3),
+                                label: _labelForIndex(context, 3),
+                                selected: widget.currentIndex == 3,
+                                icon: Icons.restaurant_menu_rounded,
+                                onTap: () => widget.onTabSelected(3),
+                                isHovered: _hoveredIndices[3] > 0,
+                                onHoverChange: (hovering) {
+                                  setState(() {
+                                    _hoveredIndices[3] = hovering ? 1 : 0;
+                                  });
+                                },
+                              ),
+                            ),
+                            Expanded(
+                              child: _TabIconButton(
+                                tooltip: _tooltipForIndex(context, 4),
+                                label: _labelForIndex(context, 4),
+                                selected: widget.currentIndex == 4,
+                                icon: Icons.list_alt_rounded,
+                                onTap: () => widget.onTabSelected(4),
+                                isHovered: _hoveredIndices[4] > 0,
+                                onHoverChange: (hovering) {
+                                  setState(() {
+                                    _hoveredIndices[4] = hovering ? 1 : 0;
+                                  });
+                                },
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                );
-              },
+                  );
+                },
+              ),
             ),
           ),
         ),
@@ -230,9 +291,9 @@ class _TabIconButtonState extends State<_TabIconButton>
                     curve: Curves.easeOutCubic,
                     child: Icon(
                       widget.icon,
-                      size: 22,
+                      size: widget.selected ? 24 : 22,
                       color: widget.selected
-                          ? const Color(0xFF2E4E69)
+                          ? const Color(0xFF17324B)
                           : const Color(0xFF7A95B1),
                     ),
                   ),
@@ -240,10 +301,11 @@ class _TabIconButtonState extends State<_TabIconButton>
                   AnimatedDefaultTextStyle(
                     duration: const Duration(milliseconds: 200),
                     style: TextStyle(
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 9.2,
+                      fontWeight:
+                          widget.selected ? FontWeight.w800 : FontWeight.w600,
                       color: widget.selected
-                          ? const Color(0xFF2E4E69)
+                          ? const Color(0xFF17324B)
                           : const Color(0xFF7A95B1),
                       letterSpacing: 0.2,
                     ),
@@ -262,3 +324,4 @@ class _TabIconButtonState extends State<_TabIconButton>
     );
   }
 }
+

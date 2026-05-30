@@ -54,6 +54,12 @@ class AppLocalizationsHe extends AppLocalizations {
   String get homeLabel => 'בית';
 
   @override
+  String get recipesLabel => 'מתכונים';
+
+  @override
+  String get shoppingListLabel => 'רשימת קניות';
+
+  @override
   String get profileTooltip => 'פרופיל';
 
   @override
@@ -451,6 +457,17 @@ class AppLocalizationsHe extends AppLocalizations {
   String get recipeDeletedMessage => 'המתכון נמחק';
 
   @override
+  String get shoppingListPageTitle => 'רשימת קניות';
+
+  @override
+  String get shoppingListPageSubtitle =>
+      'תכונה עתידית: ניהול רשימות קניות יופיע כאן.';
+
+  @override
+  String get shoppingListFutureDetails =>
+      'אזור זה שמור לכלים עתידיים של רשימות קניות, רשימות מכולת שמורות ומעקב אחר רכיבים.';
+
+  @override
   String get cookingStepsTitle => 'שלבי הבישול';
 
   @override
@@ -544,6 +561,54 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get summaryCardSubtitle => 'אוסף המתכונים האישי שלך';
+
+  @override
+  String get dashboardLabel => 'לוח בקרה';
+
+  @override
+  String get dashboardSubtitle => 'המתכונים והבריאות שלך במבט אחד.';
+
+  @override
+  String get myRecipesLabel => 'המתכונים שלי';
+
+  @override
+  String get seeAllLabel => 'הצג הכול';
+
+  @override
+  String get dashboardNoRecipesSubtitle =>
+      'צרו את המתכון הראשון או עברו ללשונית המתכונים.';
+
+  @override
+  String get healthStatisticsLabel => 'סטטיסטיקות בריאות';
+
+  @override
+  String get dashboardNoHealthStatsTitle => 'אין עדיין נתונים';
+
+  @override
+  String get dashboardNoHealthStatsSubtitle =>
+      'הוסיפו מתכונים ואז תופיע כאן התפלגות הבריאות.';
+
+  @override
+  String recipeCountLabel(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count מתכונים',
+      one: 'מתכון אחד',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String ingredientCountLabel(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count רכיבים',
+      one: 'רכיב אחד',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get summaryCardLoadingMessage => 'טוען את סיכום המתכונים שלך...';

@@ -15,6 +15,14 @@
   "connectionPillOfflineLabel": "Offline",
   "homeTooltip": "Home",
   "homeLabel": "Home",
+  "recipesLabel": "Recipes",
+  "shoppingListLabel": "Shopping List",
+  "@recipesLabel": {
+    "description": "Label for the Recipes tab in the bottom navigation bar."
+  },
+  "@shoppingListLabel": {
+    "description": "Label for the Shopping List tab in the bottom navigation bar."
+  },
   "profileTooltip": "Profile",
   "profileLabel": "Profile",
   "signInLabel": "Sign In",
@@ -163,9 +171,42 @@
   "communityChatEmptySubtitle": "Start the conversation in this room.",
   "communityChatOfflineTitle": "Community chat is offline",
   "communityChatOfflineSubtitle": "Pull down to refresh to try reconnecting and see messages again.",
+  "@communityChatUnavailableMessage": {
+    "description": "Message shown when the community chat is temporarily unavailable."
+  },
+  "@communityChatRefreshFailedMessage": {
+    "description": "Message shown when refreshing the community chat fails."
+  },
+  "@communityChatIdentityMessage": {
+    "description": "Message shown when the app cannot identify the user for chat."
+  },
+  "@communityChatSendFailedMessage": {
+    "description": "Message shown when sending a community chat message fails."
+  },
+  "@communityChatEmptyTitle": {
+    "description": "Title shown when the community chat has no messages yet."
+  },
+  "@communityChatEmptySubtitle": {
+    "description": "Subtitle shown when the community chat has no messages yet."
+  },
+  "@communityChatOfflineTitle": {
+    "description": "Title shown when the community chat is offline."
+  },
+  "@communityChatOfflineSubtitle": {
+    "description": "Subtitle shown when the community chat is offline."
+  },
   "recipePreviewUnavailableTitle": "Recipe preview unavailable",
   "recipePreviewNoLongerAvailableMessage": "This shared recipe is no longer available.",
   "recipePreviewRefreshHint": "Pull down to refresh the chat to try loading the shared recipe again.",
+  "@recipePreviewUnavailableTitle": {
+    "description": "Title shown when the shared recipe preview cannot be loaded."
+  },
+  "@recipePreviewNoLongerAvailableMessage": {
+    "description": "Message shown when a shared recipe is no longer available."
+  },
+  "@recipePreviewRefreshHint": {
+    "description": "Hint telling the user to refresh to reload the shared recipe."
+  },
   "laterButtonLabel": "Later",
   "refreshButtonLabel": "Refresh",
   "tryAgainButtonLabel": "Try again",
@@ -214,6 +255,18 @@
   "recipeSavedMessage": "Recipe saved",
   "deletingYourRecipeMessage": "Deleting your recipe...",
   "recipeDeletedMessage": "Recipe deleted",
+  "shoppingListPageTitle": "Shopping List",
+  "shoppingListPageSubtitle": "Future feature: shopping list management will live here.",
+  "shoppingListFutureDetails": "This area is reserved for future shopping list tools, saved grocery lists, and ingredient tracking.",
+  "@shoppingListPageTitle": {
+    "description": "Title shown at the top of the shopping list page."
+  },
+  "@shoppingListPageSubtitle": {
+    "description": "Subtitle shown under the shopping list page title."
+  },
+  "@shoppingListFutureDetails": {
+    "description": "Supporting text describing the future shopping list feature."
+  },
   "cookingStepsTitle": "Cooking Steps",
   "@cookingStepsTitle": {
     "description": "Heading shown above the recipe instruction steps in recipe details."
@@ -302,6 +355,52 @@
   "profileHeaderGreetingSubtitle": "Welcome back to EasyBake",
   "summaryCardSavedRecipes": "{count, plural, =0{No saved recipes} =1{1 saved recipe} other{{count} saved recipes}}",
   "summaryCardSubtitle": "Your personal recipe collection",
+  "dashboardLabel": "Dashboard",
+  "dashboardSubtitle": "Your recipes and health trends at a glance.",
+  "myRecipesLabel": "My Recipes",
+  "seeAllLabel": "See all",
+  "dashboardNoRecipesSubtitle": "Create your first recipe or jump into the Recipes tab.",
+  "healthStatisticsLabel": "Health Statistics",
+  "dashboardNoHealthStatsTitle": "No data yet",
+  "dashboardNoHealthStatsSubtitle": "Add recipes and the health breakdown will appear here.",
+  "@dashboardLabel": {
+    "description": "Title shown at the top of the dashboard page."
+  },
+  "@dashboardSubtitle": {
+    "description": "Subtitle shown under the dashboard title."
+  },
+  "@myRecipesLabel": {
+    "description": "Title for the recent recipes section on the dashboard."
+  },
+  "@seeAllLabel": {
+    "description": "Label for the action that opens the full recipes list."
+  },
+  "@dashboardNoRecipesSubtitle": {
+    "description": "Message shown when the dashboard has no recipes to display."
+  },
+  "@healthStatisticsLabel": {
+    "description": "Title for the health statistics section on the dashboard."
+  },
+  "@dashboardNoHealthStatsTitle": {
+    "description": "Title shown when there is no health data yet."
+  },
+  "@dashboardNoHealthStatsSubtitle": {
+    "description": "Subtitle shown when there is no health data yet."
+  },
+  "recipeCountLabel": "{count, plural, =1{1 recipe} other{{count} recipes}}",
+  "@recipeCountLabel": {
+    "description": "Label showing how many recipes are in a section.",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "ingredientCountLabel": "{count, plural, =1{1 ingredient} other{{count} ingredients}}",
+  "@ingredientCountLabel": {
+    "description": "Label showing how many ingredients are in a section.",
+    "placeholders": {
+      "count": {}
+    }
+  },
   "summaryCardLoadingMessage": "Loading your recipe summary...",
   "summaryCardUnavailableMessage": "Recipe summary unavailable right now",
   "logoutButtonShortLabel": "Logout",

@@ -15,6 +15,14 @@
   "connectionPillOfflineLabel": "לא מקוון",
   "homeTooltip": "בית",
   "homeLabel": "בית",
+  "recipesLabel": "מתכונים",
+  "shoppingListLabel": "רשימת קניות",
+  "@recipesLabel": {
+    "description": "תווית ללשונית המתכונים בסרגל הניווט."
+  },
+  "@shoppingListLabel": {
+    "description": "תווית ללשונית רשימת הקניות בסרגל הניווט."
+  },
   "profileTooltip": "פרופיל",
   "profileLabel": "פרופיל",
   "signInLabel": "כניסה",
@@ -35,6 +43,54 @@
   "registerErrorPasswordMinLength": "לפחות 8 תווים",
   "registerErrorConfirmPasswordRequired": "אנא אשר את הסיסמה שלך",
   "registerErrorPasswordMismatch": "הסיסמאות אינן תואמות",
+  "@fullNameHint": {
+    "description": "רמז לשדה השם המלא בטופס ההרשמה."
+  },
+  "@emailHint": {
+    "description": "רמז לשדה האימייל בטופס הכניסה."
+  },
+  "@emailAddressHint": {
+    "description": "רמז לשדה כתובת האימייל בטופס ההרשמה."
+  },
+  "@passwordHint": {
+    "description": "רמז לשדה הסיסמה בטפסי האימות."
+  },
+  "@confirmPasswordHint": {
+    "description": "רמז לשדה אישור הסיסמה בטופס ההרשמה."
+  },
+  "@nextButtonLabel": {
+    "description": "תווית לכפתור השלב הבא בטופס ההרשמה."
+  },
+  "@signInErrorInvalidEmail": {
+    "description": "הודעת אימות כשהאימייל בכניסה לא תקין."
+  },
+  "@signInErrorMinPasswordLength": {
+    "description": "הודעת אימות כשהסיסמה בכניסה קצרה מדי."
+  },
+  "@registerErrorNameRequired": {
+    "description": "הודעת אימות כשהשם בהרשמה ריק."
+  },
+  "@registerErrorNameTooShort": {
+    "description": "הודעת אימות כשהשם בהרשמה קצר מדי."
+  },
+  "@registerErrorEmailRequired": {
+    "description": "הודעת אימות כשהאימייל בהרשמה ריק."
+  },
+  "@registerErrorEmailInvalid": {
+    "description": "הודעת אימות כשהאימייל בהרשמה לא תקין."
+  },
+  "@registerErrorPasswordRequired": {
+    "description": "הודעת אימות כשהסיסמה בהרשמה ריקה."
+  },
+  "@registerErrorPasswordMinLength": {
+    "description": "הודעת אימות כשהסיסמה בהרשמה קצרה מדי."
+  },
+  "@registerErrorConfirmPasswordRequired": {
+    "description": "הודעת אימות כשהאימות של הסיסמה ריק."
+  },
+  "@registerErrorPasswordMismatch": {
+    "description": "הודעת אימות כשהסיסמאות אינן תואמות."
+  },
   "registerStepIndicatorLabel": "שלב {current} מתוך {total}",
   "@registerStepIndicatorLabel": {
     "description": "Title shown above the register progress indicator.",
@@ -115,9 +171,42 @@
   "communityChatEmptySubtitle": "התחל את השיחה בחדר הזה.",
   "communityChatOfflineTitle": "הצ'אט הקהילתי לא מקוון",
   "communityChatOfflineSubtitle": "משוך מטה לרענון כדי לנסות להתחבר שוב ולראות הודעות שוב.",
+  "@communityChatUnavailableMessage": {
+    "description": "הודעה כשהצ'אט הקהילתי אינו זמין."
+  },
+  "@communityChatRefreshFailedMessage": {
+    "description": "הודעה כשהרענון של הצ'אט הקהילתי נכשל."
+  },
+  "@communityChatIdentityMessage": {
+    "description": "הודעה כשלא ניתן לזהות את החשבון לצ'אט."
+  },
+  "@communityChatSendFailedMessage": {
+    "description": "הודעה כשלא ניתן לשלוח הודעה בצ'אט."
+  },
+  "@communityChatEmptyTitle": {
+    "description": "כותרת למסך כשאין עדיין הודעות."
+  },
+  "@communityChatEmptySubtitle": {
+    "description": "תת-כותרת למסך כשאין עדיין הודעות."
+  },
+  "@communityChatOfflineTitle": {
+    "description": "כותרת כשהצ'אט הקהילתי לא מקוון."
+  },
+  "@communityChatOfflineSubtitle": {
+    "description": "תת-כותרת כשהצ'אט הקהילתי לא מקוון."
+  },
   "recipePreviewUnavailableTitle": "תצוגת המתכון אינה זמינה",
   "recipePreviewNoLongerAvailableMessage": "המתכון המשותף הזה כבר אינו זמין.",
   "recipePreviewRefreshHint": "משוך מטה לרענון הצ'אט כדי לנסות לטעון שוב את המתכון המשותף.",
+  "@recipePreviewUnavailableTitle": {
+    "description": "כותרת כשהתצוגה המקדימה של המתכון אינה זמינה."
+  },
+  "@recipePreviewNoLongerAvailableMessage": {
+    "description": "הודעה כשהמתכון המשותף כבר לא זמין."
+  },
+  "@recipePreviewRefreshHint": {
+    "description": "רמז לרענון כדי לנסות לטעון את המתכון שוב."
+  },
   "laterButtonLabel": "מאוחר יותר",
   "refreshButtonLabel": "רענון",
   "tryAgainButtonLabel": "נסה שוב",
@@ -166,6 +255,18 @@
   "recipeSavedMessage": "המתכון נשמר",
   "deletingYourRecipeMessage": "מוחק את המתכון שלך...",
   "recipeDeletedMessage": "המתכון נמחק",
+  "shoppingListPageTitle": "רשימת קניות",
+  "shoppingListPageSubtitle": "תכונה עתידית: ניהול רשימות קניות יופיע כאן.",
+  "shoppingListFutureDetails": "אזור זה שמור לכלים עתידיים של רשימות קניות, רשימות מכולת שמורות ומעקב אחר רכיבים.",
+  "@shoppingListPageTitle": {
+    "description": "כותרת שמופיעה בראש דף רשימת הקניות."
+  },
+  "@shoppingListPageSubtitle": {
+    "description": "תת-כותרת שמופיעה מתחת לכותרת דף רשימת הקניות."
+  },
+  "@shoppingListFutureDetails": {
+    "description": "טקסט תומך שמתאר את תכונת רשימת הקניות העתידית."
+  },
   "cookingStepsTitle": "שלבי הבישול",
   "@cookingStepsTitle": {
     "description": "כותרת שמופיעה מעל שלבי ההוראות בדף פרטי המתכון."
@@ -254,6 +355,52 @@
   "profileHeaderGreetingSubtitle": "ברוך שובך ל-EasyBake",
   "summaryCardSavedRecipes": "{count, plural, =0{אין מתכונים שמורים} =1{מתכון שמור אחד} other{{count} מתכונים שמורים}}",
   "summaryCardSubtitle": "אוסף המתכונים האישי שלך",
+  "dashboardLabel": "לוח בקרה",
+  "dashboardSubtitle": "המתכונים והבריאות שלך במבט אחד.",
+  "myRecipesLabel": "המתכונים שלי",
+  "seeAllLabel": "הצג הכול",
+  "dashboardNoRecipesSubtitle": "צרו את המתכון הראשון או עברו ללשונית המתכונים.",
+  "healthStatisticsLabel": "סטטיסטיקות בריאות",
+  "dashboardNoHealthStatsTitle": "אין עדיין נתונים",
+  "dashboardNoHealthStatsSubtitle": "הוסיפו מתכונים ואז תופיע כאן התפלגות הבריאות.",
+  "@dashboardLabel": {
+    "description": "כותרת ללוח הבקרה."
+  },
+  "@dashboardSubtitle": {
+    "description": "תת-כותרת ללוח הבקרה."
+  },
+  "@myRecipesLabel": {
+    "description": "תווית למקטע המתכונים שלי."
+  },
+  "@seeAllLabel": {
+    "description": "תווית לכפתור הצג הכול."
+  },
+  "@dashboardNoRecipesSubtitle": {
+    "description": "טקסט כשאין עדיין מתכונים בדשבורד."
+  },
+  "@healthStatisticsLabel": {
+    "description": "תווית למקטע סטטיסטיקות הבריאות."
+  },
+  "@dashboardNoHealthStatsTitle": {
+    "description": "כותרת כשאין עדיין נתוני בריאות."
+  },
+  "@dashboardNoHealthStatsSubtitle": {
+    "description": "תת-כותרת כשאין עדיין נתוני בריאות."
+  },
+  "recipeCountLabel": "{count, plural, =1{מתכון אחד} other{{count} מתכונים}}",
+  "@recipeCountLabel": {
+    "description": "תווית שמציגה כמה מתכונים יש במקטע.",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "ingredientCountLabel": "{count, plural, =1{רכיב אחד} other{{count} רכיבים}}",
+  "@ingredientCountLabel": {
+    "description": "תווית שמציגה כמה רכיבים יש במקטע.",
+    "placeholders": {
+      "count": {}
+    }
+  },
   "summaryCardLoadingMessage": "טוען את סיכום המתכונים שלך...",
   "summaryCardUnavailableMessage": "סיכום המתכונים אינו זמין כרגע",
   "logoutButtonShortLabel": "יציאה",

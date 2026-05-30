@@ -188,6 +188,18 @@ abstract class AppLocalizations {
   /// **'Home'**
   String get homeLabel;
 
+  /// Label for the Recipes tab in the bottom navigation bar.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipes'**
+  String get recipesLabel;
+
+  /// Label for the Shopping List tab in the bottom navigation bar.
+  ///
+  /// In en, this message translates to:
+  /// **'Shopping List'**
+  String get shoppingListLabel;
+
   /// No description provided for @profileTooltip.
   ///
   /// In en, this message translates to:
@@ -554,67 +566,67 @@ abstract class AppLocalizations {
   /// **'Community chat is unavailable'**
   String get communityChatUnavailableTitle;
 
-  /// No description provided for @communityChatUnavailableMessage.
+  /// Message shown when the community chat is temporarily unavailable.
   ///
   /// In en, this message translates to:
   /// **'Community chat is temporarily unavailable. Please refresh or try again later.'**
   String get communityChatUnavailableMessage;
 
-  /// No description provided for @communityChatRefreshFailedMessage.
+  /// Message shown when refreshing the community chat fails.
   ///
   /// In en, this message translates to:
   /// **'We could not refresh community chat right now. Please try again later.'**
   String get communityChatRefreshFailedMessage;
 
-  /// No description provided for @communityChatIdentityMessage.
+  /// Message shown when the app cannot identify the user for chat.
   ///
   /// In en, this message translates to:
   /// **'We could not identify your account for chat.'**
   String get communityChatIdentityMessage;
 
-  /// No description provided for @communityChatSendFailedMessage.
+  /// Message shown when sending a community chat message fails.
   ///
   /// In en, this message translates to:
   /// **'Could not send your message right now. Please try again later.'**
   String get communityChatSendFailedMessage;
 
-  /// No description provided for @communityChatEmptyTitle.
+  /// Title shown when the community chat has no messages yet.
   ///
   /// In en, this message translates to:
   /// **'No messages yet'**
   String get communityChatEmptyTitle;
 
-  /// No description provided for @communityChatEmptySubtitle.
+  /// Subtitle shown when the community chat has no messages yet.
   ///
   /// In en, this message translates to:
   /// **'Start the conversation in this room.'**
   String get communityChatEmptySubtitle;
 
-  /// No description provided for @communityChatOfflineTitle.
+  /// Title shown when the community chat is offline.
   ///
   /// In en, this message translates to:
   /// **'Community chat is offline'**
   String get communityChatOfflineTitle;
 
-  /// No description provided for @communityChatOfflineSubtitle.
+  /// Subtitle shown when the community chat is offline.
   ///
   /// In en, this message translates to:
   /// **'Pull down to refresh to try reconnecting and see messages again.'**
   String get communityChatOfflineSubtitle;
 
-  /// No description provided for @recipePreviewUnavailableTitle.
+  /// Title shown when the shared recipe preview cannot be loaded.
   ///
   /// In en, this message translates to:
   /// **'Recipe preview unavailable'**
   String get recipePreviewUnavailableTitle;
 
-  /// No description provided for @recipePreviewNoLongerAvailableMessage.
+  /// Message shown when a shared recipe is no longer available.
   ///
   /// In en, this message translates to:
   /// **'This shared recipe is no longer available.'**
   String get recipePreviewNoLongerAvailableMessage;
 
-  /// No description provided for @recipePreviewRefreshHint.
+  /// Hint telling the user to refresh to reload the shared recipe.
   ///
   /// In en, this message translates to:
   /// **'Pull down to refresh the chat to try loading the shared recipe again.'**
@@ -908,6 +920,24 @@ abstract class AppLocalizations {
   /// **'Recipe deleted'**
   String get recipeDeletedMessage;
 
+  /// Title shown at the top of the shopping list page.
+  ///
+  /// In en, this message translates to:
+  /// **'Shopping List'**
+  String get shoppingListPageTitle;
+
+  /// Subtitle shown under the shopping list page title.
+  ///
+  /// In en, this message translates to:
+  /// **'Future feature: shopping list management will live here.'**
+  String get shoppingListPageSubtitle;
+
+  /// Supporting text describing the future shopping list feature.
+  ///
+  /// In en, this message translates to:
+  /// **'This area is reserved for future shopping list tools, saved grocery lists, and ingredient tracking.'**
+  String get shoppingListFutureDetails;
+
   /// Heading shown above the recipe instruction steps in recipe details.
   ///
   /// In en, this message translates to:
@@ -1075,6 +1105,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your personal recipe collection'**
   String get summaryCardSubtitle;
+
+  /// Title shown at the top of the dashboard page.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard'**
+  String get dashboardLabel;
+
+  /// Subtitle shown under the dashboard title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your recipes and health trends at a glance.'**
+  String get dashboardSubtitle;
+
+  /// Title for the recent recipes section on the dashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'My Recipes'**
+  String get myRecipesLabel;
+
+  /// Label for the action that opens the full recipes list.
+  ///
+  /// In en, this message translates to:
+  /// **'See all'**
+  String get seeAllLabel;
+
+  /// Message shown when the dashboard has no recipes to display.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first recipe or jump into the Recipes tab.'**
+  String get dashboardNoRecipesSubtitle;
+
+  /// Title for the health statistics section on the dashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Statistics'**
+  String get healthStatisticsLabel;
+
+  /// Title shown when there is no health data yet.
+  ///
+  /// In en, this message translates to:
+  /// **'No data yet'**
+  String get dashboardNoHealthStatsTitle;
+
+  /// Subtitle shown when there is no health data yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Add recipes and the health breakdown will appear here.'**
+  String get dashboardNoHealthStatsSubtitle;
+
+  /// Label showing how many recipes are in a section.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 recipe} other{{count} recipes}}'**
+  String recipeCountLabel(num count);
+
+  /// Label showing how many ingredients are in a section.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 ingredient} other{{count} ingredients}}'**
+  String ingredientCountLabel(num count);
 
   /// Loading message shown while summary card data is being fetched.
   ///

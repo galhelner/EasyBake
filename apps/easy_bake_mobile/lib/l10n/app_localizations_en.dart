@@ -55,6 +55,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeLabel => 'Home';
 
   @override
+  String get recipesLabel => 'Recipes';
+
+  @override
+  String get shoppingListLabel => 'Shopping List';
+
+  @override
   String get profileTooltip => 'Profile';
 
   @override
@@ -459,6 +465,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recipeDeletedMessage => 'Recipe deleted';
 
   @override
+  String get shoppingListPageTitle => 'Shopping List';
+
+  @override
+  String get shoppingListPageSubtitle =>
+      'Future feature: shopping list management will live here.';
+
+  @override
+  String get shoppingListFutureDetails =>
+      'This area is reserved for future shopping list tools, saved grocery lists, and ingredient tracking.';
+
+  @override
   String get cookingStepsTitle => 'Cooking Steps';
 
   @override
@@ -556,6 +573,54 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get summaryCardSubtitle => 'Your personal recipe collection';
+
+  @override
+  String get dashboardLabel => 'Dashboard';
+
+  @override
+  String get dashboardSubtitle => 'Your recipes and health trends at a glance.';
+
+  @override
+  String get myRecipesLabel => 'My Recipes';
+
+  @override
+  String get seeAllLabel => 'See all';
+
+  @override
+  String get dashboardNoRecipesSubtitle =>
+      'Create your first recipe or jump into the Recipes tab.';
+
+  @override
+  String get healthStatisticsLabel => 'Health Statistics';
+
+  @override
+  String get dashboardNoHealthStatsTitle => 'No data yet';
+
+  @override
+  String get dashboardNoHealthStatsSubtitle =>
+      'Add recipes and the health breakdown will appear here.';
+
+  @override
+  String recipeCountLabel(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count recipes',
+      one: '1 recipe',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String ingredientCountLabel(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ingredients',
+      one: '1 ingredient',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get summaryCardLoadingMessage => 'Loading your recipe summary...';
