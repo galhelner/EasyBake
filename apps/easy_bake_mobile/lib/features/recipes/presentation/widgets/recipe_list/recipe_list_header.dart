@@ -18,20 +18,51 @@ class RecipeListHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 20),
-            child: Image.asset(
-              'assets/app_logo_full.png',
-              width: 200,
-              fit: BoxFit.contain,
-            ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: const Color(0xFFDDE7F0)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF2E4E69).withValues(alpha: 0.06),
+                      blurRadius: 14,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Image.asset(
+                  'assets/app_logo.png',
+                  width: 38,
+                  height: 38,
+                  fit: BoxFit.contain,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  l10n.myRecipesLabel,
+                  style: const TextStyle(
+                    color: Color(0xFF17324B),
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    height: 1.05,
+                  ),
+                ),
+              ),
+            ],
           ),
           if (showSearch) ...[
-            const SizedBox(height: 20),
+            const SizedBox(height: 18),
             Row(
               children: [
                 Expanded(
