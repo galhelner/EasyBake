@@ -243,6 +243,9 @@ io.on('connection', async (socket: Socket) => {
 
         if (!assistantReply) {
           logger.warn(`AI assistant returned an empty reply for ${userEmail}`);
+          authSocket.emit('error', {
+            message: 'AI assistant is temporarily unavailable. Please try again.'
+          });
           return;
         }
 
