@@ -5,7 +5,7 @@ import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import logger from './services/logger';
 import { authenticateToken, verifySocketAuth, AuthenticatedSocket } from './middleware/socketAuth';
-import { saveMessage, getRecentMessages } from './services/chatService';
+import { generateAssistantReply, saveMessage, getRecentMessages } from './services/chatService';
 
 const app: Application = express();
 app.use(express.json());
@@ -132,6 +132,10 @@ app.patch('/profile', async (req, res) => {
 });
 
 const COMMUNITY_ROOM = 'community-chat';
+const AI_CHEF_TRIGGER = /@aichef\b/gi;
+
+const stripAiChefMention = (content: string): string =>
+  content.replace(AI_CHEF_TRIGGER, '').replace(/\s+/g, ' ').trim();
 
 // Socket.IO connection handler
 io.on('connection', async (socket: Socket) => {
@@ -173,10 +177,13 @@ io.on('connection', async (socket: Socket) => {
     try {
       const messageData = data as Record<string, unknown>;
       const rawType = messageData.messageType;
+      const normalizedType = typeof rawType === 'string' ? rawType.trim().toLowerCase() : 'text';
       const messageType =
-        typeof rawType === 'string' && rawType.trim().toLowerCase() === 'recipe'
+        normalizedType === 'recipe'
           ? 'recipe'
-          : 'text';
+          : normalizedType === 'ai-assistant'
+            ? 'ai-assistant'
+            : 'text';
 
       const rawContent = messageData.content;
       const trimmedContent =
@@ -207,9 +214,47 @@ io.on('connection', async (socket: Socket) => {
         return;
       }
 
+      if (messageType === 'ai-assistant' && trimmedContent.length === 0) {
+        authSocket.emit('error', { message: 'Message cannot be empty' });
+        return;
+      }
+
       const content = messageType === 'recipe'
         ? (trimmedContent || 'Shared a recipe')
         : trimmedContent;
+
+      if (messageType === 'ai-assistant') {
+        const question = stripAiChefMention(content);
+        if (question.length === 0) {
+          authSocket.emit('error', { message: 'Message cannot be empty' });
+          return;
+        }
+
+        let assistantReply = '';
+        try {
+          assistantReply = await generateAssistantReply(question);
+        } catch (error) {
+          logger.error(`AI assistant request failed for ${userEmail}`, error);
+          authSocket.emit('error', {
+            message: 'AI assistant is temporarily unavailable. Please try again.'
+          });
+          return;
+        }
+
+        if (!assistantReply) {
+          logger.warn(`AI assistant returned an empty reply for ${userEmail}`);
+          return;
+        }
+
+        const savedAssistantMessage = await saveMessage('ai-chef', {
+          content: assistantReply,
+          messageType: 'ai-assistant'
+        });
+
+        io.to(COMMUNITY_ROOM).emit('new_message', savedAssistantMessage);
+        logger.info(`🤖 AI assistant reply generated for ${userEmail}`);
+        return;
+      }
 
       // Save message to database
       const savedMessage = await saveMessage(authSocket.userId as string, {
@@ -226,8 +271,8 @@ io.on('connection', async (socket: Socket) => {
         : content;
       logger.info(`💬 ${messageType.toUpperCase()} message from ${userEmail}: "${contentPreview}"`);
     } catch (error) {
-      logger.error(`Failed to save message from ${userEmail}`, error);
-      authSocket.emit('error', { message: 'Failed to save message' });
+      logger.error(`Failed to process message from ${userEmail}`, error);
+      authSocket.emit('error', { message: 'Failed to process message' });
     }
   });
 

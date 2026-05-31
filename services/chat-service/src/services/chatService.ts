@@ -1,6 +1,10 @@
 import getPrismaClient from './prismaClient';
 import logger from './logger';
 
+const AI_CHEF_USER_ID = 'ai-chef';
+const AI_CHEF_AUTH_ID = 'system:ai-chef';
+const AI_SERVICE_API_BASE_URL = (process.env.AI_SERVICE_URL ?? 'http://127.0.0.1:8000/api').replace(/\/$/, '');
+
 export interface ChatMessage {
   id: string;
   userId: string;
@@ -25,12 +29,36 @@ export const saveMessage = async (
 ): Promise<ChatMessage> => {
   const prisma = getPrismaClient();
   const normalizedType = (input.messageType ?? 'text').trim().toLowerCase();
-  const messageType = normalizedType === 'recipe' ? 'recipe' : 'text';
+  const messageType = normalizedType === 'recipe'
+    ? 'recipe'
+    : normalizedType === 'ai-assistant'
+      ? 'ai-assistant'
+      : 'text';
+  const authorUserId = messageType === 'ai-assistant' ? AI_CHEF_USER_ID : userId;
+
+  if (messageType === 'ai-assistant') {
+    await prisma.user.upsert({
+      where: { id: AI_CHEF_USER_ID },
+      create: {
+        id: AI_CHEF_USER_ID,
+        authId: AI_CHEF_AUTH_ID,
+        email: 'ai-chef@easybake.local',
+        fullName: 'AI Chef',
+        displayName: 'AI Chef'
+      },
+      update: {
+        authId: AI_CHEF_AUTH_ID,
+        email: 'ai-chef@easybake.local',
+        fullName: 'AI Chef',
+        displayName: 'AI Chef'
+      }
+    });
+  }
 
   try {
     const message = await prisma.message.create({
       data: {
-        userId,
+        userId: authorUserId,
         content: input.content,
         messageType,
         recipeId: messageType === 'recipe' ? input.recipeId ?? null : null
@@ -124,4 +152,57 @@ export const userExists = async (userId: string): Promise<boolean> => {
     logger.error('Failed to check if user exists', error);
     throw error;
   }
+};
+
+export const generateAssistantReply = async (prompt: string): Promise<string> => {
+  const normalizedPrompt = prompt.trim();
+  if (!normalizedPrompt) {
+    throw new Error('Prompt cannot be empty');
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(`${AI_SERVICE_API_BASE_URL}/stream-assistant`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'text/event-stream'
+      },
+      body: JSON.stringify({ prompt: normalizedPrompt })
+    });
+  } catch (error) {
+    throw new Error(
+      `Failed to reach AI service at ${AI_SERVICE_API_BASE_URL}: ${(error as Error).message}`
+    );
+  }
+
+  if (!response.ok || !response.body) {
+    throw new Error(`AI assistant request failed with status ${response.status}`);
+  }
+
+  const text = await response.text();
+  let answer = '';
+
+  for (const block of text.split(/\n\n+/)) {
+    const trimmedBlock = block.trim();
+    if (!trimmedBlock.startsWith('data: ')) {
+      continue;
+    }
+
+    const payloadText = trimmedBlock.slice('data: '.length).trim();
+    if (payloadText === '[DONE]') {
+      continue;
+    }
+
+    try {
+      const parsed = JSON.parse(payloadText) as { delta?: string; type?: string };
+      if (parsed.type === 'text' && typeof parsed.delta === 'string') {
+        answer += parsed.delta;
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return answer.trim();
 };

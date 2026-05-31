@@ -12,6 +12,7 @@ describe('chatService', () => {
       findMany: jest.fn<() => Promise<unknown[]>>()
     },
     user: {
+      upsert: jest.fn<() => Promise<unknown>>(),
       findUnique: jest.fn<() => Promise<unknown>>()
     }
   };
@@ -125,6 +126,70 @@ describe('chatService', () => {
           }
         }
       });
+    });
+
+    it('should persist ai assistant messages under the ai chef user', async () => {
+      const content = 'Here is the answer';
+
+      mockPrisma.user.upsert.mockResolvedValue({});
+      mockPrisma.message.create.mockResolvedValue({
+        id: 'msg-ai-1',
+        userId: 'ai-chef',
+        content,
+        messageType: 'ai-assistant',
+        recipeId: null,
+        createdAt: new Date(),
+        user: {
+          id: 'ai-chef',
+          email: 'ai-chef@easybake.local',
+          fullName: 'AI Chef',
+          displayName: 'AI Chef'
+        }
+      });
+
+      const result = await saveMessage('user-123', {
+        content,
+        messageType: 'ai-assistant'
+      });
+
+      expect(mockPrisma.user.upsert).toHaveBeenCalledWith({
+        where: { id: 'ai-chef' },
+        create: {
+          id: 'ai-chef',
+          authId: 'system:ai-chef',
+          email: 'ai-chef@easybake.local',
+          fullName: 'AI Chef',
+          displayName: 'AI Chef'
+        },
+        update: {
+          authId: 'system:ai-chef',
+          email: 'ai-chef@easybake.local',
+          fullName: 'AI Chef',
+          displayName: 'AI Chef'
+        }
+      });
+
+      expect(mockPrisma.message.create).toHaveBeenCalledWith({
+        data: {
+          userId: 'ai-chef',
+          content,
+          messageType: 'ai-assistant',
+          recipeId: null
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              fullName: true,
+              displayName: true
+            }
+          }
+        }
+      });
+
+      expect(result.userId).toBe('ai-chef');
+      expect(result.messageType).toBe('ai-assistant');
     });
   });
 
