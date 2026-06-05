@@ -665,7 +665,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiChefGenericErrorMessage =>
-      'Something went wrong while chatting.';
+      'I\'m sorry, it seems like something went wrong 😞, try to ask me again please!';
 
   @override
   String get aiChefErrorPleaseTypeMessageFirst =>

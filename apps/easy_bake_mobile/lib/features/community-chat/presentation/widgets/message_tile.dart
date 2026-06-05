@@ -11,6 +11,7 @@ import '../../../recipes/data/services/recipe_service.dart';
 import '../../../recipes/presentation/providers/recipe_providers.dart';
 import '../../../recipes/presentation/widgets/recipe_details/saving_status_card.dart';
 import '../../../recipes/domain/models/recipe_model.dart';
+import '../../../ai-chat/presentation/widgets/ai_chef_chat_typing_dots.dart';
 import 'chat_avatar.dart';
 import 'shared_recipe_preview_card.dart';
 
@@ -67,6 +68,46 @@ Color _resolveSenderAccentColor(
   return palette[hash.abs() % palette.length];
 }
 
+const Color _aiChefAvatarBackgroundColor = Color(0xFFF3F7FA);
+const Color _aiChefAvatarBorderColor = Color(0xFFB8CAD8);
+
+TextSpan _buildCommunityChatTextSpan(String text, TextStyle baseStyle) {
+  const mention = '@aichef';
+  final mentionStyle = baseStyle.copyWith(
+    color: const Color(0xFF1F6FC9),
+    fontWeight: FontWeight.w700,
+  );
+
+  if (text.isEmpty) {
+    return TextSpan(style: baseStyle, text: text);
+  }
+
+  final spans = <InlineSpan>[];
+  var index = 0;
+
+  while (index < text.length) {
+    final mentionIndex = text.toLowerCase().indexOf(mention, index);
+    if (mentionIndex == -1) {
+      spans.add(TextSpan(text: text.substring(index)));
+      break;
+    }
+
+    if (mentionIndex > index) {
+      spans.add(TextSpan(text: text.substring(index, mentionIndex)));
+    }
+
+    spans.add(
+      TextSpan(
+        text: text.substring(mentionIndex, mentionIndex + mention.length),
+        style: mentionStyle,
+      ),
+    );
+    index = mentionIndex + mention.length;
+  }
+
+  return TextSpan(style: baseStyle, children: spans);
+}
+
 class MessageTile extends ConsumerWidget {
   const MessageTile({
     super.key,
@@ -79,17 +120,29 @@ class MessageTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isAiAssistant =
+        message.type == ChatMessageType.aiAssistant ||
+        message.userId == 'ai-chef';
     final avatarColor = _resolveSenderAccentColor(
       message,
       isCurrentUser: isCurrentUser,
     );
-    final avatarIcon = isCurrentUser ? Icons.person : Icons.groups;
+    final avatarBackgroundColor = isAiAssistant
+        ? _aiChefAvatarBackgroundColor
+        : avatarColor;
+    final avatarIcon = isCurrentUser
+        ? Icons.person
+        : (isAiAssistant ? Icons.smart_toy_rounded : Icons.groups);
+    final avatarImageAsset = isAiAssistant ? 'assets/ai_chef_logo.png' : null;
     final senderName = (message.userFullName?.trim().isNotEmpty ?? false)
         ? message.userFullName!.trim()
         : (message.userEmail.isNotEmpty ? message.userEmail : 'Baker');
+    final isTypingPlaceholder =
+        isAiAssistant && message.isPending && message.content.trim().isEmpty;
     const avatarSlotWidth = 54.0;
     const avatarGap = 10.0;
     const incomingBubbleTopOffset = 6.0;
+    const aiAssistantBubbleTopOffset = 18.0;
     const currentUserBubbleTopOffset = 24.0;
 
     return Padding(
@@ -111,7 +164,15 @@ class MessageTile extends ConsumerWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      ChatAvatar(color: avatarColor, icon: avatarIcon),
+                      ChatAvatar(
+                        color: avatarBackgroundColor,
+                        icon: avatarIcon,
+                        imageAsset: avatarImageAsset,
+                        borderColor: isAiAssistant
+                            ? _aiChefAvatarBorderColor
+                            : null,
+                        size: 38,
+                      ),
                     ],
                   ),
                 ),
@@ -120,7 +181,9 @@ class MessageTile extends ConsumerWidget {
                 padding: EdgeInsets.only(
                   top: isCurrentUser
                       ? currentUserBubbleTopOffset
-                      : incomingBubbleTopOffset,
+                      : (isAiAssistant
+                            ? aiAssistantBubbleTopOffset
+                            : incomingBubbleTopOffset),
                 ),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
@@ -155,52 +218,61 @@ class MessageTile extends ConsumerWidget {
                             recipeId: message.recipeId!,
                             isCurrentUser: isCurrentUser,
                           )
+                        else if (isTypingPlaceholder)
+                          const Padding(
+                            padding: EdgeInsets.only(top: 2, bottom: 2),
+                            child: AiChefChatTypingDots(),
+                          )
                         else
-                          Text(
-                            message.content,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              height: 1.4,
-                              color: Color(0xFF111B26),
-                            ),
-                          ),
-                        const SizedBox(height: 4),
-                        Row(
-                          mainAxisSize: MainAxisSize.max,
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              DateFormat(
-                                'dd/MM/yyyy HH:mm',
-                              ).format(message.createdAt),
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: Color(0xFF6E8298),
-                                fontWeight: FontWeight.w500,
+                          Text.rich(
+                            _buildCommunityChatTextSpan(
+                              message.content,
+                              const TextStyle(
+                                fontSize: 15,
+                                height: 1.4,
+                                color: Color(0xFF111B26),
                               ),
                             ),
-                            if (isCurrentUser) ...[
-                              const SizedBox(width: 5),
-                              if (message.isPending)
-                                const SizedBox(
-                                  width: 10,
-                                  height: 10,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 1.4,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Color(0xFF6E8298),
-                                    ),
-                                  ),
-                                )
-                              else
-                                const Icon(
-                                  Icons.done,
-                                  size: 13,
-                                  color: Color(0xFF1D67C2),
+                          ),
+                        if (!isTypingPlaceholder) ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            mainAxisSize: MainAxisSize.max,
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Text(
+                                DateFormat(
+                                  'dd/MM/yyyy HH:mm',
+                                ).format(message.createdAt),
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: Color(0xFF6E8298),
+                                  fontWeight: FontWeight.w500,
                                 ),
+                              ),
+                              if (isCurrentUser) ...[
+                                const SizedBox(width: 5),
+                                if (message.isPending)
+                                  const SizedBox(
+                                    width: 10,
+                                    height: 10,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 1.4,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Color(0xFF6E8298),
+                                      ),
+                                    ),
+                                  )
+                                else
+                                  const Icon(
+                                    Icons.done,
+                                    size: 13,
+                                    color: Color(0xFF1D67C2),
+                                  ),
+                              ],
                             ],
-                          ],
-                        ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -212,7 +284,15 @@ class MessageTile extends ConsumerWidget {
                   width: avatarSlotWidth,
                   child: Align(
                     alignment: Alignment.bottomCenter,
-                    child: ChatAvatar(color: avatarColor, icon: avatarIcon),
+                    child: ChatAvatar(
+                      color: avatarBackgroundColor,
+                      icon: avatarIcon,
+                      imageAsset: avatarImageAsset,
+                      borderColor: isAiAssistant
+                          ? _aiChefAvatarBorderColor
+                          : null,
+                      size: 36,
+                    ),
                   ),
                 ),
             ],
@@ -254,10 +334,7 @@ class _RecipePreviewCard extends ConsumerWidget {
     );
   }
 
-  String _recipePreviewMessageForError(
-    AppLocalizations l10n,
-    Object error,
-  ) {
+  String _recipePreviewMessageForError(AppLocalizations l10n, Object error) {
     if (error is DioException && error.response?.statusCode == 404) {
       return l10n.recipePreviewNoLongerAvailableMessage;
     }

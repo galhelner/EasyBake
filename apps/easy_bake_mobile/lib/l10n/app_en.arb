@@ -413,7 +413,7 @@
   "aiChefGreetingWithName": "Hello {displayName}!\nHow can I help you?",
   "aiChefServiceUnavailableMessage": "Recipe service is currently unavailable. Please tap Refresh and try again.",
   "aiChefCreatingRecipeMessage": "Sure! I am creating the recipe for you",
-  "aiChefGenericErrorMessage": "Something went wrong while chatting.",
+  "aiChefGenericErrorMessage": "I'm sorry, it seems like something went wrong 😞, try to ask me again please!",
   "aiChefErrorPleaseTypeMessageFirst": "Please type a message first.",
   "aiChefErrorCouldNotSendMessage": "Could not send your message. Please try again.",
   "aiChefErrorEmptyResponse": "Empty response from server.",

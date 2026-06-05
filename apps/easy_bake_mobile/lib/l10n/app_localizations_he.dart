@@ -650,7 +650,8 @@ class AppLocalizationsHe extends AppLocalizations {
   String get aiChefCreatingRecipeMessage => 'בטח! אני יוצר את המתכון עבורך';
 
   @override
-  String get aiChefGenericErrorMessage => 'משהו השתבש בזמן השיחה.';
+  String get aiChefGenericErrorMessage =>
+      'מצטער, נראה שמשהו השתבש 😞. אנא נסה לשאול אותי שוב בבקשה!';
 
   @override
   String get aiChefErrorPleaseTypeMessageFirst => 'אנא הקלד הודעה קודם.';

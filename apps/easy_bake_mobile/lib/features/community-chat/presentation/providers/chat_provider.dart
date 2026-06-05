@@ -57,7 +57,9 @@ class ChatMessagesNotifier extends Notifier<List<ChatMessage>> {
               (message.userEmail.isNotEmpty &&
                   serverMessage.userEmail.isNotEmpty &&
                   message.userEmail == serverMessage.userEmail)) &&
-          message.content == serverMessage.content,
+          (message.type == ChatMessageType.aiAssistant ||
+              message.content == serverMessage.content ||
+              _stripAiChefMention(message.content) == serverMessage.content),
     );
 
     if (pendingIndex == -1) {
@@ -74,11 +76,27 @@ class ChatMessagesNotifier extends Notifier<List<ChatMessage>> {
     }
 
     final pendingMessage = messages[pendingIndex];
+    final resolvedContent = pendingMessage.type == ChatMessageType.aiAssistant
+        ? serverMessage.content
+        : pendingMessage.content;
     messages[pendingIndex] = serverMessage.copyWith(
       localId: pendingMessage.localId,
       deliveryStatus: ChatMessageDeliveryStatus.sent,
+      content: resolvedContent,
     );
     state = messages;
+        // Notify chat service notifier in case an AI failure message was deferred
+        // until the user's message was marked as sent.
+        try {
+          final questionLocalId = pendingMessage.localId;
+          if (questionLocalId != null && questionLocalId.isNotEmpty) {
+            final notifier = ref.read(chatServiceProvider.notifier);
+            // Start AI typing indicator after user's message is confirmed sent
+            notifier._maybeStartAiTypingForLocalId(questionLocalId);
+            // Deliver any deferred AI failure that was waiting for message delivery
+            notifier._maybeDeliverDeferredAiFailureForLocalId(questionLocalId);
+          }
+        } catch (_) {}
   }
 
   void removePendingMessage(String localId) {
@@ -94,10 +112,29 @@ class ChatMessagesNotifier extends Notifier<List<ChatMessage>> {
       return;
     }
 
-    final pendingMessages = state
+    final currentMessages = [...state];
+    final pendingMessages = currentMessages
         .where((message) => message.isPending)
         .toList();
-    final mergedMessages = [...messages, ...pendingMessages]
+
+    final mergedMessages = messages.map((incomingMessage) {
+      final existingIndex = currentMessages.indexWhere(
+        (message) => message.id == incomingMessage.id,
+      );
+      if (existingIndex != -1) {
+        final existingMessage = currentMessages[existingIndex];
+        if (_shouldPreserveAiChefDisplayContent(
+          existingMessage,
+          incomingMessage,
+        )) {
+          return incomingMessage.copyWith(content: existingMessage.content);
+        }
+      }
+
+      return incomingMessage;
+    }).toList();
+
+    final combinedMessages = [...mergedMessages, ...pendingMessages]
       ..sort((left, right) {
         final createdAtComparison = left.createdAt.compareTo(right.createdAt);
         if (createdAtComparison != 0) {
@@ -106,7 +143,7 @@ class ChatMessagesNotifier extends Notifier<List<ChatMessage>> {
         return left.id.compareTo(right.id);
       });
 
-    state = mergedMessages;
+    state = combinedMessages;
   }
 
   void clear() {
@@ -158,6 +195,30 @@ String _chatIdentityMessage() =>
 String _chatSendFailedMessage() =>
     _chatLocalizations().communityChatSendFailedMessage;
 
+String _communityChatAiFailureMessage() =>
+    _chatLocalizations().aiChefGenericErrorMessage;
+
+String _stripAiChefMention(String content) {
+  final cleaned = content.replaceAll(
+    RegExp(r'@aichef\b', caseSensitive: false),
+    '',
+  );
+  return cleaned.replaceAll(RegExp(r'\s+'), ' ').trim();
+}
+
+bool _shouldPreserveAiChefDisplayContent(
+  ChatMessage existing,
+  ChatMessage incoming,
+) {
+  final existingContent = existing.content.trim();
+  final incomingContent = incoming.content.trim();
+
+  return existingContent.isNotEmpty &&
+      existingContent != incomingContent &&
+      existingContent.toLowerCase().contains('@aichef') &&
+      _stripAiChefMention(existingContent) == incomingContent;
+}
+
 // Connection status
 final chatConnectionStateProvider =
     NotifierProvider<ChatConnectionNotifier, ChatConnectionState>(
@@ -174,6 +235,17 @@ class ChatConnectionNotifier extends Notifier<ChatConnectionState> {
 }
 
 class ChatServiceNotifier extends Notifier<ChatSocketService?> {
+  bool _awaitingAiChefResponse = false;
+  String? _awaitingAiChefTypingLocalId;
+  String? _awaitingAiChefQuestionLocalId;
+  String? _awaitingAiChefQuestionContent;
+  bool _aiRequestSent = false;
+  bool _deferAiChefFailure = false;
+  bool _suppressNextSocketError = false;
+
+  static const String _aiChefUnavailableServerMessage =
+      'AI assistant is temporarily unavailable. Please try again.';
+
   @override
   ChatSocketService? build() {
     ref.listen(authNotifierProvider, (previous, next) {
@@ -285,6 +357,14 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
       };
 
       chatService.onMessage = (message) {
+        if (message.type == ChatMessageType.aiAssistant) {
+          _awaitingAiChefResponse = false;
+          _awaitingAiChefTypingLocalId = null;
+          _awaitingAiChefQuestionLocalId = null;
+          _awaitingAiChefQuestionContent = null;
+          _aiRequestSent = false;
+          _deferAiChefFailure = false;
+        }
         ref.read(chatMessagesProvider.notifier).markMessageAsSent(message);
       };
 
@@ -321,6 +401,27 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
       };
 
       chatService.onError = (error) {
+        debugPrint('[Chat] socket error callback: $error');
+        if (_suppressNextSocketError) {
+          _suppressNextSocketError = false;
+          return;
+        }
+
+        final normalizedError = error.trim().toLowerCase();
+        debugPrint('[Chat] normalized socket error: $normalizedError');
+        final isAiChefFailure =
+            _awaitingAiChefResponse ||
+            normalizedError == _aiChefUnavailableServerMessage.toLowerCase() ||
+          normalizedError.contains('ai assistant is temporarily unavailable') ||
+          normalizedError.contains('ai assistant request failed') ||
+          normalizedError.contains('403');
+
+        if (isAiChefFailure) {
+          debugPrint('[Chat] detected AI chef failure: awaiting=$_awaitingAiChefResponse');
+          _showAiChefFailureMessage();
+          return;
+        }
+
         ref
             .read(chatErrorProvider.notifier)
             .setError(_chatUnavailableMessage());
@@ -400,6 +501,13 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
       return;
     }
 
+    final cleanedContent = _stripAiChefMention(trimmedContent);
+    if (cleanedContent.isEmpty) {
+      return;
+    }
+
+    final isAiChefQuestion = cleanedContent != trimmedContent;
+
     // Use display name from auth state (source of truth from server)
     final displayName = authState.displayName;
 
@@ -414,11 +522,160 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
     );
 
     ref.read(chatMessagesProvider.notifier).addPendingMessage(pendingMessage);
+    // Track the user's local id when asking the AI Chef so we can defer
+    // showing the AI failure message until the user's message is marked as sent.
 
     final sent = chatService.sendMessage(content: trimmedContent);
     if (!sent) {
       ref.read(chatErrorProvider.notifier).setError(_chatSendFailedMessage());
       ref.read(chatMessagesProvider.notifier).removePendingMessage(localId);
+      return;
+    }
+
+    if (isAiChefQuestion) {
+      _awaitingAiChefQuestionLocalId = localId;
+      _awaitingAiChefQuestionContent = cleanedContent;
+      _aiRequestSent = false;
+      _awaitingAiChefResponse = true;
+      _awaitingAiChefTypingLocalId = '$localId-ai-typing';
+      _suppressNextSocketError = false;
+      // The actual AI request will be sent once the user's message is
+      // confirmed sent (in _maybeStartAiTypingForLocalId) to avoid
+      // races or transient socket disconnects.
+    }
+  }
+
+  void _showAiChefFailureMessage() {
+    final typingLocalId = _awaitingAiChefTypingLocalId;
+    if (typingLocalId != null) {
+      ref
+          .read(chatMessagesProvider.notifier)
+          .removePendingMessage(typingLocalId);
+    }
+
+    // If the user's message that triggered the AI request is still pending,
+    // defer adding the AI failure message until that message is marked as sent
+    // so the UI shows the "delivered" state (V) instead of a loading animation.
+    final questionLocalId = _awaitingAiChefQuestionLocalId;
+    final messages = ref.read(chatMessagesProvider);
+    final userMessageStillPending = questionLocalId != null &&
+        messages.any((m) => m.localId == questionLocalId && m.isPending);
+
+    if (userMessageStillPending) {
+      _deferAiChefFailure = true;
+
+      // Clear awaiting typing indicator and mark not awaiting response,
+      // but keep the question local id so we can deliver the failure later.
+      _awaitingAiChefResponse = false;
+      _awaitingAiChefTypingLocalId = null;
+      _awaitingAiChefQuestionContent = null;
+      _aiRequestSent = false;
+      _suppressNextSocketError = true;
+      ref.read(chatErrorProvider.notifier).setError(null);
+      return;
+    }
+
+    ref
+        .read(chatMessagesProvider.notifier)
+        .addMessage(
+          ChatMessage(
+            id: 'ai-chef-local-${DateTime.now().microsecondsSinceEpoch}',
+            userId: 'ai-chef',
+            userEmail: 'ai-chef@easybake.local',
+            userFullName: 'AI Chef',
+            content: _communityChatAiFailureMessage(),
+            type: ChatMessageType.aiAssistant,
+            createdAt: DateTime.now(),
+          ),
+        );
+
+    _awaitingAiChefResponse = false;
+    _awaitingAiChefTypingLocalId = null;
+    _suppressNextSocketError = true;
+    ref.read(chatErrorProvider.notifier).setError(null);
+  }
+
+  // Called when a user's pending message is marked as sent. If we previously
+  // deferred the AI failure message for that question, deliver it now.
+  void _maybeDeliverDeferredAiFailureForLocalId(String localId) {
+    if (!_deferAiChefFailure) return;
+    if (_awaitingAiChefQuestionLocalId == null) return;
+    if (_awaitingAiChefQuestionLocalId != localId) return;
+    // Try to send the AI failure message via the socket so it is visible
+    // to everyone in the chat and marked as an AI assistant message. If
+    // sending fails, fall back to adding a local message.
+    ref
+        .read(chatMessagesProvider.notifier)
+        .addMessage(
+          ChatMessage(
+            id: 'ai-chef-local-${DateTime.now().microsecondsSinceEpoch}',
+            userId: 'ai-chef',
+            userEmail: 'ai-chef@easybake.local',
+            userFullName: 'AI Chef',
+            content: _communityChatAiFailureMessage(),
+            type: ChatMessageType.aiAssistant,
+            createdAt: DateTime.now(),
+          ),
+        );
+
+    _deferAiChefFailure = false;
+    _awaitingAiChefQuestionLocalId = null;
+    _awaitingAiChefQuestionContent = null;
+    _aiRequestSent = false;
+    _awaitingAiChefResponse = false;
+    _awaitingAiChefTypingLocalId = null;
+    _suppressNextSocketError = true;
+    ref.read(chatErrorProvider.notifier).setError(null);
+  }
+
+  // Called when a user's pending message is marked as sent. If we were
+  // awaiting an AI Chef response for that question, start the AI typing
+  // indicator (a pending aiAssistant message) so the UI shows typing after
+  // the user's message is delivered.
+  void _maybeStartAiTypingForLocalId(String localId) {
+    if (_awaitingAiChefQuestionLocalId == null) return;
+    if (_awaitingAiChefQuestionLocalId != localId) return;
+    final typingLocalId = _awaitingAiChefTypingLocalId;
+    if (typingLocalId == null || typingLocalId.isEmpty) return;
+
+    final messages = ref.read(chatMessagesProvider);
+    final alreadyPresent = messages.any((m) => m.localId == typingLocalId);
+    if (alreadyPresent) return;
+
+    ref
+        .read(chatMessagesProvider.notifier)
+        .addPendingMessage(
+          ChatMessage.pending(
+            localId: typingLocalId,
+            userId: 'ai-chef',
+            userEmail: '',
+            userFullName: 'AI Chef',
+            content: '',
+            type: ChatMessageType.aiAssistant,
+            createdAt: DateTime.now(),
+          ),
+        );
+
+    // After showing typing, send the AI request to the server if not already sent.
+    if (!_aiRequestSent && _awaitingAiChefQuestionContent != null) {
+      final service = state;
+      final contentToSend = _awaitingAiChefQuestionContent!;
+      debugPrint('[Chat] sending AI request to server: content="$contentToSend"');
+      final sent = service != null && service.isConnected
+          ? service.sendMessage(
+              content: contentToSend,
+              type: ChatMessageType.aiAssistant,
+              assistantFallback: _communityChatAiFailureMessage(),
+            )
+          : false;
+      debugPrint('[Chat] AI request sent result: $sent');
+      _aiRequestSent = sent;
+      if (!sent) {
+        // If sending failed, show failure immediately (it will be deferred
+        // earlier only when user's message was pending).
+        debugPrint('[Chat] AI request failed to send, showing failure');
+        _showAiChefFailureMessage();
+      }
     }
   }
 

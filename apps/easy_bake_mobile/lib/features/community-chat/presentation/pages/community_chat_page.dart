@@ -20,7 +20,7 @@ class CommunityChat extends ConsumerStatefulWidget {
 }
 
 class _CommunityChatState extends ConsumerState<CommunityChat> {
-  final _messageController = TextEditingController();
+  late TextEditingController _messageController;
   final _scrollController = ScrollController();
   bool _isFailureDialogOpen = false;
 
@@ -30,10 +30,25 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
   @override
   void initState() {
     super.initState();
+    _messageController = MentionTextEditingController();
     _chatServiceNotifier = ref.read(chatServiceProvider.notifier);
     Future.microtask(() {
       _initializeChat();
     });
+  }
+
+  @override
+  void reassemble() {
+    super.reassemble();
+
+    if (_messageController is! MentionTextEditingController) {
+      final previousController = _messageController;
+      final updatedController = MentionTextEditingController();
+      updatedController.value = previousController.value;
+      _messageController = updatedController;
+      previousController.dispose();
+      setState(() {});
+    }
   }
 
   Future<void> _initializeChat() async {

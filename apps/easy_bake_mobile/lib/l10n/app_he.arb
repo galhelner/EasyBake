@@ -413,7 +413,7 @@
   "aiChefGreetingWithName": "שלום {displayName}!\nאיך אני יכול לעזור לך?",
   "aiChefServiceUnavailableMessage": "שירות המתכונים אינו זמין כרגע. לחץ על רענון ונסה שוב.",
   "aiChefCreatingRecipeMessage": "בטח! אני יוצר את המתכון עבורך",
-  "aiChefGenericErrorMessage": "משהו השתבש בזמן השיחה.",
+  "aiChefGenericErrorMessage": "מצטער, נראה שמשהו השתבש 😞. אנא נסה לשאול אותי שוב בבקשה!",
   "aiChefErrorPleaseTypeMessageFirst": "אנא הקלד הודעה קודם.",
   "aiChefErrorCouldNotSendMessage": "לא ניתן היה לשלוח את ההודעה שלך. נסה שוב.",
   "aiChefErrorEmptyResponse": "התקבלה תשובה ריקה מהשרת.",

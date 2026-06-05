@@ -150,8 +150,11 @@ class ChatSocketService {
           ? data['message'] as String?
           : data.toString();
       debugPrint('[Chat] Socket error: $message');
-      onConnectionStateChanged?.call(false);
-      onError?.call(_unavailableMessage);
+      onError?.call(
+        message != null && message.trim().isNotEmpty
+            ? message.trim()
+            : _unavailableMessage,
+      );
     });
 
     _socket.on('disconnect', (_) {
@@ -174,6 +177,7 @@ class ChatSocketService {
     required String content,
     ChatMessageType type = ChatMessageType.text,
     String? recipeId,
+    String? assistantFallback,
   }) {
     if (!_socket.connected) {
       onConnectionStateChanged?.call(false);
@@ -182,11 +186,18 @@ class ChatSocketService {
     }
 
     try {
-      debugPrint('[Chat] Sending ${type.name} message');
+      final messageType = switch (type) {
+        ChatMessageType.text => 'text',
+        ChatMessageType.recipe => 'recipe',
+        ChatMessageType.aiAssistant => 'ai-assistant',
+      };
+
+      debugPrint('[Chat] Sending $messageType message');
       _socket.emit('send_message', {
         'content': content,
-        'messageType': type.name,
+        'messageType': messageType,
         'recipeId': recipeId,
+        'assistantFallback': assistantFallback,
       });
       return true;
     } catch (e) {

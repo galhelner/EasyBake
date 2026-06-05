@@ -704,7 +704,7 @@ class _RecipeDetailsTimerCardState extends State<RecipeDetailsTimerCard>
           opacity: fade,
           child: SizeTransition(
             sizeFactor: size,
-            axisAlignment: -1,
+              alignment: Alignment.topLeft,
             child: ScaleTransition(
               alignment: Alignment.topLeft,
               scale: Tween<double>(begin: 0.98, end: 1).animate(size),

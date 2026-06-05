@@ -1,14 +1,28 @@
 enum ChatMessageDeliveryStatus { pending, sent }
 
-enum ChatMessageType { text, recipe }
+enum ChatMessageType { text, recipe, aiAssistant }
 
 ChatMessageType _parseChatMessageType(String? value) {
   switch ((value ?? '').trim().toLowerCase()) {
     case 'recipe':
       return ChatMessageType.recipe;
+    case 'ai-assistant':
+    case 'aiassistant':
+      return ChatMessageType.aiAssistant;
     case 'text':
     default:
       return ChatMessageType.text;
+  }
+}
+
+String _serializeChatMessageType(ChatMessageType type) {
+  switch (type) {
+    case ChatMessageType.recipe:
+      return 'recipe';
+    case ChatMessageType.aiAssistant:
+      return 'ai-assistant';
+    case ChatMessageType.text:
+      return 'text';
   }
 }
 
@@ -92,7 +106,7 @@ class ChatMessage {
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
     return ChatMessage(
       id: json['id'] as String,
-      userId: json['userId'] as String,
+      userId: (json['userId'] as String?) ?? '',
       userEmail: json['userEmail'] as String? ?? '',
       userFullName:
           (json['userDisplayName'] as String?) ??
@@ -110,7 +124,7 @@ class ChatMessage {
     'userEmail': userEmail,
     'userFullName': userFullName,
     'content': content,
-    'messageType': type.name,
+    'messageType': _serializeChatMessageType(type),
     'recipeId': recipeId,
     'createdAt': createdAt.toIso8601String(),
   };

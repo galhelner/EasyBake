@@ -1241,7 +1241,7 @@ abstract class AppLocalizations {
   /// Fallback error message shown in the AI chef chat.
   ///
   /// In en, this message translates to:
-  /// **'Something went wrong while chatting.'**
+  /// **'I\'m sorry, it seems like something went wrong 😞, try to ask me again please!'**
   String get aiChefGenericErrorMessage;
 
   /// Error shown when the user submits an empty AI chef message.
