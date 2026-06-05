@@ -225,6 +225,9 @@ io.on('connection', async (socket: Socket) => {
 
       if (messageType === 'ai-assistant') {
         const question = stripAiChefMention(content);
+        const assistantFallback = typeof messageData.assistantFallback === 'string'
+          ? messageData.assistantFallback.trim()
+          : '';
         if (question.length === 0) {
           authSocket.emit('error', { message: 'Message cannot be empty' });
           return;
@@ -235,6 +238,17 @@ io.on('connection', async (socket: Socket) => {
           assistantReply = await generateAssistantReply(question);
         } catch (error) {
           logger.error(`AI assistant request failed for ${userEmail}`, error);
+          if (assistantFallback.length > 0) {
+            const savedAssistantMessage = await saveMessage('ai-chef', {
+              content: assistantFallback,
+              messageType: 'ai-assistant'
+            });
+
+            io.to(COMMUNITY_ROOM).emit('new_message', savedAssistantMessage);
+            logger.info(`🤖 AI assistant fallback broadcasted for ${userEmail}`);
+            return;
+          }
+
           authSocket.emit('error', {
             message: 'AI assistant is temporarily unavailable. Please try again.'
           });
@@ -243,6 +257,17 @@ io.on('connection', async (socket: Socket) => {
 
         if (!assistantReply) {
           logger.warn(`AI assistant returned an empty reply for ${userEmail}`);
+          if (assistantFallback.length > 0) {
+            const savedAssistantMessage = await saveMessage('ai-chef', {
+              content: assistantFallback,
+              messageType: 'ai-assistant'
+            });
+
+            io.to(COMMUNITY_ROOM).emit('new_message', savedAssistantMessage);
+            logger.info(`🤖 AI assistant fallback broadcasted for ${userEmail}`);
+            return;
+          }
+
           authSocket.emit('error', {
             message: 'AI assistant is temporarily unavailable. Please try again.'
           });

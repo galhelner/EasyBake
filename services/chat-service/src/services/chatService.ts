@@ -4,6 +4,7 @@ import logger from './logger';
 const AI_CHEF_USER_ID = 'ai-chef';
 const AI_CHEF_AUTH_ID = 'system:ai-chef';
 const AI_SERVICE_API_BASE_URL = (process.env.AI_SERVICE_URL ?? 'http://127.0.0.1:8000/api').replace(/\/$/, '');
+const AI_SERVICE_REQUEST_TIMEOUT_MS = Number(process.env.AI_SERVICE_REQUEST_TIMEOUT_MS ?? 15000);
 
 export interface ChatMessage {
   id: string;
@@ -160,49 +161,60 @@ export const generateAssistantReply = async (prompt: string): Promise<string> =>
     throw new Error('Prompt cannot be empty');
   }
 
-  let response: Response;
+  const abortController = new AbortController();
+  const timeoutId = setTimeout(
+    () => abortController.abort(),
+    AI_SERVICE_REQUEST_TIMEOUT_MS,
+  );
+
   try {
-    response = await fetch(`${AI_SERVICE_API_BASE_URL}/stream-assistant`, {
+    const response = await fetch(`${AI_SERVICE_API_BASE_URL}/stream-assistant`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'text/event-stream'
       },
-      body: JSON.stringify({ prompt: normalizedPrompt })
+      body: JSON.stringify({ prompt: normalizedPrompt }),
+      signal: abortController.signal
     });
-  } catch (error) {
-    throw new Error(
-      `Failed to reach AI service at ${AI_SERVICE_API_BASE_URL}: ${(error as Error).message}`
-    );
-  }
-
-  if (!response.ok || !response.body) {
-    throw new Error(`AI assistant request failed with status ${response.status}`);
-  }
-
-  const text = await response.text();
-  let answer = '';
-
-  for (const block of text.split(/\n\n+/)) {
-    const trimmedBlock = block.trim();
-    if (!trimmedBlock.startsWith('data: ')) {
-      continue;
+    if (!response.ok || !response.body) {
+      throw new Error(`AI assistant request failed with status ${response.status}`);
     }
 
-    const payloadText = trimmedBlock.slice('data: '.length).trim();
-    if (payloadText === '[DONE]') {
-      continue;
-    }
+    const text = await response.text();
+    let answer = '';
 
-    try {
-      const parsed = JSON.parse(payloadText) as { delta?: string; type?: string };
-      if (parsed.type === 'text' && typeof parsed.delta === 'string') {
-        answer += parsed.delta;
+    for (const block of text.split(/\n\n+/)) {
+      const trimmedBlock = block.trim();
+      if (!trimmedBlock.startsWith('data: ')) {
+        continue;
       }
-    } catch {
-      continue;
-    }
-  }
 
-  return answer.trim();
+      const payloadText = trimmedBlock.slice('data: '.length).trim();
+      if (payloadText === '[DONE]') {
+        continue;
+      }
+
+      try {
+        const parsed = JSON.parse(payloadText) as { delta?: string; type?: string };
+        if (parsed.type === 'text' && typeof parsed.delta === 'string') {
+          answer += parsed.delta;
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    return answer.trim();
+  } catch (error) {
+    if ((error as Error).name === 'AbortError') {
+      throw new Error(`AI service request timed out after ${AI_SERVICE_REQUEST_TIMEOUT_MS}ms`);
+    }
+
+    throw new Error(
+      `Failed to reach AI service at ${AI_SERVICE_API_BASE_URL}: ${(error as Error).message}`,
+    );
+  } finally {
+    clearTimeout(timeoutId);
+  }
 };
