@@ -15,7 +15,7 @@ Whenever you are asked to generate, modify, or review UI code for the EasyBake a
 - Use `const` constructors aggressively on all immutable widgets to optimize performance.
 
 ## 2. Localization & RTL (Directionality) Support
-- **ALWAYS use translations** for any user-facing strings. Use `AppLocalizations.of(context)!.yourStringKey`. Do NOT hardcode strings in the UI.
+- **ALWAYS use translations** for any user-facing strings. Instantiate `final l10n = AppLocalizations.of(context)!;` at the beginning of the `build` method and use `l10n.yourStringKey`. Do NOT hardcode strings in the UI.
 - Ensure the design supports both LTR and RTL directions.
 - Use directional APIs: `EdgeInsetsDirectional`, `AlignmentDirectional`, `Positioned.directional`, and `BorderDirectional` instead of absolute left/right properties.
 
