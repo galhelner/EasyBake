@@ -468,7 +468,58 @@ class AppLocalizationsHe extends AppLocalizations {
       'אזור זה שמור לכלים עתידיים של רשימות קניות, רשימות מכולת שמורות ומעקב אחר רכיבים.';
 
   @override
+  String get shoppingListAddItemTitle => 'הוספת פריט';
+
+  @override
+  String get addButtonLabel => 'הוספה';
+
+  @override
+  String get shoppingListItemAddedMessage => 'הפריט נוסף לרשימת הקניות';
+
+  @override
+  String get shoppingListItemAddFailedMessage =>
+      'הוספת הפריט לרשימת הקניות נכשלה';
+
+  @override
+  String get shoppingListLoadFailedMessage => 'טעינת רשימת הקניות נכשלה';
+
+  @override
+  String get shoppingListEditItemTitle => 'עריכת פריט';
+
+  @override
+  String get shoppingListItemUpdatedMessage => 'הפריט עודכן בהצלחה';
+
+  @override
+  String get shoppingListItemUpdateFailedMessage => 'עדכון הפריט נכשל';
+
+  @override
+  String get shoppingListItemDeletedMessage => 'הפריט נמחק';
+
+  @override
+  String get shoppingListItemDeleteFailedMessage => 'מחיקת הפריט נכשלה';
+
+  @override
+  String get confirmDeleteShoppingListItemMessage =>
+      'האם אתה בטוח שברצונך למחוק את הפריט הזה?';
+
+  @override
+  String get deletingShoppingListItemMessage => 'מוחק פריט...';
+
+  @override
+  String get shoppingListEmptyTitle => 'רשימת הקניות שלך ריקה';
+
+  @override
+  String get shoppingListEmptySubtitle =>
+      'הקישו על כפתור ה-+ למטה כדי להוסיף פריטים לרשימה.';
+
+  @override
+  String get shoppingListEmptyBackLabel => 'חזרה';
+
+  @override
   String get cookingStepsTitle => 'שלבי הבישול';
+
+  @override
+  String get doneLabel => 'סיום';
 
   @override
   String get recipeScalesTitle => 'כמויות';

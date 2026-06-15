@@ -154,10 +154,9 @@ class _RecipeDetailsPageState extends ConsumerState<RecipeDetailsPage> {
         try {
           await ref.read(recipeServiceProvider).deleteRecipe(id);
           ref.invalidate(recipesListProvider);
-          if (!mounted) {
-            return;
+          if (mounted) {
+            Navigator.of(context).pop();
           }
-          Navigator.of(context).pop();
         } on DioException catch (error) {
           if (!mounted) {
             return;
@@ -214,36 +213,40 @@ class _RecipeDetailsPageState extends ConsumerState<RecipeDetailsPage> {
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
-        return StatefulBuilder(builder: (ctx, setState) {
-          if (isSaving) {
-            Future.microtask(() async {
-              try {
-                await ref
-                    .read(recipeServiceProvider)
-                    .createRecipeCopyWithRemoteImage(_recipe);
-                saveSucceeded = true;
-                if (dialogContext.mounted) {
-                  setState(() {
-                    isSaving = false;
-                  });
+        return StatefulBuilder(
+          builder: (ctx, setState) {
+            if (isSaving) {
+              Future.microtask(() async {
+                try {
+                  await ref
+                      .read(recipeServiceProvider)
+                      .createRecipeCopyWithRemoteImage(_recipe);
+                  saveSucceeded = true;
+                  if (dialogContext.mounted) {
+                    setState(() {
+                      isSaving = false;
+                    });
+                  }
+                  ref.invalidate(recipesListProvider);
+                } catch (e) {
+                  saveSucceeded = false;
+                  saveErrorMessage = _userFacingSaveError(e);
+                  if (dialogContext.mounted) {
+                    setState(() {
+                      isSaving = false;
+                    });
+                  }
                 }
-                ref.invalidate(recipesListProvider);
-              } catch (e) {
-                saveSucceeded = false;
-                saveErrorMessage = _userFacingSaveError(e);
-                if (dialogContext.mounted) {
-                  setState(() {
-                    isSaving = false;
-                  });
-                }
-              }
-            });
-          }
+              });
+            }
 
-          return Dialog(
-            backgroundColor: Colors.transparent,
-            insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-            child: Center(
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 24,
+              ),
+              child: Center(
                 child: SavingStatusCard(
                   isSaving: isSaving,
                   saveSucceeded: saveSucceeded,
@@ -258,8 +261,9 @@ class _RecipeDetailsPageState extends ConsumerState<RecipeDetailsPage> {
                   },
                 ),
               ),
-          );
-        });
+            );
+          },
+        );
       },
     );
   }
@@ -283,12 +287,13 @@ class _RecipeDetailsPageState extends ConsumerState<RecipeDetailsPage> {
             chatService: ref.read(chatServiceProvider),
             onOpenRecipeCreated: (recipePayload) {
               WidgetsBinding.instance.addPostFrameCallback((_) async {
-                final savedRecipe = await Navigator.of(context).push<RecipeModel>(
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        RecipeCreatePage(initialRecipeJson: recipePayload),
-                  ),
-                );
+                final savedRecipe = await Navigator.of(context)
+                    .push<RecipeModel>(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            RecipeCreatePage(initialRecipeJson: recipePayload),
+                      ),
+                    );
 
                 if (savedRecipe != null && context.mounted) {
                   notifyRecipeSaved(savedRecipe.title);

@@ -7,6 +7,7 @@ import { resolve } from 'path';
 import authRouter from './routes/auth.routes';
 import chatRouter from './routes/chat.routes';
 import recipeRouter from './routes/recipe.routes';
+import shoppingListRouter from './routes/shoppingList.routes';
 import logger from './services/logger';
 import cors from 'cors';
 
@@ -57,6 +58,7 @@ app.use(enforceInternalAppSecret);
 app.use('/auth', authRouter);
 app.use('/chat', chatRouter);
 app.use('/recipes', recipeRouter);
+app.use('/shopping-list', shoppingListRouter);
 
 const cleanupTmpFolder = async (): Promise<void> => {
   const tmpPath = resolve('tmp');

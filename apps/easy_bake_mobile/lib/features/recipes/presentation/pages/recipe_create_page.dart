@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -700,16 +700,19 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                 separatorBuilder: (context, index) => const Divider(height: 1),
                 itemBuilder: (context, suggestionIndex) {
                   final suggestion = suggestions[suggestionIndex];
-                  return ListTile(
-                    dense: true,
-                    leading: suggestion.icon.isEmpty
-                        ? null
-                        : Text(
-                            suggestion.icon,
-                            style: const TextStyle(fontSize: 20),
-                          ),
-                    title: Text(suggestion.name),
-                    onTap: () => _selectIngredientSuggestion(index, suggestion),
+                  return Material(
+                    color: Colors.transparent,
+                    child: ListTile(
+                      dense: true,
+                      leading: suggestion.icon.isEmpty
+                          ? null
+                          : Text(
+                              suggestion.icon,
+                              style: const TextStyle(fontSize: 20),
+                            ),
+                      title: Text(suggestion.name),
+                      onTap: () => _selectIngredientSuggestion(index, suggestion),
+                    ),
                   );
                 },
               ),

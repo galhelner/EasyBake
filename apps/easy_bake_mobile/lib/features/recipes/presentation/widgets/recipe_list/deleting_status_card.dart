@@ -10,12 +10,16 @@ class DeletingStatusCard extends StatelessWidget {
     required this.deleteSucceeded,
     this.deleteErrorMessage,
     this.onOk,
+    this.deletingMessage,
+    this.deletedMessage,
   });
 
   final bool isDeleting;
   final bool deleteSucceeded;
   final String? deleteErrorMessage;
   final VoidCallback? onOk;
+  final String? deletingMessage;
+  final String? deletedMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -49,9 +53,9 @@ class DeletingStatusCard extends StatelessWidget {
           const SizedBox(height: 12),
           if (isDeleting) ...[
             Text(
-              l10n.deletingYourRecipeMessage,
+              deletingMessage ?? l10n.deletingYourRecipeMessage,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Color(0xFF2E4E69),
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -72,7 +76,7 @@ class DeletingStatusCard extends StatelessWidget {
           ] else ...[
             Text(
               deleteSucceeded
-                  ? l10n.recipeDeletedMessage
+                  ? (deletedMessage ?? l10n.recipeDeletedMessage)
                   : (deleteErrorMessage ?? l10n.couldNotDeleteRecipeMessage),
               textAlign: TextAlign.center,
               style: TextStyle(

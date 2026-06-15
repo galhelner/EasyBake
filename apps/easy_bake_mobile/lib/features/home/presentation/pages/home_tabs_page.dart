@@ -60,6 +60,7 @@ class _HomeTabsPageState extends ConsumerState<HomeTabsPage> {
       const CommunityChatRoomPage(),
       HomeDashboardPage(
         onSeeAllRecipes: () => _onTabSelected(3),
+        onSeeAllShoppingList: () => _onTabSelected(4),
         onOpenAiChefChat: _openAiChefChat,
       ),
       const RecipeListPage(showBottomActions: true),

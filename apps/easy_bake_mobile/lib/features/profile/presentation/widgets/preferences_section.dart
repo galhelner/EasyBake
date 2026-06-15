@@ -190,36 +190,39 @@ class _PreferencesSectionContentState extends State<_PreferencesSectionContent> 
               color: const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 8,
-              ),
-              title: Text(
-                l10n.healthyModeTitle,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1F334A),
+            child: Material(
+              color: Colors.transparent,
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
                 ),
-              ),
-              subtitle: Text(
-                l10n.healthyModeSubtitle,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF5D7489),
+                title: Text(
+                  l10n.healthyModeTitle,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1F334A),
+                  ),
                 ),
-              ),
-              trailing: Switch(
-                value: widget.preferences.healthyModeEnabled,
-                onChanged: (value) {
-                  widget.ref
-                      .read(userPreferencesNotifierProvider.notifier)
-                      .toggleHealthyMode(value);
-                },
-                activeThumbColor: const Color(0xFF2E4E69),
-                activeTrackColor:
-                    const Color(0xFF2E4E69).withValues(alpha: 0.3),
+                subtitle: Text(
+                  l10n.healthyModeSubtitle,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF5D7489),
+                  ),
+                ),
+                trailing: Switch(
+                  value: widget.preferences.healthyModeEnabled,
+                  onChanged: (value) {
+                    widget.ref
+                        .read(userPreferencesNotifierProvider.notifier)
+                        .toggleHealthyMode(value);
+                  },
+                  activeThumbColor: const Color(0xFF2E4E69),
+                  activeTrackColor:
+                      const Color(0xFF2E4E69).withValues(alpha: 0.3),
+                ),
               ),
             ),
           ),
@@ -229,7 +232,9 @@ class _PreferencesSectionContentState extends State<_PreferencesSectionContent> 
               color: const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: ListTile(
+            child: Material(
+              color: Colors.transparent,
+              child: ListTile(
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 12,
                 vertical: 8,
@@ -425,6 +430,7 @@ class _PreferencesSectionContentState extends State<_PreferencesSectionContent> 
                         ),
                       ],
                     ),
+              ),
             ),
           ),
           const SizedBox(height: 12),
