@@ -938,11 +938,119 @@ abstract class AppLocalizations {
   /// **'This area is reserved for future shopping list tools, saved grocery lists, and ingredient tracking.'**
   String get shoppingListFutureDetails;
 
+  /// Title for the sheet to add a shopping list item.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Item'**
+  String get shoppingListAddItemTitle;
+
+  /// Label for the ingredient name field in the editor.
+  ///
+  /// In en, this message translates to:
+  /// **'Ingredient name'**
+  String get shoppingListIngredientNameHint;
+
+  /// Label for the amount field in the editor.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount (e.g. 2, 200g, 1 cup)'**
+  String get shoppingListIngredientAmountHint;
+
+  /// Label for the button to confirm adding an item.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get addButtonLabel;
+
+  /// Snackbar message shown when an item is successfully added.
+  ///
+  /// In en, this message translates to:
+  /// **'Item added to shopping list'**
+  String get shoppingListItemAddedMessage;
+
+  /// Snackbar message shown when adding an item fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to add item to shopping list'**
+  String get shoppingListItemAddFailedMessage;
+
+  /// Error message shown when loading the shopping list fails on the dashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load shopping list'**
+  String get shoppingListLoadFailedMessage;
+
+  /// Title for the sheet to edit a shopping list item.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Item'**
+  String get shoppingListEditItemTitle;
+
+  /// Snackbar message shown when an item is successfully updated.
+  ///
+  /// In en, this message translates to:
+  /// **'Item updated'**
+  String get shoppingListItemUpdatedMessage;
+
+  /// Snackbar message shown when updating an item fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update item'**
+  String get shoppingListItemUpdateFailedMessage;
+
+  /// Snackbar message shown when an item is successfully deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Item deleted'**
+  String get shoppingListItemDeletedMessage;
+
+  /// Snackbar message shown when deleting an item fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete item'**
+  String get shoppingListItemDeleteFailedMessage;
+
+  /// Confirmation message shown before deleting a shopping list item.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this item?'**
+  String get confirmDeleteShoppingListItemMessage;
+
+  /// Status message shown while deleting a shopping list item.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting item...'**
+  String get deletingShoppingListItemMessage;
+
+  /// Title shown when there are no items in the shopping list.
+  ///
+  /// In en, this message translates to:
+  /// **'Your shopping list is empty'**
+  String get shoppingListEmptyTitle;
+
+  /// Subtitle shown when there are no items in the shopping list.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the + button to add items to your list.'**
+  String get shoppingListEmptySubtitle;
+
+  /// Button label to go back from an empty shopping list page.
+  ///
+  /// In en, this message translates to:
+  /// **'Go Back'**
+  String get shoppingListEmptyBackLabel;
+
   /// Heading shown above the recipe instruction steps in recipe details.
   ///
   /// In en, this message translates to:
   /// **'Cooking Steps'**
   String get cookingStepsTitle;
+
+  /// Button label for done actions.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get doneLabel;
 
   /// Section title shown above the recipe scale controls in recipe details.
   ///
@@ -1381,6 +1489,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Great! I\'ve saved your recipe: {recipeName}'**
   String aiChefRecipeSavedConfirmation(Object recipeName);
+
+  /// Greeting shown by the AI chef when adding items to the shopping list.
+  ///
+  /// In en, this message translates to:
+  /// **'Sure! I am adding the items to your shopping list'**
+  String get aiChefAddingToShoppingListMessage;
+
+  /// Title shown when items have been successfully added to the shopping list.
+  ///
+  /// In en, this message translates to:
+  /// **'I added these items to your shopping list:'**
+  String get aiChefShoppingListAddedTitle;
+
+  /// Button label to switch to the shopping list screen.
+  ///
+  /// In en, this message translates to:
+  /// **'View Shopping List'**
+  String get aiChefNavigateToShoppingListButton;
 
   /// Ingredient count label shown on each recipe tile in the share recipe dialog.
   ///

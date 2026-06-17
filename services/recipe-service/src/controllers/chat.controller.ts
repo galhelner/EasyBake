@@ -27,12 +27,46 @@ type RouterIntent =
   | 'SEARCH_RECIPES'
   | 'HEALTH_AUDIT'
   | 'ASSISTANT_HELP'
-  | 'GENERAL_CHAT';
+  | 'GENERAL_CHAT'
+  | 'ADD_TO_SHOPPING_LIST';
 
 interface RouterResponsePayload {
   intent: RouterIntent;
   confidence: number;
 }
+
+const normalizeIngredientName = (value: string): string => value.trim().toLowerCase();
+
+const ensureUser = async (authId: string) => {
+  const existingUser = await prisma.user.findUnique({
+    where: { authId },
+    select: { id: true },
+  });
+
+  if (existingUser) {
+    return existingUser;
+  }
+
+  return prisma.user.create({
+    data: { authId },
+    select: { id: true },
+  });
+};
+
+const ensureIngredient = async (ingredientName: string) => {
+  const normalizedName = normalizeIngredientName(ingredientName);
+
+  return prisma.ingredient.upsert({
+    where: { name: normalizedName },
+    update: {},
+    create: { name: normalizedName },
+    select: {
+      id: true,
+      name: true,
+      icon: true,
+    },
+  });
+};
 
 interface FlushableResponse extends Response {
   flush?: () => void;
@@ -671,6 +705,179 @@ export const streamChat = async (
       };
 
       await streamSemanticSearch();
+      return;
+    }
+    case 'ADD_TO_SHOPPING_LIST': {
+      try {
+        const streamingResponse = res as FlushableResponse;
+        streamingResponse.writeHead(200, {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          Connection: 'keep-alive',
+          'X-Accel-Buffering': 'no',
+        });
+        streamingResponse.flushHeaders();
+
+        writeSseEvent(streamingResponse, { type: 'intent', intent: 'ADD_TO_SHOPPING_LIST' });
+
+        logger.info('Calling AI Service for: parse-shopping-list');
+        const aiResponse = await axios.post(
+          `${AI_SERVICE_API_BASE_URL}/parse-shopping-list`,
+          { prompt, recipe_context: recipeContext },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            timeout: 30000,
+          },
+        );
+
+        const { mode, items, recipe_name } = aiResponse.data;
+        logger.info(`AI parse-shopping-list: mode=${mode}, recipe_name=${recipe_name}, itemsCount=${items?.length ?? 0}`);
+
+        let itemsToAdd: Array<{ name: string; amount: string | null }> = [];
+
+        if (mode === 'recipe_context') {
+          if (recipe_id) {
+            const recipe = await prisma.recipe.findFirst({
+              where: {
+                id: recipe_id,
+                author: { authId: req.user!.id },
+              },
+              include: {
+                ingredients: {
+                  include: {
+                    ingredient: true,
+                  },
+                },
+              },
+            });
+            if (recipe) {
+              itemsToAdd = recipe.ingredients.map((ri) => ({
+                name: ri.ingredient.name,
+                amount: ri.amount || null,
+              }));
+            }
+          }
+          if (itemsToAdd.length === 0) {
+            itemsToAdd = (items || []).map((item: any) => {
+              if (typeof item === 'string') {
+                return { name: item, amount: null };
+              }
+              return { name: item.name, amount: item.amount || null };
+            });
+          }
+        } else if (mode === 'recipe_by_name' && recipe_name) {
+          const recipe = await prisma.recipe.findFirst({
+            where: {
+              title: { contains: recipe_name, mode: 'insensitive' },
+              author: { authId: req.user!.id },
+            },
+            include: {
+              ingredients: {
+                include: {
+                  ingredient: true,
+                },
+              },
+            },
+          });
+          if (recipe) {
+            itemsToAdd = recipe.ingredients.map((ri) => ({
+              name: ri.ingredient.name,
+              amount: ri.amount || null,
+            }));
+          } else {
+            writeSseEvent(streamingResponse, {
+              type: 'error',
+              message: `I couldn't find a recipe named "${recipe_name}" in your collection.`,
+            });
+            streamingResponse.write('data: [DONE]\n\n');
+            streamingResponse.end();
+            return;
+          }
+        } else {
+          // mode === 'explicit_items'
+          itemsToAdd = (items || []).map((item: any) => {
+            if (typeof item === 'string') {
+              return { name: item, amount: null };
+            }
+            return { name: item.name, amount: item.amount || null };
+          });
+        }
+
+        const user = await ensureUser(req.user!.id);
+        const addedItems: string[] = [];
+
+        if (itemsToAdd.length > 0) {
+          const prismaAny = prisma as any;
+          for (const item of itemsToAdd) {
+            const normalizedName = item.name.trim().toLowerCase();
+            if (!normalizedName) {
+              continue;
+            }
+
+            const ingredient = await ensureIngredient(normalizedName);
+
+            const existing = await prismaAny.shoppingListItem.findUnique({
+              where: {
+                userId_ingredientId: {
+                  userId: user.id,
+                  ingredientId: ingredient.id,
+                },
+              },
+            });
+
+            if (!existing) {
+              await prismaAny.shoppingListItem.create({
+                data: {
+                  userId: user.id,
+                  ingredientId: ingredient.id,
+                  checked: false,
+                  amount: item.amount || null,
+                },
+              });
+              addedItems.push(item.amount ? `${item.amount} ${item.name}` : item.name);
+            } else {
+              if (item.amount) {
+                await prismaAny.shoppingListItem.update({
+                  where: { id: existing.id },
+                  data: {
+                    amount: item.amount,
+                  },
+                });
+              }
+              addedItems.push(item.amount ? `${item.amount} ${item.name}` : item.name);
+            }
+          }
+        }
+
+        writeSseEvent(streamingResponse, {
+          type: 'shoppingListAdded',
+          items: addedItems,
+        });
+        streamingResponse.write('data: [DONE]\n\n');
+        streamingResponse.end();
+      } catch (error) {
+        logAxiosFailure('AI shopping list parse failed', error);
+
+        const streamingResponse = res as FlushableResponse;
+        if (!streamingResponse.headersSent) {
+          streamingResponse.writeHead(200, {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            Connection: 'keep-alive',
+            'X-Accel-Buffering': 'no',
+          });
+          streamingResponse.flushHeaders();
+        }
+
+        writeSseEvent(streamingResponse, {
+          type: 'error',
+          message: getUserFacingAxiosErrorMessage(error),
+        });
+        streamingResponse.write('data: [DONE]\n\n');
+        streamingResponse.end();
+      }
       return;
     }
     default:

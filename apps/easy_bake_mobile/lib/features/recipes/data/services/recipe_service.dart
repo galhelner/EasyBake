@@ -297,13 +297,24 @@ class RecipeService {
     );
 
     final data = response.data as List<dynamic>;
-    return data
+    final suggestions = data
         .map(
           (item) =>
               IngredientSuggestionModel.fromJson(item as Map<String, dynamic>),
         )
         .where((item) => item.name.isNotEmpty)
         .toList();
+
+    final seen = <String>{};
+    final uniqueSuggestions = <IngredientSuggestionModel>[];
+    for (final suggestion in suggestions) {
+      final normalized = suggestion.name.trim().toLowerCase();
+      if (!seen.contains(normalized)) {
+        seen.add(normalized);
+        uniqueSuggestions.add(suggestion);
+      }
+    }
+    return uniqueSuggestions;
   }
 }
 

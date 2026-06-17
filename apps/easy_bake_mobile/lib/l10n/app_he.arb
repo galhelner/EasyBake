@@ -267,9 +267,81 @@
   "@shoppingListFutureDetails": {
     "description": "טקסט תומך שמתאר את תכונת רשימת הקניות העתידית."
   },
+  "shoppingListAddItemTitle": "הוספת פריט",
+  "@shoppingListAddItemTitle": {
+    "description": "Title for the sheet to add a shopping list item."
+  },
+  "shoppingListIngredientNameHint": "שם הרכיב",
+  "@shoppingListIngredientNameHint": {
+    "description": "Label for the ingredient name field in the editor."
+  },
+  "shoppingListIngredientAmountHint": "כמות (למשל 2, 200 גרם, כוס אחת)",
+  "@shoppingListIngredientAmountHint": {
+    "description": "Label for the amount field in the editor."
+  },
+  "addButtonLabel": "הוספה",
+  "@addButtonLabel": {
+    "description": "Label for the button to confirm adding an item."
+  },
+  "shoppingListItemAddedMessage": "הפריט נוסף לרשימת הקניות",
+  "@shoppingListItemAddedMessage": {
+    "description": "Snackbar message shown when an item is successfully added."
+  },
+  "shoppingListItemAddFailedMessage": "הוספת הפריט לרשימת הקניות נכשלה",
+  "@shoppingListItemAddFailedMessage": {
+    "description": "Snackbar message shown when adding an item fails."
+  },
+  "shoppingListLoadFailedMessage": "טעינת רשימת הקניות נכשלה",
+  "@shoppingListLoadFailedMessage": {
+    "description": "Error message shown when loading the shopping list fails on the dashboard."
+  },
+  "shoppingListEditItemTitle": "עריכת פריט",
+  "@shoppingListEditItemTitle": {
+    "description": "Title for the sheet to edit a shopping list item."
+  },
+  "shoppingListItemUpdatedMessage": "הפריט עודכן בהצלחה",
+  "@shoppingListItemUpdatedMessage": {
+    "description": "Snackbar message shown when an item is successfully updated."
+  },
+  "shoppingListItemUpdateFailedMessage": "עדכון הפריט נכשל",
+  "@shoppingListItemUpdateFailedMessage": {
+    "description": "Snackbar message shown when updating an item fails."
+  },
+  "shoppingListItemDeletedMessage": "הפריט נמחק",
+  "@shoppingListItemDeletedMessage": {
+    "description": "Snackbar message shown when an item is successfully deleted."
+  },
+  "shoppingListItemDeleteFailedMessage": "מחיקת הפריט נכשלה",
+  "@shoppingListItemDeleteFailedMessage": {
+    "description": "Snackbar message shown when deleting an item fails."
+  },
+  "confirmDeleteShoppingListItemMessage": "האם אתה בטוח שברצונך למחוק את הפריט הזה?",
+  "@confirmDeleteShoppingListItemMessage": {
+    "description": "Confirmation message shown before deleting a shopping list item."
+  },
+  "deletingShoppingListItemMessage": "מוחק פריט...",
+  "@deletingShoppingListItemMessage": {
+    "description": "Status message shown while deleting a shopping list item."
+  },
+  "shoppingListEmptyTitle": "רשימת הקניות שלך ריקה",
+  "@shoppingListEmptyTitle": {
+    "description": "Title shown when there are no items in the shopping list."
+  },
+  "shoppingListEmptySubtitle": "הקישו על כפתור ה-+ למטה כדי להוסיף פריטים לרשימה.",
+  "@shoppingListEmptySubtitle": {
+    "description": "Subtitle shown when there are no items in the shopping list."
+  },
+  "shoppingListEmptyBackLabel": "חזרה",
+  "@shoppingListEmptyBackLabel": {
+    "description": "Button label to go back from an empty shopping list page."
+  },
   "cookingStepsTitle": "שלבי הבישול",
   "@cookingStepsTitle": {
     "description": "כותרת שמופיעה מעל שלבי ההוראות בדף פרטי המתכון."
+  },
+  "doneLabel": "סיום",
+  "@doneLabel": {
+    "description": "Button label for done actions."
   },
   "recipeScalesTitle": "כמויות",
   "@recipeScalesTitle": {
@@ -437,6 +509,9 @@
   "aiChefYourRecipeFallback": "המתכון שלך",
   "aiChefConnectionRestoredMessage": "החיבור שוחזר. אפשר להמשיך לשוחח.",
   "aiChefRecipeSavedConfirmation": "מעולה! שמרתי את המתכון שלך: {recipeName}",
+  "aiChefAddingToShoppingListMessage": "בטח! אוסיף את הפריטים לרשימת הקניות שלך",
+  "aiChefShoppingListAddedTitle": "הוספתי את הפריטים הבאים לרשימת הקניות שלך:",
+  "aiChefNavigateToShoppingListButton": "לצפייה ברשימת הקניות",
   "shareRecipeIngredientsCount": "{count, plural, =0{אין רכיבים} =1{רכיב אחד} other{{count} רכיבים}}",
   "preferencesSectionTitle": "העדפות",
   "customizeYourExperienceSubtitle": "התאם את החוויה שלך",
@@ -527,6 +602,15 @@
   },
   "@aiChefCreatingRecipeMessage": {
     "description": "Message shown when the AI chef starts creating a recipe."
+  },
+  "@aiChefAddingToShoppingListMessage": {
+    "description": "Greeting shown by the AI chef when adding items to the shopping list."
+  },
+  "@aiChefShoppingListAddedTitle": {
+    "description": "Title shown when items have been successfully added to the shopping list."
+  },
+  "@aiChefNavigateToShoppingListButton": {
+    "description": "Button label to switch to the shopping list screen."
   },
   "@aiChefGenericErrorMessage": {
     "description": "Fallback error message shown in the AI chef chat."

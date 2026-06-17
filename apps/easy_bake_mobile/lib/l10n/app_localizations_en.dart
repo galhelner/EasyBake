@@ -476,7 +476,64 @@ class AppLocalizationsEn extends AppLocalizations {
       'This area is reserved for future shopping list tools, saved grocery lists, and ingredient tracking.';
 
   @override
+  String get shoppingListAddItemTitle => 'Add Item';
+
+  @override
+  String get shoppingListIngredientNameHint => 'Ingredient name';
+
+  @override
+  String get shoppingListIngredientAmountHint => 'Amount (e.g. 2, 200g, 1 cup)';
+
+  @override
+  String get addButtonLabel => 'Add';
+
+  @override
+  String get shoppingListItemAddedMessage => 'Item added to shopping list';
+
+  @override
+  String get shoppingListItemAddFailedMessage =>
+      'Failed to add item to shopping list';
+
+  @override
+  String get shoppingListLoadFailedMessage => 'Failed to load shopping list';
+
+  @override
+  String get shoppingListEditItemTitle => 'Edit Item';
+
+  @override
+  String get shoppingListItemUpdatedMessage => 'Item updated';
+
+  @override
+  String get shoppingListItemUpdateFailedMessage => 'Failed to update item';
+
+  @override
+  String get shoppingListItemDeletedMessage => 'Item deleted';
+
+  @override
+  String get shoppingListItemDeleteFailedMessage => 'Failed to delete item';
+
+  @override
+  String get confirmDeleteShoppingListItemMessage =>
+      'Are you sure you want to delete this item?';
+
+  @override
+  String get deletingShoppingListItemMessage => 'Deleting item...';
+
+  @override
+  String get shoppingListEmptyTitle => 'Your shopping list is empty';
+
+  @override
+  String get shoppingListEmptySubtitle =>
+      'Tap the + button to add items to your list.';
+
+  @override
+  String get shoppingListEmptyBackLabel => 'Go Back';
+
+  @override
   String get cookingStepsTitle => 'Cooking Steps';
+
+  @override
+  String get doneLabel => 'Done';
 
   @override
   String get recipeScalesTitle => 'Recipe scales';
@@ -755,6 +812,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String aiChefRecipeSavedConfirmation(Object recipeName) {
     return 'Great! I\'ve saved your recipe: $recipeName';
   }
+
+  @override
+  String get aiChefAddingToShoppingListMessage =>
+      'Sure! I am adding the items to your shopping list';
+
+  @override
+  String get aiChefShoppingListAddedTitle =>
+      'I added these items to your shopping list:';
+
+  @override
+  String get aiChefNavigateToShoppingListButton => 'View Shopping List';
 
   @override
   String shareRecipeIngredientsCount(num count) {

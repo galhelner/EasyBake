@@ -21,6 +21,7 @@ from app.schemas.router import (
     EmbeddingResponse,
     HealthScoreRequest,
     HealthScoreResponse,
+    ShoppingListResponse,
 )
 from app.services.gemini_service import (
     calculate_health_score,
@@ -30,6 +31,7 @@ from app.services.gemini_service import (
     generate_recipe,
     generate_recipe_from_image,
     parse_search_filters,
+    parse_shopping_list,
     stream_generate_content,
 )
 
@@ -262,6 +264,17 @@ async def search_specialist_endpoint(payload: MessageRequest):
     try:
         return await parse_search_filters(
             _build_specialist_prompt(payload.prompt, payload.recipe_context)
+        )
+    except Exception as e:
+        raise _http_exception_from_error(e)
+
+
+@router.post("/parse-shopping-list", response_model=ShoppingListResponse)
+async def parse_shopping_list_endpoint(payload: MessageRequest):
+    logger.info("Received request for: /api/parse-shopping-list")
+    try:
+        return await parse_shopping_list(
+            payload.prompt, payload.recipe_context
         )
     except Exception as e:
         raise _http_exception_from_error(e)

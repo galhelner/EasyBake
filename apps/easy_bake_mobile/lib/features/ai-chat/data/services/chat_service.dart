@@ -12,6 +12,7 @@ enum ChatEventType {
   intentDetected,
   recipeCreated,
   searchResults,
+  shoppingListAdded,
   error,
   done,
 }
@@ -46,6 +47,7 @@ class ChatEvent {
     this.metadata,
     this.recipe,
     this.searchResults,
+    this.shoppingListItems,
     this.errorKind,
     this.isConnectionIssue = false,
   });
@@ -65,6 +67,9 @@ class ChatEvent {
   const ChatEvent.searchResults(List<dynamic> results)
     : this._(type: ChatEventType.searchResults, searchResults: results);
 
+  const ChatEvent.shoppingListAdded(List<dynamic> items)
+    : this._(type: ChatEventType.shoppingListAdded, shoppingListItems: items);
+
   const ChatEvent.error(
     ChatErrorKind errorKind, {
     bool isConnectionIssue = false,
@@ -83,6 +88,7 @@ class ChatEvent {
   final Map<String, dynamic>? metadata;
   final Map<String, dynamic>? recipe;
   final List<dynamic>? searchResults;
+  final List<dynamic>? shoppingListItems;
   final ChatErrorKind? errorKind;
   final bool isConnectionIssue;
 }
@@ -245,6 +251,14 @@ class ChatService {
             final recipes = decoded['recipes'];
             if (recipes is List) {
               yield ChatEvent.searchResults(recipes);
+            }
+            continue;
+          }
+
+          if (type == 'shoppingListAdded') {
+            final items = decoded['items'];
+            if (items is List) {
+              yield ChatEvent.shoppingListAdded(items);
             }
             continue;
           }

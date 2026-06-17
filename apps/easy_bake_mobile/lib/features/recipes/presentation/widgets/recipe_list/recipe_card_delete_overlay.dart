@@ -150,6 +150,7 @@ class _RecipeCardDeleteOverlayState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Positioned.fill(
       child: Stack(
         children: [
@@ -188,7 +189,7 @@ class _RecipeCardDeleteOverlayState
                   onPressed: _showDeleteConfirmationAndDelete,
                   icon: const Icon(Icons.delete_outline, size: 16),
                   label: Text(
-                    AppLocalizations.of(context)!.deleteButtonLabel,
+                    l10n.deleteButtonLabel,
                     style: const TextStyle(fontSize: 13),
                   ),
                   style: ElevatedButton.styleFrom(

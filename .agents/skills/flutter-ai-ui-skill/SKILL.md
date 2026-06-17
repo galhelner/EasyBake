@@ -1,7 +1,7 @@
 ---
 name: flutter-ai-ui-skill
 description: Enforces professional UI/UX capabilities, Material 3 specifications, fluid micro-interactions, and pristine widget architecture for Flutter layouts in EasyBake.
-aliases: [ui]
+aliases: [ui-skill]
 ---
 
 # Flutter UI/UX Production Guardrails
@@ -35,3 +35,10 @@ Whenever you are asked to generate, modify, or review UI code for the EasyBake a
 ## 5. Visual Flourish & Component Aesthetics
 - Give containers modern Material 3 silhouettes: rounded corners (`BorderRadius.circular(16.0)`) and soft, natural drop shadows (`BoxShadow` with low opacity offsets).
 - Instead of raw loading indicators, implement elegant placeholder state structures (`Shimmer` loading layouts) when parsing asynchronous data streams.
+
+## 6. Verification and Analysis Guidelines
+- **NEVER** run `flutter test` to check changes or compile correctness.
+- **ALWAYS** run `flutter analyze` instead to verify code correctness and check for static analysis issues.
+
+## 7. Git & Version Control Guidelines
+- **NEVER** perform git operations that modify repository state (such as `git add`, `git commit`, `git push`, or `git checkout`).

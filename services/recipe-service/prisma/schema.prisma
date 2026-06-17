@@ -16,6 +16,7 @@ model User {
   fullName  String?
   displayName String?
   recipes   Recipe[]
+  shoppingListItems ShoppingListItem[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -39,6 +40,7 @@ model Ingredient {
   name      String             @unique
   icon      String             @default("")
   recipes   RecipeIngredient[]
+  shoppingListItems ShoppingListItem[]
   createdAt DateTime           @default(now())
   updatedAt DateTime           @updatedAt
 }
@@ -53,5 +55,22 @@ model RecipeIngredient {
   ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
 
   @@unique([recipeId, ingredientId])
+}
+
+model ShoppingListItem {
+  id           String     @id @default(uuid())
+  userId       String
+  ingredientId String
+  checked      Boolean    @default(false)
+  amount       String?
+
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([userId, ingredientId])
+  @@index([userId])
 }
 

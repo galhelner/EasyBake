@@ -17,20 +17,23 @@ Valid intents:
 - HEALTH_AUDIT
 - ASSISTANT_HELP
 - GENERAL_CHAT
+- ADD_TO_SHOPPING_LIST
 
 Hard context rules:
 - If page_context is home, you may only return one of:
 	- CREATE_RECIPE
 	- SEARCH_RECIPES
 	- GENERAL_CHAT
+	- ADD_TO_SHOPPING_LIST
 - If page_context is recipe_detail, you may only return one of:
 	- ASSISTANT_HELP
 	- HEALTH_AUDIT
 	- GENERAL_CHAT
+	- ADD_TO_SHOPPING_LIST
 
 Feature policy by page:
-- home supports only new recipe generation and RAG search features.
-- recipe_detail supports only assistant help and health audit features.
+- home supports only new recipe generation, RAG search, and adding items to the shopping list.
+- recipe_detail supports only assistant help, health audit, and adding items to the shopping list.
 - Therefore, CREATE_RECIPE and SEARCH_RECIPES are not allowed for recipe_detail.
 - Therefore, ASSISTANT_HELP and HEALTH_AUDIT are not allowed for home.
 
@@ -45,6 +48,7 @@ Intent definitions:
 - HEALTH_AUDIT: The user wants nutritional analysis or healthier alternatives.
 - ASSISTANT_HELP: The user wants kitchen help, substitutions, cooking technique advice, or recipe-step help for the current recipe.
 - GENERAL_CHAT: The user asks a food-domain general knowledge question not directly requesting create/search/assistant/health specialist actions.
+- ADD_TO_SHOPPING_LIST: The user wants to add ingredients or items to their shopping list, either from the current recipe, a specific recipe by name, or a list of items.
 
 Examples:
 - page_context=home, message="Find my cake" -> SEARCH_RECIPES
@@ -55,6 +59,9 @@ Examples:
 - page_context=recipe_detail, message="How can I make this recipe healthier?" -> HEALTH_AUDIT
 - page_context=home, message="What is a danish whisk?" -> GENERAL_CHAT
 - page_context=recipe_detail, message="Who won the World Cup?" -> GENERAL_CHAT (low confidence)
+- page_context=recipe_detail, message="add the ingredients of this recipe to my list" -> ADD_TO_SHOPPING_LIST
+- page_context=home, message="add flour, eggs and sugar to my shopping list" -> ADD_TO_SHOPPING_LIST
+- page_context=home, message="add items from my chocolate chip cookies recipe to the list" -> ADD_TO_SHOPPING_LIST
 
 Rules:
 - Return valid JSON only.
