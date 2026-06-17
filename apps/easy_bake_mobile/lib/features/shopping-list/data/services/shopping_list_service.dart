@@ -26,11 +26,16 @@ class ShoppingListService {
 
   Future<ShoppingListItemModel> addShoppingListItem({
     required String ingredientName,
+    String? amount,
     bool checked = false,
   }) async {
     final response = await _dio.post(
       '/shopping-list',
-      data: {'ingredientName': ingredientName, 'checked': checked},
+      data: {
+        'ingredientName': ingredientName,
+        'checked': checked,
+        'amount': ?amount,
+      },
     );
 
     return ShoppingListItemModel.fromJson(
@@ -41,11 +46,15 @@ class ShoppingListService {
   Future<ShoppingListItemModel> updateShoppingListItem({
     required String id,
     String? ingredientName,
+    String? amount,
     bool? checked,
   }) async {
     final payload = <String, dynamic>{};
     if (ingredientName != null) {
       payload['ingredientName'] = ingredientName;
+    }
+    if (amount != null) {
+      payload['amount'] = amount;
     }
     if (checked != null) {
       payload['checked'] = checked;

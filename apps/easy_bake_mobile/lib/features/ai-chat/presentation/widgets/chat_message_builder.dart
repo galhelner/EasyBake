@@ -7,6 +7,7 @@ import 'ai_chef_message_text.dart';
 import 'ai_chef_recipe_preview.dart';
 import 'ai_chef_search_results.dart';
 import 'ai_chef_swap_summary.dart';
+import 'ai_chef_shopping_list_added.dart';
 
 /// Enum for different chat message types
 enum ChatMessageKind {
@@ -16,6 +17,7 @@ enum ChatMessageKind {
   recipePreview,
   swapSummary,
   searchResults,
+  shoppingListAdded,
 }
 
 /// Enum for message sender
@@ -33,6 +35,7 @@ class ChatMessage {
     this.title,
     this.swaps,
     this.recipes,
+    this.shoppingListItems,
   });
 
   const ChatMessage.text(String text, {ChatSender sender = ChatSender.ai})
@@ -80,6 +83,14 @@ class ChatMessage {
           recipes: recipes,
         );
 
+  const ChatMessage.shoppingListAdded({required List<String> items})
+      : this._(
+          text: '',
+          kind: ChatMessageKind.shoppingListAdded,
+          sender: ChatSender.ai,
+          shoppingListItems: items,
+        );
+
   final String text;
   final ChatMessageKind kind;
   final ChatSender sender;
@@ -89,8 +100,9 @@ class ChatMessage {
   final String? title;
   final List<String>? swaps;
   final List<dynamic>? recipes;
+  final List<String>? shoppingListItems;
 
-  ChatMessage copyWith({String? text, List<dynamic>? recipes}) {
+  ChatMessage copyWith({String? text, List<dynamic>? recipes, List<String>? shoppingListItems}) {
     return ChatMessage._(
       text: text ?? this.text,
       kind: kind,
@@ -101,6 +113,7 @@ class ChatMessage {
       title: title,
       swaps: swaps,
       recipes: recipes ?? this.recipes,
+      shoppingListItems: shoppingListItems ?? this.shoppingListItems,
     );
   }
 }
@@ -111,12 +124,14 @@ class ChatMessageBuilder extends StatelessWidget {
     required this.message,
     required this.onOpenRecipe,
     required this.onRecipeTap,
+    this.onNavigateToShoppingList,
     super.key,
   });
 
   final ChatMessage message;
   final VoidCallback onOpenRecipe;
   final Function(Map<String, dynamic>) onRecipeTap;
+  final VoidCallback? onNavigateToShoppingList;
 
   @override
   Widget build(BuildContext context) {
@@ -145,6 +160,11 @@ class ChatMessageBuilder extends StatelessWidget {
           message: message.text,
           recipes: message.recipes ?? [],
           onRecipeTap: onRecipeTap,
+        );
+      case ChatMessageKind.shoppingListAdded:
+        return AiChefShoppingListAdded(
+          items: message.shoppingListItems ?? [],
+          onNavigateToShoppingList: onNavigateToShoppingList ?? () {},
         );
       case ChatMessageKind.text:
         return AiChefMessageText(message.text);

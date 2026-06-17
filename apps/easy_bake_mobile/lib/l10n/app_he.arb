@@ -271,6 +271,14 @@
   "@shoppingListAddItemTitle": {
     "description": "Title for the sheet to add a shopping list item."
   },
+  "shoppingListIngredientNameHint": "שם הרכיב",
+  "@shoppingListIngredientNameHint": {
+    "description": "Label for the ingredient name field in the editor."
+  },
+  "shoppingListIngredientAmountHint": "כמות (למשל 2, 200 גרם, כוס אחת)",
+  "@shoppingListIngredientAmountHint": {
+    "description": "Label for the amount field in the editor."
+  },
   "addButtonLabel": "הוספה",
   "@addButtonLabel": {
     "description": "Label for the button to confirm adding an item."
@@ -501,6 +509,9 @@
   "aiChefYourRecipeFallback": "המתכון שלך",
   "aiChefConnectionRestoredMessage": "החיבור שוחזר. אפשר להמשיך לשוחח.",
   "aiChefRecipeSavedConfirmation": "מעולה! שמרתי את המתכון שלך: {recipeName}",
+  "aiChefAddingToShoppingListMessage": "בטח! אוסיף את הפריטים לרשימת הקניות שלך",
+  "aiChefShoppingListAddedTitle": "הוספתי את הפריטים הבאים לרשימת הקניות שלך:",
+  "aiChefNavigateToShoppingListButton": "לצפייה ברשימת הקניות",
   "shareRecipeIngredientsCount": "{count, plural, =0{אין רכיבים} =1{רכיב אחד} other{{count} רכיבים}}",
   "preferencesSectionTitle": "העדפות",
   "customizeYourExperienceSubtitle": "התאם את החוויה שלך",
@@ -591,6 +602,15 @@
   },
   "@aiChefCreatingRecipeMessage": {
     "description": "Message shown when the AI chef starts creating a recipe."
+  },
+  "@aiChefAddingToShoppingListMessage": {
+    "description": "Greeting shown by the AI chef when adding items to the shopping list."
+  },
+  "@aiChefShoppingListAddedTitle": {
+    "description": "Title shown when items have been successfully added to the shopping list."
+  },
+  "@aiChefNavigateToShoppingListButton": {
+    "description": "Button label to switch to the shopping list screen."
   },
   "@aiChefGenericErrorMessage": {
     "description": "Fallback error message shown in the AI chef chat."

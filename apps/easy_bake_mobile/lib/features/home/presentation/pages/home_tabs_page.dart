@@ -12,6 +12,19 @@ import '../../../shopping-list/presentation/pages/shopping_list_page.dart';
 import 'home_dashboard_page.dart';
 import '../widgets/home_bottom_tab_bar.dart';
 
+class HomeTabIndexNotifier extends Notifier<int> {
+  @override
+  int build() => 2;
+
+  void setIndex(int index) {
+    state = index;
+  }
+}
+
+final homeTabIndexProvider = NotifierProvider<HomeTabIndexNotifier, int>(
+  HomeTabIndexNotifier.new,
+);
+
 class HomeTabsPage extends ConsumerStatefulWidget {
   const HomeTabsPage({super.key});
 
@@ -20,16 +33,12 @@ class HomeTabsPage extends ConsumerStatefulWidget {
 }
 
 class _HomeTabsPageState extends ConsumerState<HomeTabsPage> {
-  int _currentIndex = 2;
-
   void _onTabSelected(int index) {
-    if (_currentIndex == index) {
+    if (ref.read(homeTabIndexProvider) == index) {
       return;
     }
 
-    setState(() {
-      _currentIndex = index;
-    });
+    ref.read(homeTabIndexProvider.notifier).setIndex(index);
   }
 
   Future<void> _openAiChefChat() {
@@ -55,6 +64,7 @@ class _HomeTabsPageState extends ConsumerState<HomeTabsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final currentIndex = ref.watch(homeTabIndexProvider);
     final tabs = [
       const ProfilePage(),
       const CommunityChatRoomPage(),
@@ -69,9 +79,9 @@ class _HomeTabsPageState extends ConsumerState<HomeTabsPage> {
 
     return Scaffold(
       extendBody: false,
-      body: IndexedStack(index: _currentIndex, children: tabs),
+      body: IndexedStack(index: currentIndex, children: tabs),
       bottomNavigationBar: HomeBottomTabBar(
-        currentIndex: _currentIndex,
+        currentIndex: currentIndex,
         onTabSelected: _onTabSelected,
       ),
     );

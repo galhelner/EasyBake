@@ -11,6 +11,8 @@ import '../../data/services/chat_service.dart';
 import '../widgets/ai_chef_chat_popup_composer.dart';
 import '../widgets/ai_chef_chat_popup_header.dart';
 import '../widgets/chat_message_builder.dart';
+import '../../../home/presentation/pages/home_tabs_page.dart';
+import '../../../shopping-list/presentation/providers/shopping_list_providers.dart';
 
 Future<void> showAiChefChatPopup(
   BuildContext context, {
@@ -32,8 +34,7 @@ void notifyRecipeSaved(String recipeName) {
   notifyRecipeSavedInDialog(recipeName);
 }
 
-final _chatDialogStateKey =
-    GlobalKey<_AiChefChatPopupDialogState>();
+final _chatDialogStateKey = GlobalKey<_AiChefChatPopupDialogState>();
 
 Future<void> showAiChefChatPopupDialog(
   BuildContext context, {
@@ -60,7 +61,7 @@ void notifyRecipeSavedInDialog(String recipeName) {
   _chatDialogStateKey.currentState?.addRecipeSavedConfirmation(recipeName);
 }
 
-class _AiChefChatPopupDialog extends StatefulWidget {
+class _AiChefChatPopupDialog extends ConsumerStatefulWidget {
   const _AiChefChatPopupDialog({
     super.key,
     required this.pageContext,
@@ -75,15 +76,15 @@ class _AiChefChatPopupDialog extends StatefulWidget {
   final ValueChanged<Map<String, dynamic>> onOpenRecipeCreated;
 
   @override
-  State<_AiChefChatPopupDialog> createState() => _AiChefChatPopupDialogState();
+  ConsumerState<_AiChefChatPopupDialog> createState() =>
+      _AiChefChatPopupDialogState();
 }
 
-class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
+class _AiChefChatPopupDialogState
+    extends ConsumerState<_AiChefChatPopupDialog> {
   final TextEditingController _questionController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final List<ChatMessage> _messages = [
-    const ChatMessage.connectionChecking(),
-  ];
+  final List<ChatMessage> _messages = [const ChatMessage.connectionChecking()];
 
   StreamSubscription<ChatEvent>? _chatSubscription;
   bool _isAwaitingResponse = false;
@@ -132,7 +133,7 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
     ).read(authNotifierProvider);
     final fullName = authState.fullName?.trim();
     final greeting = fullName != null && fullName.isNotEmpty
-      ? l10n.aiChefGreetingWithName(fullName)
+        ? l10n.aiChefGreetingWithName(fullName)
         : l10n.aiChefGreetingWithoutName;
 
     setState(() {
@@ -235,6 +236,19 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
             _recipeIntentAnnounced = true;
           });
           _scrollToBottom();
+        } else if (intent == 'ADD_TO_SHOPPING_LIST' &&
+            !_recipeIntentAnnounced) {
+          setState(() {
+            _isServiceOnline = true;
+            _removeTypingIndicator();
+            _messages.add(
+              ChatMessage.text(l10n.aiChefAddingToShoppingListMessage),
+            );
+            _messages.add(const ChatMessage.typing());
+            _typingMessageIndex = _messages.length - 1;
+            _recipeIntentAnnounced = true;
+          });
+          _scrollToBottom();
         }
       case ChatEventType.recipeCreated:
         final recipe = event.recipe;
@@ -251,6 +265,21 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
               recipeTitle: recipeTitle,
               imageUrl: imageUrl,
               recipePayload: recipe,
+            ),
+          );
+          _recipeIntentAnnounced = false;
+          _isAwaitingResponse = false;
+        });
+        _scrollToBottom();
+      case ChatEventType.shoppingListAdded:
+        final items = event.shoppingListItems;
+        setState(() {
+          _isServiceOnline = true;
+          _removeTypingIndicator();
+          _activeStreamingMessageIndex = null;
+          _messages.add(
+            ChatMessage.shoppingListAdded(
+              items: items != null ? List<String>.from(items) : const [],
             ),
           );
           _recipeIntentAnnounced = false;
@@ -588,6 +617,8 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
                                         widget.onOpenRecipeCreated(payload);
                                       },
                                       onRecipeTap: _openRecipeDetailsFromSearch,
+                                      onNavigateToShoppingList:
+                                          _navigateToShoppingList,
                                     ),
                                   ),
                                 ),
@@ -639,9 +670,7 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
     }
 
     setState(() {
-      _messages.add(
-        ChatMessage.text(l10n.aiChefConnectionRestoredMessage),
-      );
+      _messages.add(ChatMessage.text(l10n.aiChefConnectionRestoredMessage));
     });
     _scrollToBottom();
   }
@@ -665,11 +694,16 @@ class _AiChefChatPopupDialogState extends State<_AiChefChatPopupDialog> {
 
     setState(() {
       _messages.add(
-        ChatMessage.text(
-          l10n.aiChefRecipeSavedConfirmation(recipeName),
-        ),
+        ChatMessage.text(l10n.aiChefRecipeSavedConfirmation(recipeName)),
       );
     });
     _scrollToBottom();
+  }
+
+  void _navigateToShoppingList() {
+    Navigator.of(context).pop();
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    ref.invalidate(shoppingListItemsProvider);
+    ref.read(homeTabIndexProvider.notifier).setIndex(4);
   }
 }

@@ -46,14 +46,18 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
     final l10n = AppLocalizations.of(context)!;
     await _showEditorDialog(
       title: l10n.shoppingListAddItemTitle,
-      initialValue: '',
+      initialName: '',
+      initialAmount: '',
       confirmLabel: l10n.addButtonLabel,
-      onConfirm: (ingredientName) async {
+      onConfirm: (ingredientName, amount) async {
         if (ingredientName.isEmpty) return;
         try {
           await ref
               .read(shoppingListServiceProvider)
-              .addShoppingListItem(ingredientName: ingredientName);
+              .addShoppingListItem(
+                ingredientName: ingredientName,
+                amount: amount.isNotEmpty ? amount : null,
+              );
           ref.invalidate(shoppingListItemsProvider);
         } catch (_) {
           rethrow;
@@ -66,14 +70,19 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
     final l10n = AppLocalizations.of(context)!;
     await _showEditorDialog(
       title: l10n.shoppingListEditItemTitle,
-      initialValue: item.ingredient.name,
+      initialName: item.ingredient.name,
+      initialAmount: item.amount ?? '',
       confirmLabel: l10n.saveButtonLabel,
-      onConfirm: (ingredientName) async {
+      onConfirm: (ingredientName, amount) async {
         if (ingredientName.isEmpty) return;
         try {
           await ref
               .read(shoppingListServiceProvider)
-              .updateShoppingListItem(id: item.id, ingredientName: ingredientName);
+              .updateShoppingListItem(
+                id: item.id,
+                ingredientName: ingredientName,
+                amount: amount.isNotEmpty ? amount : null,
+              );
           ref.invalidate(shoppingListItemsProvider);
           _showSnackBar(l10n.shoppingListItemUpdatedMessage);
         } catch (_) {
@@ -178,9 +187,10 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
 
   Future<void> _showEditorDialog({
     required String title,
-    required String initialValue,
+    required String initialName,
+    required String initialAmount,
     required String confirmLabel,
-    required Future<void> Function(String) onConfirm,
+    required Future<void> Function(String, String) onConfirm,
   }) {
     return showDialog<void>(
       context: context,
@@ -188,7 +198,8 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
       builder: (dialogContext) {
         return IngredientEditorDialog(
           title: title,
-          initialValue: initialValue,
+          initialName: initialName,
+          initialAmount: initialAmount,
           confirmLabel: confirmLabel,
           recipeService: ref.read(recipeServiceProvider),
           onConfirm: onConfirm,
@@ -302,6 +313,9 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
                     ),
                     data: (items) {
                       if (items.isEmpty) {
+                        if (shoppingListAsync.isLoading) {
+                          return const ShoppingListLoadingState();
+                        }
                         return const ShoppingListEmptyState();
                       }
 

@@ -21,6 +21,7 @@ from app.schemas.router import (
     RouterRequest,
     RouterResponse,
     SearchFiltersResponse,
+    ShoppingListResponse,
 )
 
 MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
@@ -33,8 +34,8 @@ client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 SchemaT = TypeVar("SchemaT", bound=BaseModel)
 IngredientListAdapter = TypeAdapter(list[IngredientSchema])
 ALLOWED_INTENTS_BY_CONTEXT: dict[str, set[str]] = {
-    "home": {"CREATE_RECIPE", "SEARCH_RECIPES", "GENERAL_CHAT"},
-    "recipe_detail": {"ASSISTANT_HELP", "HEALTH_AUDIT", "GENERAL_CHAT"},
+    "home": {"CREATE_RECIPE", "SEARCH_RECIPES", "GENERAL_CHAT", "ADD_TO_SHOPPING_LIST"},
+    "recipe_detail": {"ASSISTANT_HELP", "HEALTH_AUDIT", "GENERAL_CHAT", "ADD_TO_SHOPPING_LIST"},
 }
 
 
@@ -253,6 +254,20 @@ async def parse_search_filters(prompt: str) -> SearchFiltersResponse:
         prompt,
         "search_specialist.md",
         SearchFiltersResponse,
+    )
+
+
+async def parse_shopping_list(prompt: str, recipe_context: str | None = None) -> ShoppingListResponse:
+    contents = (
+        f"recipe_context:\n{recipe_context}\n\nprompt: {prompt}"
+        if recipe_context
+        else f"prompt: {prompt}"
+    )
+    return await asyncio.to_thread(
+        _generate_structured_content,
+        contents,
+        "shopping_list_specialist.md",
+        ShoppingListResponse,
     )
 
 

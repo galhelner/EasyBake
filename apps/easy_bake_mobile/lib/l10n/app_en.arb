@@ -271,6 +271,14 @@
   "@shoppingListAddItemTitle": {
     "description": "Title for the sheet to add a shopping list item."
   },
+  "shoppingListIngredientNameHint": "Ingredient name",
+  "@shoppingListIngredientNameHint": {
+    "description": "Label for the ingredient name field in the editor."
+  },
+  "shoppingListIngredientAmountHint": "Amount (e.g. 2, 200g, 1 cup)",
+  "@shoppingListIngredientAmountHint": {
+    "description": "Label for the amount field in the editor."
+  },
   "addButtonLabel": "Add",
   "@addButtonLabel": {
     "description": "Label for the button to confirm adding an item."
@@ -501,6 +509,9 @@
   "aiChefYourRecipeFallback": "your recipe",
   "aiChefConnectionRestoredMessage": "Connection restored. You can continue chatting.",
   "aiChefRecipeSavedConfirmation": "Great! I've saved your recipe: {recipeName}",
+  "aiChefAddingToShoppingListMessage": "Sure! I am adding the items to your shopping list",
+  "aiChefShoppingListAddedTitle": "I added these items to your shopping list:",
+  "aiChefNavigateToShoppingListButton": "View Shopping List",
   "shareRecipeIngredientsCount": "{count, plural, =0{No ingredients} =1{1 ingredient} other{{count} ingredients}}",
   "preferencesSectionTitle": "Preferences",
   "customizeYourExperienceSubtitle": "Customize your experience",
@@ -912,6 +923,15 @@
   },
   "@aiChefCreatingRecipeMessage": {
     "description": "Message shown when the AI chef starts creating a recipe."
+  },
+  "@aiChefAddingToShoppingListMessage": {
+    "description": "Greeting shown by the AI chef when adding items to the shopping list."
+  },
+  "@aiChefShoppingListAddedTitle": {
+    "description": "Title shown when items have been successfully added to the shopping list."
+  },
+  "@aiChefNavigateToShoppingListButton": {
+    "description": "Button label to switch to the shopping list screen."
   },
   "@aiChefGenericErrorMessage": {
     "description": "Fallback error message shown in the AI chef chat."

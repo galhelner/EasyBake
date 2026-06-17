@@ -62,6 +62,7 @@ model ShoppingListItem {
   userId       String
   ingredientId String
   checked      Boolean    @default(false)
+  amount       String?
 
   user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   ingredient   Ingredient @relation(fields: [ingredientId], references: [id])

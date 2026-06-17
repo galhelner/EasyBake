@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_bake_mobile/features/recipes/data/services/recipe_service.dart';
 import 'package:easy_bake_mobile/features/recipes/domain/models/ingredient_suggestion_model.dart';
@@ -7,25 +8,29 @@ class IngredientEditorDialog extends StatefulWidget {
   const IngredientEditorDialog({
     super.key,
     required this.title,
-    required this.initialValue,
+    required this.initialName,
+    required this.initialAmount,
     required this.confirmLabel,
     required this.recipeService,
     required this.onConfirm,
   });
 
   final String title;
-  final String initialValue;
+  final String initialName;
+  final String initialAmount;
   final String confirmLabel;
   final RecipeService recipeService;
-  final Future<void> Function(String) onConfirm;
+  final Future<void> Function(String name, String amount) onConfirm;
 
   @override
   State<IngredientEditorDialog> createState() => _IngredientEditorDialogState();
 }
 
 class _IngredientEditorDialogState extends State<IngredientEditorDialog> {
-  late final TextEditingController _controller;
-  late final FocusNode _focusNode;
+  late final TextEditingController _nameController;
+  late final TextEditingController _amountController;
+  late final FocusNode _nameFocusNode;
+  late final FocusNode _amountFocusNode;
   Timer? _debounce;
   List<IngredientSuggestionModel> _suggestions = const [];
   bool _loadingSuggestions = false;
@@ -34,21 +39,25 @@ class _IngredientEditorDialogState extends State<IngredientEditorDialog> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.initialValue);
-    _focusNode = FocusNode();
+    _nameController = TextEditingController(text: widget.initialName);
+    _amountController = TextEditingController(text: widget.initialAmount);
+    _nameFocusNode = FocusNode();
+    _amountFocusNode = FocusNode();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        _focusNode.requestFocus();
+        _nameFocusNode.requestFocus();
       }
     });
-    _loadSuggestions(_controller.text);
+    _loadSuggestions(_nameController.text);
   }
 
   @override
   void dispose() {
     _debounce?.cancel();
-    _controller.dispose();
-    _focusNode.dispose();
+    _nameController.dispose();
+    _amountController.dispose();
+    _nameFocusNode.dispose();
+    _amountFocusNode.dispose();
     super.dispose();
   }
 
@@ -99,8 +108,9 @@ class _IngredientEditorDialogState extends State<IngredientEditorDialog> {
   }
 
   Future<void> _submit() async {
-    final value = _controller.text.trim();
-    if (value.isEmpty || _submitting) {
+    final name = _nameController.text.trim();
+    final amount = _amountController.text.trim();
+    if (name.isEmpty || _submitting) {
       return;
     }
 
@@ -109,7 +119,7 @@ class _IngredientEditorDialogState extends State<IngredientEditorDialog> {
     });
 
     try {
-      await widget.onConfirm(value);
+      await widget.onConfirm(name, amount);
       if (mounted) {
         Navigator.of(context).pop();
       }
@@ -124,6 +134,8 @@ class _IngredientEditorDialogState extends State<IngredientEditorDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return PopScope(
       canPop: !_submitting,
       child: Dialog(
@@ -135,17 +147,17 @@ class _IngredientEditorDialogState extends State<IngredientEditorDialog> {
               clipBehavior: Clip.none,
               children: [
                 Container(
-                  width: 270,
+                  width: 280,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
-                    vertical: 18,
+                    vertical: 20,
                   ),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(24),
                     boxShadow: const [
                       BoxShadow(
-                        color: Color(0x33000000),
+                        color: Color(0x2217324B),
                         blurRadius: 24,
                         offset: Offset(0, 10),
                       ),
@@ -165,34 +177,60 @@ class _IngredientEditorDialogState extends State<IngredientEditorDialog> {
                         widget.title,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
-                          color: Color(0xFF2E4E69),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF0F3559),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
                           decoration: TextDecoration.none,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 18),
+                      
+                      // Ingredient Name Label
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Text(
+                          l10n.shoppingListIngredientNameHint,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF2E4E69),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      // Ingredient Name Field
                       Material(
                         color: Colors.transparent,
                         child: TextField(
-                          controller: _controller,
-                          focusNode: _focusNode,
-                          minLines: 1,
-                          maxLines: 3,
-                          keyboardType: TextInputType.multiline,
+                          controller: _nameController,
+                          focusNode: _nameFocusNode,
+                          style: const TextStyle(fontSize: 14, color: Color(0xFF17324B), fontWeight: FontWeight.w600),
+                          textInputAction: TextInputAction.next,
                           onChanged: (value) {
                             setState(() {});
                             _loadSuggestions(value);
                           },
-                          onSubmitted: (_) => _submit(),
-                          style: const TextStyle(fontSize: 14),
-                          decoration: const InputDecoration(
-                             isDense: true,
-                             contentPadding: EdgeInsets.symmetric(
-                               horizontal: 12,
-                               vertical: 10,
-                             ),
-                             border: OutlineInputBorder(),
+                          onSubmitted: (_) {
+                            _amountFocusNode.requestFocus();
+                          },
+                          decoration: InputDecoration(
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(color: Color(0xFFDAE6F5)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(color: Color(0xFFDAE6F5)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(color: Color(0xFF8BB3D6), width: 1.5),
+                            ),
                           ),
                         ),
                       ),
@@ -209,7 +247,7 @@ class _IngredientEditorDialogState extends State<IngredientEditorDialog> {
                         Container(
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(10),
                             border: Border.all(color: const Color(0xFFE4EBF2)),
                           ),
                           child: ConstrainedBox(
@@ -219,7 +257,7 @@ class _IngredientEditorDialogState extends State<IngredientEditorDialog> {
                               child: ListView.separated(
                                 shrinkWrap: true,
                                 itemCount: _suggestions.length,
-                                separatorBuilder: (_, index) => const Divider(height: 1),
+                                separatorBuilder: (_, index) => const Divider(height: 1, color: Color(0xFFE4EBF2)),
                                 itemBuilder: (context, index) {
                                   final suggestion = _suggestions[index];
                                   return Material(
@@ -235,7 +273,7 @@ class _IngredientEditorDialogState extends State<IngredientEditorDialog> {
                                             ),
                                       title: Text(
                                         suggestion.name,
-                                        style: const TextStyle(fontSize: 12),
+                                        style: const TextStyle(fontSize: 12, color: Color(0xFF17324B), fontWeight: FontWeight.w600),
                                       ),
                                       onTap: () {
                                         _debounce?.cancel();
@@ -243,13 +281,14 @@ class _IngredientEditorDialogState extends State<IngredientEditorDialog> {
                                         final textValue = hasIcon
                                             ? '${suggestion.icon.trim()} ${suggestion.name}'
                                             : suggestion.name;
-                                        _controller.text = textValue;
-                                        _controller.selection = TextSelection.collapsed(
+                                        _nameController.text = textValue;
+                                        _nameController.selection = TextSelection.collapsed(
                                           offset: textValue.length,
                                         );
                                         setState(() {
                                           _suggestions = const [];
                                         });
+                                        _amountFocusNode.requestFocus();
                                       },
                                     ),
                                   );
@@ -259,14 +298,68 @@ class _IngredientEditorDialogState extends State<IngredientEditorDialog> {
                           ),
                         ),
                       ],
-                      const SizedBox(height: 16),
+                      
+                      const SizedBox(height: 14),
+
+                      // Ingredient Amount Label
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Text(
+                          l10n.recipeIngredientAmountHint,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF2E4E69),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      // Ingredient Amount Field
+                      Material(
+                        color: Colors.transparent,
+                        child: TextField(
+                          controller: _amountController,
+                          focusNode: _amountFocusNode,
+                          style: const TextStyle(fontSize: 14, color: Color(0xFF17324B), fontWeight: FontWeight.w600),
+                          textInputAction: TextInputAction.done,
+                          onSubmitted: (_) => _submit(),
+                          decoration: InputDecoration(
+                            isDense: true,
+                            hintText: l10n.shoppingListIngredientAmountHint,
+                            hintStyle: const TextStyle(color: Color(0xFF8BB3D6), fontSize: 13, fontWeight: FontWeight.normal),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(color: Color(0xFFDAE6F5)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(color: Color(0xFFDAE6F5)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(color: Color(0xFF8BB3D6), width: 1.5),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
                       SizedBox(
                         width: double.infinity,
+                        height: 44,
                         child: ElevatedButton(
-                          onPressed: _controller.text.trim().isEmpty || _submitting ? null : _submit,
+                          onPressed: _nameController.text.trim().isEmpty || _submitting ? null : _submit,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF8BB3D6),
+                            backgroundColor: const Color(0xFF2F5D7E),
                             foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                           child: _submitting
                               ? const SizedBox(
@@ -277,15 +370,18 @@ class _IngredientEditorDialogState extends State<IngredientEditorDialog> {
                                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                   ),
                                 )
-                              : Text(widget.confirmLabel),
+                              : Text(
+                                  widget.confirmLabel,
+                                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                                ),
                         ),
                       ),
                     ],
                   ),
                 ),
                 Positioned(
-                  top: -4,
-                  right: -4,
+                  top: 4,
+                  right: 4,
                   child: Material(
                     color: Colors.transparent,
                     child: IconButton(

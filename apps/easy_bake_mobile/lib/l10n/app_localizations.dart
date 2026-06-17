@@ -944,6 +944,18 @@ abstract class AppLocalizations {
   /// **'Add Item'**
   String get shoppingListAddItemTitle;
 
+  /// Label for the ingredient name field in the editor.
+  ///
+  /// In en, this message translates to:
+  /// **'Ingredient name'**
+  String get shoppingListIngredientNameHint;
+
+  /// Label for the amount field in the editor.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount (e.g. 2, 200g, 1 cup)'**
+  String get shoppingListIngredientAmountHint;
+
   /// Label for the button to confirm adding an item.
   ///
   /// In en, this message translates to:
@@ -1477,6 +1489,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Great! I\'ve saved your recipe: {recipeName}'**
   String aiChefRecipeSavedConfirmation(Object recipeName);
+
+  /// Greeting shown by the AI chef when adding items to the shopping list.
+  ///
+  /// In en, this message translates to:
+  /// **'Sure! I am adding the items to your shopping list'**
+  String get aiChefAddingToShoppingListMessage;
+
+  /// Title shown when items have been successfully added to the shopping list.
+  ///
+  /// In en, this message translates to:
+  /// **'I added these items to your shopping list:'**
+  String get aiChefShoppingListAddedTitle;
+
+  /// Button label to switch to the shopping list screen.
+  ///
+  /// In en, this message translates to:
+  /// **'View Shopping List'**
+  String get aiChefNavigateToShoppingListButton;
 
   /// Ingredient count label shown on each recipe tile in the share recipe dialog.
   ///

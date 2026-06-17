@@ -471,6 +471,13 @@ class AppLocalizationsHe extends AppLocalizations {
   String get shoppingListAddItemTitle => 'הוספת פריט';
 
   @override
+  String get shoppingListIngredientNameHint => 'שם הרכיב';
+
+  @override
+  String get shoppingListIngredientAmountHint =>
+      'כמות (למשל 2, 200 גרם, כוס אחת)';
+
+  @override
   String get addButtonLabel => 'הוספה';
 
   @override
@@ -786,6 +793,17 @@ class AppLocalizationsHe extends AppLocalizations {
   String aiChefRecipeSavedConfirmation(Object recipeName) {
     return 'מעולה! שמרתי את המתכון שלך: $recipeName';
   }
+
+  @override
+  String get aiChefAddingToShoppingListMessage =>
+      'בטח! אוסיף את הפריטים לרשימת הקניות שלך';
+
+  @override
+  String get aiChefShoppingListAddedTitle =>
+      'הוספתי את הפריטים הבאים לרשימת הקניות שלך:';
+
+  @override
+  String get aiChefNavigateToShoppingListButton => 'לצפייה ברשימת הקניות';
 
   @override
   String shareRecipeIngredientsCount(num count) {

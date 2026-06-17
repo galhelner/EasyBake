@@ -40,8 +40,20 @@ class RouterResponse(BaseModel):
         "HEALTH_AUDIT",
         "ASSISTANT_HELP",
         "GENERAL_CHAT",
+        "ADD_TO_SHOPPING_LIST",
     ]
     confidence: float = Field(..., ge=0.0, le=1.0)
+
+
+class ShoppingListItemInput(BaseModel):
+    name: str = Field(..., description="Name of the ingredient")
+    amount: str | None = Field(default=None, description="Amount or quantity, e.g. '2', '200 g', '1 cup', or null if not specified")
+
+
+class ShoppingListResponse(BaseModel):
+    mode: Literal["recipe_context", "explicit_items", "recipe_by_name"]
+    items: list[ShoppingListItemInput] = Field(default_factory=list, description="Ingredients/items to add directly")
+    recipe_name: str | None = Field(default=None, description="Name of the recipe to look up")
 
 
 class MessageRequest(BaseModel):

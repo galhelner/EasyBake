@@ -23,6 +23,7 @@ class ShoppingListItemModel {
     required this.id,
     required this.checked,
     required this.ingredient,
+    this.amount,
     this.createdAt,
     this.updatedAt,
   });
@@ -30,6 +31,7 @@ class ShoppingListItemModel {
   final String id;
   final bool checked;
   final ShoppingListIngredientModel ingredient;
+  final String? amount;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -42,6 +44,7 @@ class ShoppingListItemModel {
     return ShoppingListItemModel(
       id: (json['id'] as String? ?? '').trim(),
       checked: json['checked'] as bool? ?? false,
+      amount: json['amount'] as String?,
       ingredient: ingredient,
       createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? ''),
       updatedAt: DateTime.tryParse(json['updatedAt']?.toString() ?? ''),
@@ -52,6 +55,7 @@ class ShoppingListItemModel {
     String? id,
     bool? checked,
     ShoppingListIngredientModel? ingredient,
+    String? amount,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -59,6 +63,7 @@ class ShoppingListItemModel {
       id: id ?? this.id,
       checked: checked ?? this.checked,
       ingredient: ingredient ?? this.ingredient,
+      amount: amount ?? this.amount,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

@@ -8,14 +8,16 @@ const prismaAny = prisma as any;
 const shoppingListItemSchema = z.object({
   ingredientName: z.string().trim().min(1),
   checked: z.boolean().optional(),
+  amount: z.string().trim().optional().nullable(),
 });
 
 const updateShoppingListItemSchema = z
   .object({
     ingredientName: z.string().trim().min(1).optional(),
     checked: z.boolean().optional(),
+    amount: z.string().trim().optional().nullable(),
   })
-  .refine((value) => value.ingredientName !== undefined || value.checked !== undefined, {
+  .refine((value) => value.ingredientName !== undefined || value.checked !== undefined || value.amount !== undefined, {
     message: 'At least one field must be provided',
   });
 
@@ -55,12 +57,14 @@ const ensureIngredient = async (ingredientName: string) => {
 const mapShoppingListItem = (item: {
   id: string;
   checked: boolean;
+  amount?: string | null;
   createdAt: Date;
   updatedAt: Date;
   ingredient: { id: string; name: string; icon: string };
 }) => ({
   id: item.id,
   checked: item.checked,
+  amount: item.amount || null,
   createdAt: item.createdAt,
   updatedAt: item.updatedAt,
   ingredient: {
@@ -118,6 +122,7 @@ export const createShoppingListItem = async (
     const user = await ensureUser(req.user.id);
     const ingredient = await ensureIngredient(parsed.data.ingredientName);
     const checked = parsed.data.checked ?? false;
+    const amount = parsed.data.amount ?? null;
 
     const shoppingListItem = await prismaAny.shoppingListItem.upsert({
       where: {
@@ -128,11 +133,13 @@ export const createShoppingListItem = async (
       },
       update: {
         checked,
+        amount,
       },
       create: {
         userId: user.id,
         ingredientId: ingredient.id,
         checked,
+        amount,
       },
       include: {
         ingredient: true,
@@ -182,8 +189,9 @@ export const updateShoppingListItem = async (
 
     const nextIngredientName = parsed.data.ingredientName?.trim();
     const nextChecked = parsed.data.checked;
+    const nextAmount = parsed.data.amount;
 
-    if (!nextIngredientName && typeof nextChecked !== 'boolean') {
+    if (!nextIngredientName && typeof nextChecked !== 'boolean' && nextAmount === undefined) {
       res.status(400).json({ error: 'Validation error' });
       return;
     }
@@ -203,12 +211,14 @@ export const updateShoppingListItem = async (
 
         if (conflictingItem && conflictingItem.id !== existingItem.id) {
           const mergedChecked = Boolean(conflictingItem.checked || existingItem.checked || nextChecked);
+          const mergedAmount = nextAmount !== undefined ? nextAmount : conflictingItem.amount || existingItem.amount;
 
           const [updatedItem] = await prisma.$transaction([
             prismaAny.shoppingListItem.update({
               where: { id: conflictingItem.id },
               data: {
                 checked: mergedChecked,
+                amount: mergedAmount,
               },
               include: {
                 ingredient: true,
@@ -229,6 +239,7 @@ export const updateShoppingListItem = async (
         data: {
           ingredientId: ingredient.id,
           ...(typeof nextChecked === 'boolean' ? { checked: nextChecked } : {}),
+          ...(nextAmount !== undefined ? { amount: nextAmount } : {}),
         },
         include: {
           ingredient: true,
@@ -242,7 +253,8 @@ export const updateShoppingListItem = async (
     const updatedItem = await prismaAny.shoppingListItem.update({
       where: { id: existingItem.id },
       data: {
-        checked: nextChecked,
+        ...(typeof nextChecked === 'boolean' ? { checked: nextChecked } : {}),
+        ...(nextAmount !== undefined ? { amount: nextAmount } : {}),
       },
       include: {
         ingredient: true,

@@ -479,6 +479,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shoppingListAddItemTitle => 'Add Item';
 
   @override
+  String get shoppingListIngredientNameHint => 'Ingredient name';
+
+  @override
+  String get shoppingListIngredientAmountHint => 'Amount (e.g. 2, 200g, 1 cup)';
+
+  @override
   String get addButtonLabel => 'Add';
 
   @override
@@ -806,6 +812,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String aiChefRecipeSavedConfirmation(Object recipeName) {
     return 'Great! I\'ve saved your recipe: $recipeName';
   }
+
+  @override
+  String get aiChefAddingToShoppingListMessage =>
+      'Sure! I am adding the items to your shopping list';
+
+  @override
+  String get aiChefShoppingListAddedTitle =>
+      'I added these items to your shopping list:';
+
+  @override
+  String get aiChefNavigateToShoppingListButton => 'View Shopping List';
 
   @override
   String shareRecipeIngredientsCount(num count) {

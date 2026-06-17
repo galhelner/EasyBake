@@ -58,21 +58,113 @@ class ShoppingListItemCard extends StatelessWidget {
                   const SizedBox(width: 14),
                 ],
                 Expanded(
-                  child: Text(
-                    item.ingredient.name,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      decoration: checked
-                          ? TextDecoration.lineThrough
-                          : TextDecoration.none,
-                      decorationColor: const Color(0xFF5D6F69),
-                      decorationThickness: 2,
-                    ),
-                  ),
+                  child: isEditMode
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              item.ingredient.name,
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: textColor,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                decoration: checked
+                                    ? TextDecoration.lineThrough
+                                    : TextDecoration.none,
+                                decorationColor: const Color(0xFF5D6F69),
+                                decorationThickness: 2,
+                              ),
+                            ),
+                            if (item.amount != null && item.amount!.isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: checked
+                                      ? const Color(0xFFD0E6D4)
+                                      : const Color(0xFFE6F0FA),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: checked
+                                        ? const Color(0xFFB5D0BC)
+                                        : const Color(0xFFD2E3F3),
+                                  ),
+                                ),
+                                child: Text(
+                                  item.amount!,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: checked
+                                        ? const Color(0xFF4A6852)
+                                        : const Color(0xFF2F5D7E),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        )
+                      : Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                item.ingredient.name,
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: textColor,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  decoration: checked
+                                      ? TextDecoration.lineThrough
+                                      : TextDecoration.none,
+                                  decorationColor: const Color(0xFF5D6F69),
+                                  decorationThickness: 2,
+                                ),
+                              ),
+                            ),
+                            if (item.amount != null && item.amount!.isNotEmpty) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: checked
+                                      ? const Color(0xFFD0E6D4)
+                                      : const Color(0xFFE6F0FA),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: checked
+                                        ? const Color(0xFFB5D0BC)
+                                        : const Color(0xFFD2E3F3),
+                                  ),
+                                ),
+                                child: Text(
+                                  item.amount!,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: checked
+                                        ? const Color(0xFF4A6852)
+                                        : const Color(0xFF2F5D7E),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
                 ),
                 if (isEditMode) ...[
                   Container(

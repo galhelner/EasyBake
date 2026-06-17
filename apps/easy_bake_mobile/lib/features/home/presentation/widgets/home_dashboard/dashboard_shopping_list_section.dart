@@ -106,20 +106,56 @@ class DashboardShoppingListSection extends ConsumerWidget {
                         const SizedBox(width: 8),
                       ],
                       Expanded(
-                        child: Text(
-                          item.ingredient.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: textColor,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            decoration: isChecked
-                                ? TextDecoration.lineThrough
-                                : TextDecoration.none,
-                            decorationColor: const Color(0xFF5D6F69),
-                            decorationThickness: 2,
-                          ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                item.ingredient.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: textColor,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  decoration: isChecked
+                                      ? TextDecoration.lineThrough
+                                      : TextDecoration.none,
+                                  decorationColor: const Color(0xFF5D6F69),
+                                  decorationThickness: 2,
+                                ),
+                              ),
+                            ),
+                            if (item.amount != null && item.amount!.isNotEmpty) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isChecked
+                                      ? const Color(0xFFD0E6D4)
+                                      : const Color(0xFFE6F0FA),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: isChecked
+                                        ? const Color(0xFFB5D0BC)
+                                        : const Color(0xFFD2E3F3),
+                                  ),
+                                ),
+                                child: Text(
+                                  item.amount!,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: isChecked
+                                        ? const Color(0xFF4A6852)
+                                        : const Color(0xFF2F5D7E),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                     ],
