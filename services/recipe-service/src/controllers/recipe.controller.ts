@@ -194,6 +194,7 @@ const createRecipeSchema = z.object({
     parseOptionalHealthScore,
     z.number().int().min(0).max(100).optional(),
   ),
+  folderId: z.string().uuid().optional().nullable(),
 }).strict();
 
 const semanticSearchSchema = z.object({
@@ -223,6 +224,7 @@ export interface RecipeDTO {
   imageUrl: string;
   authorId: string;
   ingredients: IngredientDTO[];
+  folderId?: string | null;
 }
 
 const mapRecipeToDTO = (recipe: any): RecipeDTO => ({
@@ -241,6 +243,7 @@ const mapRecipeToDTO = (recipe: any): RecipeDTO => ({
           ? ri.amount.trim()
           : undefined,
     })) ?? [],
+  folderId: recipe.folderId ?? null,
 });
 
 interface NormalizedIngredient {
@@ -398,7 +401,7 @@ export const createRecipe = async (
       return;
     }
 
-    const { title, instructions, ingredients, healthScore: clientHealthScore } = parsed.data;
+    const { title, instructions, ingredients, healthScore: clientHealthScore, folderId } = parsed.data;
     const imageUrl = req.file ? await uploadImage(req.file) : DEFAULT_RECIPE_IMAGE_URL;
 
     const normalizedIngredients = normalizeIngredients(ingredients);
@@ -416,6 +419,7 @@ export const createRecipe = async (
       title,
       instructions,
       healthScore,
+      folderId: folderId || null,
       author: {
         connectOrCreate: {
           where: { authId: req.user.id },
@@ -732,7 +736,7 @@ export const updateRecipe = async (
       return;
     }
 
-    const { title, instructions, ingredients, remove_image: removeImage, healthScore: clientHealthScore } = parsed.data;
+    const { title, instructions, ingredients, remove_image: removeImage, healthScore: clientHealthScore, folderId } = parsed.data;
     const normalizedIngredients = normalizeIngredients(ingredients);
     const ingredientNames = normalizedIngredients.map((ingredient) => ingredient.name);
     const healthScore =
@@ -759,6 +763,7 @@ export const updateRecipe = async (
         instructions,
         healthScore,
         imageUrl,
+        folderId: folderId !== undefined ? (folderId || null) : undefined,
         ingredients: {
           deleteMany: {},
           create: normalizedIngredients.map((ingredient) => ({
@@ -888,6 +893,90 @@ export const deleteRecipe = async (
      
     console.error('Error deleting recipe', error);
     res.status(500).json({ error: 'Failed to delete recipe' });
+  }
+};
+
+const moveRecipeSchema = z.object({
+  folderId: z.string().uuid().optional().nullable(),
+});
+
+export const moveRecipe = async (
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    if (!req.user?.id) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const { id } = req.params;
+    const parsed = moveRecipeSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation error', details: parsed.error.flatten() });
+      return;
+    }
+
+    const { folderId } = parsed.data;
+
+    const existingRecipe = await prisma.recipe.findFirst({
+      where: {
+        id,
+        author: {
+          authId: req.user.id,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!existingRecipe) {
+      res.status(404).json({ error: 'Recipe not found' });
+      return;
+    }
+
+    if (folderId) {
+      const user = await prisma.user.findUnique({
+        where: { authId: req.user.id },
+        select: { id: true },
+      });
+      if (!user) {
+        res.status(404).json({ error: 'User not found' });
+        return;
+      }
+      const folder = await prisma.folder.findFirst({
+        where: {
+          id: folderId,
+          userId: user.id,
+        },
+      });
+      if (!folder) {
+        res.status(404).json({ error: 'Target folder not found' });
+        return;
+      }
+    }
+
+    const updatedRecipe = await prisma.recipe.update({
+      where: {
+        id: existingRecipe.id,
+      },
+      data: {
+        folderId: folderId || null,
+      },
+      include: {
+        ingredients: {
+          include: {
+            ingredient: true,
+          },
+        },
+      },
+    });
+
+    res.json(mapRecipeToDTO(updatedRecipe));
+  } catch (error) {
+    console.error('Error moving recipe', error);
+    res.status(500).json({ error: 'Failed to move recipe' });
   }
 };
 
