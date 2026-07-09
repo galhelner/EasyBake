@@ -61,10 +61,17 @@ if ($LASTEXITCODE -ne $null -and $LASTEXITCODE -ne 0) {
   exit $LASTEXITCODE
 }
 
+# Resolve active local IP address dynamically to prevent stale hardcoded IPs.
+$localIP = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -notlike "127.*" -and $_.IPAddress -notlike "172.*" -and $_.IPAddress -notlike "169.254.*" } | Select-Object -First 1).IPAddress
+if ([string]::IsNullOrWhiteSpace($localIP)) {
+  $localIP = "10.231.1.140"
+}
+Write-Host "Resolved local host IP: $localIP"
+
 Push-Location $mobileAppPath
 $flutterExitCode = 0
 try {
-  flutter run --dart-define "INTERNAL_APP_SECRET=$internalAppSecret" --dart-define "DEV_MODE=true" --dart-define "LOCAL_API_BASE_URL=http://10.231.1.139:4000" --dart-define "LOCAL_CHAT_BASE_URL=http://10.231.1.139:4001" @FlutterArgs
+  flutter run --dart-define "INTERNAL_APP_SECRET=$internalAppSecret" --dart-define "DEV_MODE=true" --dart-define "LOCAL_API_BASE_URL=http://${localIP}:4000" --dart-define "LOCAL_CHAT_BASE_URL=http://${localIP}:4001" @FlutterArgs
   if ($LASTEXITCODE -ne $null) {
     $flutterExitCode = $LASTEXITCODE
   }
