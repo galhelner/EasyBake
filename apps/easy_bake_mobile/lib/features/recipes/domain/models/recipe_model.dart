@@ -8,6 +8,7 @@ class RecipeModel {
   final int healthScore;
   final String? imageUrl;
   final String? authorId;
+  final String? folderId;
 
   RecipeModel({
     this.id,
@@ -19,6 +20,7 @@ class RecipeModel {
     required this.healthScore,
     this.imageUrl,
     this.authorId,
+    this.folderId,
   }) : ingredientIcons = ingredientIcons ?? const {},
        ingredientAmounts = ingredientAmounts ?? const {};
 
@@ -42,6 +44,7 @@ class RecipeModel {
           (json['healthScore'] as int?) ?? (json['health_score'] as int?) ?? 5,
       imageUrl: json['imageUrl'] as String?,
       authorId: json['authorId'] as String?,
+      folderId: json['folderId'] as String?,
     );
   }
 
@@ -147,6 +150,7 @@ class RecipeModel {
       'instructions': instructions,
       'ingredients': payloadIngredients,
       if (includeHealthScore) 'healthScore': healthScore.clamp(0, 100),
+      if (folderId != null) 'folderId': folderId,
     };
   }
 }

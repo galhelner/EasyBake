@@ -7,9 +7,11 @@ import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 import '../../../data/services/recipe_service.dart';
 import '../../../domain/models/recipe_model.dart';
+import '../../../domain/models/folder_model.dart';
 import '../../providers/recipe_providers.dart';
 import 'delete_confirmation_dialog.dart';
 import 'deleting_status_card.dart';
+import 'move_dialog.dart';
 
 class RecipeCardDeleteOverlay extends ConsumerStatefulWidget {
   final RecipeModel recipe;
@@ -66,6 +68,7 @@ class _RecipeCardDeleteOverlayState
 
     // After entire deletion flow completes, close the overlay
     if (mounted) {
+      FocusScope.of(context).unfocus();
       widget.onClose();
     }
   }
@@ -148,6 +151,107 @@ class _RecipeCardDeleteOverlayState
     return l10n.couldNotDeleteRecipeMessage;
   }
 
+  Future<void> _moveRecipe() async {
+    final nextFolderId = await showDialog<String?>(
+      context: context,
+      builder: (ctx) => MoveDialog(
+        recipeId: widget.recipe.id,
+        currentParentId: widget.recipe.folderId,
+      ),
+    );
+
+    // If the user cancelled (nextFolderId is null or equals current folder id), do nothing.
+    if (nextFolderId == null || nextFolderId == widget.recipe.folderId) {
+      if (mounted) {
+        FocusScope.of(context).unfocus();
+        widget.onClose();
+      }
+      return;
+    }
+
+    // Now, nextFolderId is either a target folder's UUID or '__root__'
+    final targetFolderId = nextFolderId == '__root__' ? null : nextFolderId;
+
+    if (mounted) {
+      final l10n = AppLocalizations.of(context)!;
+      String targetFolderName = '';
+      if (targetFolderId == null) {
+        targetFolderName = l10n.moveToRootOption;
+      } else {
+        final folders = ref.read(foldersListProvider).value ?? [];
+        final folder = folders.firstWhere(
+          (f) => f.id == targetFolderId,
+          orElse: () => FolderModel(
+            id: '',
+            name: '',
+            userId: '',
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+        targetFolderName = folder.name.isNotEmpty ? folder.name : 'Folder';
+      }
+
+      var isMoving = true;
+      var moveSucceeded = false;
+      String? moveErrorMessage;
+
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) {
+          return StatefulBuilder(builder: (ctx, setState) {
+            if (isMoving) {
+              Future.microtask(() async {
+                try {
+                  await ref.read(recipeServiceProvider).moveRecipe(
+                        widget.recipe.id!,
+                        targetFolderId,
+                      );
+                  moveSucceeded = true;
+                  if (dialogContext.mounted) {
+                    setState(() {
+                      isMoving = false;
+                    });
+                  }
+                  if (mounted) {
+                    ref.invalidate(recipesListProvider);
+                  }
+                } catch (error) {
+                  moveSucceeded = false;
+                  moveErrorMessage = error.toString();
+                  if (dialogContext.mounted) {
+                    setState(() {
+                      isMoving = false;
+                    });
+                  }
+                }
+              });
+            }
+
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              child: DeletingStatusCard(
+                isDeleting: isMoving,
+                deleteSucceeded: moveSucceeded,
+                deleteErrorMessage: moveErrorMessage,
+                deletingMessage: l10n.movingRecipeMessage(targetFolderName),
+                deletedMessage: l10n.recipeMovedMessage,
+                onOk: () {
+                  Navigator.of(dialogContext).pop();
+                  if (mounted) {
+                    FocusScope.of(context).unfocus();
+                    widget.onClose();
+                  }
+                },
+              ),
+            );
+          });
+        },
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -158,12 +262,15 @@ class _RecipeCardDeleteOverlayState
           // GestureDetector to consume taps and close overlay on tap outside
           GestureDetector(
             onTap: widget.onClose,
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
               ),
             ),
@@ -177,30 +284,55 @@ class _RecipeCardDeleteOverlayState
               child: const Icon(Icons.close, color: Colors.black54, size: 24),
             ),
           ),
-          // Delete button at bottom
+          // Action buttons at bottom
           Positioned(
             bottom: 12,
             left: 0,
             right: 0,
             child: Center(
-              child: SizedBox(
-                width: 120,
-                child: ElevatedButton.icon(
-                  onPressed: _showDeleteConfirmationAndDelete,
-                  icon: const Icon(Icons.delete_outline, size: 16),
-                  label: Text(
-                    l10n.deleteButtonLabel,
-                    style: const TextStyle(fontSize: 13),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red[400],
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 120,
+                    child: ElevatedButton.icon(
+                      onPressed: _moveRecipe,
+                      icon: const Icon(Icons.drive_file_move_outlined, size: 16),
+                      label: Text(
+                        l10n.moveButtonLabel,
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2E4E69),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: 120,
+                    child: ElevatedButton.icon(
+                      onPressed: _showDeleteConfirmationAndDelete,
+                      icon: const Icon(Icons.delete_outline, size: 16),
+                      label: Text(
+                        l10n.deleteButtonLabel,
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red[400],
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

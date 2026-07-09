@@ -873,4 +873,90 @@ class AppLocalizationsEn extends AppLocalizations {
   String welcomeUser(Object username) {
     return 'Welcome, $username!';
   }
+
+  @override
+  String get createFolderButtonLabel => 'Create Folder';
+
+  @override
+  String get newFolderDialogTitle => 'New Folder';
+
+  @override
+  String get folderNameHint => 'Folder name';
+
+  @override
+  String get deleteFolderTitle => 'Delete Folder?';
+
+  @override
+  String get deleteFolderOptionAllTitle => 'Delete folder and all contents';
+
+  @override
+  String get deleteFolderOptionAllMessage =>
+      'This will delete the folder, all its sub-folders, and all the recipes inside them.';
+
+  @override
+  String get deleteFolderOptionPopTitle => 'Delete folder only (keep contents)';
+
+  @override
+  String get deleteFolderOptionPopMessage =>
+      'This will delete only the folder. Recipes and sub-folders will move one level up.';
+
+  @override
+  String get moveRecipeDialogTitle => 'Move Recipe';
+
+  @override
+  String get moveFolderDialogTitle => 'Move Folder';
+
+  @override
+  String get moveToRootOption => 'Root (No folder)';
+
+  @override
+  String get folderLabel => 'Folder';
+
+  @override
+  String get emptyFolderTitle => 'This folder is empty';
+
+  @override
+  String get emptyFolderSubtitle =>
+      'Tap the + button to add a recipe or create a sub-folder.';
+
+  @override
+  String get moveButtonLabel => 'Move';
+
+  @override
+  String get savingFolderMessage => 'Saving folder...';
+
+  @override
+  String get folderSavedMessage => 'Folder saved';
+
+  @override
+  String get deletingFolderMessage => 'Deleting folder...';
+
+  @override
+  String get folderDeletedMessage => 'Folder deleted';
+
+  @override
+  String movingRecipeMessage(Object folderName) {
+    return 'Moving recipe to $folderName...';
+  }
+
+  @override
+  String get recipeMovedMessage => 'Recipe moved';
+
+  @override
+  String movingFolderMessage(Object folderName) {
+    return 'Moving folder to $folderName...';
+  }
+
+  @override
+  String get folderMovedMessage => 'Folder moved';
+
+  @override
+  String get deleteFolderConfirmationMessage =>
+      'Are you sure you want to delete this folder?';
+
+  @override
+  String get foldersHeaderLabel => 'Folders';
+
+  @override
+  String get recipesHeaderLabel => 'Recipes';
 }
