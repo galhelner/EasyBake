@@ -1025,5 +1025,115 @@
   },
   "@healthyModeSubtitle": {
     "description": "No description provided for @healthyModeSubtitle."
-  }
+  },
+  "@createFolderButtonLabel": {
+    "description": "Label for the button to create a folder."
+  },
+  "@newFolderDialogTitle": {
+    "description": "Title for the create new folder dialog."
+  },
+  "@folderNameHint": {
+    "description": "Hint text for the folder name input field."
+  },
+  "@deleteFolderTitle": {
+    "description": "Title for the delete folder dialog."
+  },
+  "@deleteFolderOptionAllTitle": {
+    "description": "Option title for deleting a folder along with all sub-folders and recipes."
+  },
+  "@deleteFolderOptionAllMessage": {
+    "description": "Option description for deleting a folder along with all sub-folders and recipes."
+  },
+  "@deleteFolderOptionPopTitle": {
+    "description": "Option title for deleting only the folder and moving contents up."
+  },
+  "@deleteFolderOptionPopMessage": {
+    "description": "Option description for deleting only the folder and moving contents up."
+  },
+  "@moveRecipeDialogTitle": {
+    "description": "Title for the move recipe dialog."
+  },
+  "@moveFolderDialogTitle": {
+    "description": "Title for the move folder dialog."
+  },
+  "@moveToRootOption": {
+    "description": "Option label to move an item to the root level."
+  },
+  "@folderLabel": {
+    "description": "Generic label for a folder."
+  },
+  "@emptyFolderTitle": {
+    "description": "Title shown when a folder has no recipes or sub-folders."
+  },
+  "@emptyFolderSubtitle": {
+    "description": "Subtitle shown when a folder has no recipes or sub-folders."
+  },
+  "@moveButtonLabel": {
+    "description": "Label for the button/option to move items."
+  },
+  "@savingFolderMessage": {
+    "description": "Snack bar or loader message when saving a folder."
+  },
+  "@folderSavedMessage": {
+    "description": "Confirmation message shown when a folder is successfully saved."
+  },
+  "@deletingFolderMessage": {
+    "description": "Snack bar or loader message when deleting a folder."
+  },
+  "@folderDeletedMessage": {
+    "description": "Confirmation message shown when a folder is successfully deleted."
+  },
+  "@movingRecipeMessage": {
+    "description": "Loader message when moving a recipe.",
+    "placeholders": {
+      "folderName": {}
+    }
+  },
+  "@recipeMovedMessage": {
+    "description": "Confirmation message when a recipe is successfully moved."
+  },
+  "@movingFolderMessage": {
+    "description": "Loader message when moving a folder.",
+    "placeholders": {
+      "folderName": {}
+    }
+  },
+  "@folderMovedMessage": {
+    "description": "Confirmation message when a folder is successfully moved."
+  },
+  "@deleteFolderConfirmationMessage": {
+    "description": "Confirmation message shown when deleting an empty folder."
+  },
+  "@foldersHeaderLabel": {
+    "description": "Header label shown above the folders section."
+  },
+  "@recipesHeaderLabel": {
+    "description": "Header label shown above the recipes section."
+  },
+  "createFolderButtonLabel": "Create Folder",
+  "newFolderDialogTitle": "New Folder",
+  "folderNameHint": "Folder name",
+  "deleteFolderTitle": "Delete Folder?",
+  "deleteFolderOptionAllTitle": "Delete folder and all contents",
+  "deleteFolderOptionAllMessage": "This will delete the folder, all its sub-folders, and all the recipes inside them.",
+  "deleteFolderOptionPopTitle": "Delete folder only (keep contents)",
+  "deleteFolderOptionPopMessage": "This will delete only the folder. Recipes and sub-folders will move one level up.",
+  "moveRecipeDialogTitle": "Move Recipe",
+  "moveFolderDialogTitle": "Move Folder",
+  "moveToRootOption": "Root (No folder)",
+  "folderLabel": "Folder",
+  "emptyFolderTitle": "This folder is empty",
+  "emptyFolderSubtitle": "Tap the + button to add a recipe or create a sub-folder.",
+  "moveButtonLabel": "Move",
+  "savingFolderMessage": "Saving folder...",
+  "folderSavedMessage": "Folder saved",
+  "deletingFolderMessage": "Deleting folder...",
+  "folderDeletedMessage": "Folder deleted",
+  "movingRecipeMessage": "Moving recipe to {folderName}...",
+  "recipeMovedMessage": "Recipe moved",
+  "movingFolderMessage": "Moving folder to {folderName}...",
+  "folderMovedMessage": "Folder moved",
+  "deleteFolderConfirmationMessage": "Are you sure you want to delete this folder?",
+  "foldersHeaderLabel": "Folders",
+  "recipesHeaderLabel": "Recipes"
 }

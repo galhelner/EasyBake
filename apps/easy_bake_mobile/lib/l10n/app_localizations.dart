@@ -1585,6 +1585,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Welcome, {username}!'**
   String welcomeUser(Object username);
+
+  /// Label for the button to create a folder.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Folder'**
+  String get createFolderButtonLabel;
+
+  /// Title for the create new folder dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'New Folder'**
+  String get newFolderDialogTitle;
+
+  /// Hint text for the folder name input field.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder name'**
+  String get folderNameHint;
+
+  /// Title for the delete folder dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Folder?'**
+  String get deleteFolderTitle;
+
+  /// Option title for deleting a folder along with all sub-folders and recipes.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete folder and all contents'**
+  String get deleteFolderOptionAllTitle;
+
+  /// Option description for deleting a folder along with all sub-folders and recipes.
+  ///
+  /// In en, this message translates to:
+  /// **'This will delete the folder, all its sub-folders, and all the recipes inside them.'**
+  String get deleteFolderOptionAllMessage;
+
+  /// Option title for deleting only the folder and moving contents up.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete folder only (keep contents)'**
+  String get deleteFolderOptionPopTitle;
+
+  /// Option description for deleting only the folder and moving contents up.
+  ///
+  /// In en, this message translates to:
+  /// **'This will delete only the folder. Recipes and sub-folders will move one level up.'**
+  String get deleteFolderOptionPopMessage;
+
+  /// Title for the move recipe dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Move Recipe'**
+  String get moveRecipeDialogTitle;
+
+  /// Title for the move folder dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Move Folder'**
+  String get moveFolderDialogTitle;
+
+  /// Option label to move an item to the root level.
+  ///
+  /// In en, this message translates to:
+  /// **'Root (No folder)'**
+  String get moveToRootOption;
+
+  /// Generic label for a folder.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder'**
+  String get folderLabel;
+
+  /// Title shown when a folder has no recipes or sub-folders.
+  ///
+  /// In en, this message translates to:
+  /// **'This folder is empty'**
+  String get emptyFolderTitle;
+
+  /// Subtitle shown when a folder has no recipes or sub-folders.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the + button to add a recipe or create a sub-folder.'**
+  String get emptyFolderSubtitle;
+
+  /// Label for the button/option to move items.
+  ///
+  /// In en, this message translates to:
+  /// **'Move'**
+  String get moveButtonLabel;
+
+  /// Snack bar or loader message when saving a folder.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving folder...'**
+  String get savingFolderMessage;
+
+  /// Confirmation message shown when a folder is successfully saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder saved'**
+  String get folderSavedMessage;
+
+  /// Snack bar or loader message when deleting a folder.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting folder...'**
+  String get deletingFolderMessage;
+
+  /// Confirmation message shown when a folder is successfully deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder deleted'**
+  String get folderDeletedMessage;
+
+  /// Loader message when moving a recipe.
+  ///
+  /// In en, this message translates to:
+  /// **'Moving recipe to {folderName}...'**
+  String movingRecipeMessage(Object folderName);
+
+  /// Confirmation message when a recipe is successfully moved.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipe moved'**
+  String get recipeMovedMessage;
+
+  /// Loader message when moving a folder.
+  ///
+  /// In en, this message translates to:
+  /// **'Moving folder to {folderName}...'**
+  String movingFolderMessage(Object folderName);
+
+  /// Confirmation message when a folder is successfully moved.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder moved'**
+  String get folderMovedMessage;
+
+  /// Confirmation message shown when deleting an empty folder.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this folder?'**
+  String get deleteFolderConfirmationMessage;
+
+  /// Header label shown above the folders section.
+  ///
+  /// In en, this message translates to:
+  /// **'Folders'**
+  String get foldersHeaderLabel;
+
+  /// Header label shown above the recipes section.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipes'**
+  String get recipesHeaderLabel;
 }
 
 class _AppLocalizationsDelegate

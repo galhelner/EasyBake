@@ -6,6 +6,7 @@ import 'dart:io';
 import '../../../../core/network/api_client.dart';
 import '../../domain/models/ingredient_suggestion_model.dart';
 import '../../domain/models/recipe_model.dart';
+import '../../domain/models/folder_model.dart';
 
 class RecipeService {
   final Dio _dio;
@@ -315,6 +316,58 @@ class RecipeService {
       }
     }
     return uniqueSuggestions;
+  }
+
+  Future<List<FolderModel>> fetchFolders({CancelToken? cancelToken}) async {
+    final response = await _dio.get('/recipes/folders', cancelToken: cancelToken);
+    final data = response.data as List<dynamic>;
+    return data
+        .map((item) => FolderModel.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<FolderModel> createFolder(String name, String? parentId) async {
+    final response = await _dio.post(
+      '/recipes/folders',
+      data: {
+        'name': name,
+        'parentId': parentId,
+      },
+    );
+    return FolderModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<FolderModel> updateFolder(
+    String id, {
+    String? name,
+    String? parentId,
+    bool moveToRoot = false,
+  }) async {
+    final response = await _dio.put(
+      '/recipes/folders/$id',
+      data: {
+        'name': ?name,
+        'parentId': moveToRoot ? null : parentId,
+      },
+    );
+    return FolderModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<void> deleteFolder(String id, {required bool purge}) async {
+    await _dio.delete(
+      '/recipes/folders/$id',
+      queryParameters: {'purge': purge.toString()},
+    );
+  }
+
+  Future<RecipeModel> moveRecipe(String recipeId, String? folderId) async {
+    final response = await _dio.put(
+      '/recipes/$recipeId/move',
+      data: {
+        'folderId': folderId,
+      },
+    );
+    return RecipeModel.fromJson(response.data as Map<String, dynamic>);
   }
 }
 

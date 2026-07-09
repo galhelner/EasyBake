@@ -1025,5 +1025,115 @@
   },
   "@healthyModeSubtitle": {
     "description": "No description provided for @healthyModeSubtitle."
-  }
+  },
+  "@createFolderButtonLabel": {
+    "description": "Label for the button to create a folder."
+  },
+  "@newFolderDialogTitle": {
+    "description": "Title for the create new folder dialog."
+  },
+  "@folderNameHint": {
+    "description": "Hint text for the folder name input field."
+  },
+  "@deleteFolderTitle": {
+    "description": "Title for the delete folder dialog."
+  },
+  "@deleteFolderOptionAllTitle": {
+    "description": "Option title for deleting a folder along with all sub-folders and recipes."
+  },
+  "@deleteFolderOptionAllMessage": {
+    "description": "Option description for deleting a folder along with all sub-folders and recipes."
+  },
+  "@deleteFolderOptionPopTitle": {
+    "description": "Option title for deleting only the folder and moving contents up."
+  },
+  "@deleteFolderOptionPopMessage": {
+    "description": "Option description for deleting only the folder and moving contents up."
+  },
+  "@moveRecipeDialogTitle": {
+    "description": "Title for the move recipe dialog."
+  },
+  "@moveFolderDialogTitle": {
+    "description": "Title for the move folder dialog."
+  },
+  "@moveToRootOption": {
+    "description": "Option label to move an item to the root level."
+  },
+  "@folderLabel": {
+    "description": "Generic label for a folder."
+  },
+  "@emptyFolderTitle": {
+    "description": "Title shown when a folder has no recipes or sub-folders."
+  },
+  "@emptyFolderSubtitle": {
+    "description": "Subtitle shown when a folder has no recipes or sub-folders."
+  },
+  "@moveButtonLabel": {
+    "description": "Label for the button/option to move items."
+  },
+  "@savingFolderMessage": {
+    "description": "Snack bar or loader message when saving a folder."
+  },
+  "@folderSavedMessage": {
+    "description": "Confirmation message shown when a folder is successfully saved."
+  },
+  "@deletingFolderMessage": {
+    "description": "Snack bar or loader message when deleting a folder."
+  },
+  "@folderDeletedMessage": {
+    "description": "Confirmation message shown when a folder is successfully deleted."
+  },
+  "@movingRecipeMessage": {
+    "description": "Loader message when moving a recipe.",
+    "placeholders": {
+      "folderName": {}
+    }
+  },
+  "@recipeMovedMessage": {
+    "description": "Confirmation message when a recipe is successfully moved."
+  },
+  "@movingFolderMessage": {
+    "description": "Loader message when moving a folder.",
+    "placeholders": {
+      "folderName": {}
+    }
+  },
+  "@folderMovedMessage": {
+    "description": "Confirmation message when a folder is successfully moved."
+  },
+  "@deleteFolderConfirmationMessage": {
+    "description": "Confirmation message shown when deleting an empty folder."
+  },
+  "@foldersHeaderLabel": {
+    "description": "Header label shown above the folders section."
+  },
+  "@recipesHeaderLabel": {
+    "description": "Header label shown above the recipes section."
+  },
+  "createFolderButtonLabel": "צור תיקייה",
+  "newFolderDialogTitle": "תיקייה חדשה",
+  "folderNameHint": "שם התיקייה",
+  "deleteFolderTitle": "למחוק את התיקייה?",
+  "deleteFolderOptionAllTitle": "מחק את התיקייה ואת כל התוכן שלה",
+  "deleteFolderOptionAllMessage": "פעולה זו תמחק את התיקייה, את כל תתי-התיקיות שלה ואת כל המתכונים שבתוכן.",
+  "deleteFolderOptionPopTitle": "מחק את התיקייה בלבד (שמור על התוכן)",
+  "deleteFolderOptionPopMessage": "פעולה זו תמחק רק את התיקייה. המתכונים ותתי-התיקיות יעברו רמה אחת למעלה.",
+  "moveRecipeDialogTitle": "העברת מתכון",
+  "moveFolderDialogTitle": "העברת תיקייה",
+  "moveToRootOption": "ראשי (ללא תיקייה)",
+  "folderLabel": "תיקייה",
+  "emptyFolderTitle": "תיקייה זו ריקה",
+  "emptyFolderSubtitle": "לחץ על כפתור ה-+ כדי להוסיף מתכון או ליצור תת-תיקייה.",
+  "moveButtonLabel": "העבר",
+  "savingFolderMessage": "שומר תיקייה...",
+  "folderSavedMessage": "התיקייה נשמרה",
+  "deletingFolderMessage": "מוחק תיקייה...",
+  "folderDeletedMessage": "התיקייה נמחקה",
+  "movingRecipeMessage": "מעביר מתכון ל-{folderName}...",
+  "recipeMovedMessage": "המתכון הועבר",
+  "movingFolderMessage": "מעביר תיקייה ל-{folderName}...",
+  "folderMovedMessage": "התיקייה הועברה",
+  "deleteFolderConfirmationMessage": "האם אתה בטוח שברצונך למחוק תיקייה זו?",
+  "foldersHeaderLabel": "תיקיות",
+  "recipesHeaderLabel": "מתכונים"
 }

@@ -854,4 +854,91 @@ class AppLocalizationsHe extends AppLocalizations {
   String welcomeUser(Object username) {
     return 'ברוך הבא, $username!';
   }
+
+  @override
+  String get createFolderButtonLabel => 'צור תיקייה';
+
+  @override
+  String get newFolderDialogTitle => 'תיקייה חדשה';
+
+  @override
+  String get folderNameHint => 'שם התיקייה';
+
+  @override
+  String get deleteFolderTitle => 'למחוק את התיקייה?';
+
+  @override
+  String get deleteFolderOptionAllTitle => 'מחק את התיקייה ואת כל התוכן שלה';
+
+  @override
+  String get deleteFolderOptionAllMessage =>
+      'פעולה זו תמחק את התיקייה, את כל תתי-התיקיות שלה ואת כל המתכונים שבתוכן.';
+
+  @override
+  String get deleteFolderOptionPopTitle =>
+      'מחק את התיקייה בלבד (שמור על התוכן)';
+
+  @override
+  String get deleteFolderOptionPopMessage =>
+      'פעולה זו תמחק רק את התיקייה. המתכונים ותתי-התיקיות יעברו רמה אחת למעלה.';
+
+  @override
+  String get moveRecipeDialogTitle => 'העברת מתכון';
+
+  @override
+  String get moveFolderDialogTitle => 'העברת תיקייה';
+
+  @override
+  String get moveToRootOption => 'ראשי (ללא תיקייה)';
+
+  @override
+  String get folderLabel => 'תיקייה';
+
+  @override
+  String get emptyFolderTitle => 'תיקייה זו ריקה';
+
+  @override
+  String get emptyFolderSubtitle =>
+      'לחץ על כפתור ה-+ כדי להוסיף מתכון או ליצור תת-תיקייה.';
+
+  @override
+  String get moveButtonLabel => 'העבר';
+
+  @override
+  String get savingFolderMessage => 'שומר תיקייה...';
+
+  @override
+  String get folderSavedMessage => 'התיקייה נשמרה';
+
+  @override
+  String get deletingFolderMessage => 'מוחק תיקייה...';
+
+  @override
+  String get folderDeletedMessage => 'התיקייה נמחקה';
+
+  @override
+  String movingRecipeMessage(Object folderName) {
+    return 'מעביר מתכון ל-$folderName...';
+  }
+
+  @override
+  String get recipeMovedMessage => 'המתכון הועבר';
+
+  @override
+  String movingFolderMessage(Object folderName) {
+    return 'מעביר תיקייה ל-$folderName...';
+  }
+
+  @override
+  String get folderMovedMessage => 'התיקייה הועברה';
+
+  @override
+  String get deleteFolderConfirmationMessage =>
+      'האם אתה בטוח שברצונך למחוק תיקייה זו?';
+
+  @override
+  String get foldersHeaderLabel => 'תיקיות';
+
+  @override
+  String get recipesHeaderLabel => 'מתכונים';
 }

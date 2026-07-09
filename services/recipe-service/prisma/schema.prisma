@@ -6,7 +6,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  extensions = [pgvector]
 }
 
 model User {
@@ -16,6 +15,8 @@ model User {
   fullName  String?
   displayName String?
   recipes   Recipe[]
+  folders   Folder[]
+  messages  Message[]
   shoppingListItems ShoppingListItem[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -31,8 +32,23 @@ model Recipe {
   authorId     String
   author       User               @relation(fields: [authorId], references: [id])
   ingredients  RecipeIngredient[]
+  folderId     String?
+  folder       Folder?            @relation(fields: [folderId], references: [id], onDelete: SetNull)
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
+}
+
+model Folder {
+  id        String   @id @default(uuid())
+  name      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parentId  String?
+  parent    Folder?  @relation("FolderToFolder", fields: [parentId], references: [id], onDelete: Cascade)
+  children  Folder[] @relation("FolderToFolder")
+  recipes   Recipe[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Ingredient {
@@ -73,4 +89,19 @@ model ShoppingListItem {
   @@unique([userId, ingredientId])
   @@index([userId])
 }
+
+model Message {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content   String
+  messageType String @default("text")
+  recipeId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
 
