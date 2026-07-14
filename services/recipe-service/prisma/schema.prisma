@@ -16,7 +16,8 @@ model User {
   displayName String?
   recipes   Recipe[]
   folders   Folder[]
-  messages  Message[]
+  communityChatMessages CommunityChatMessage[]
+  chefChatMessages ChefChatMessage[]
   shoppingListItems ShoppingListItem[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -90,18 +91,37 @@ model ShoppingListItem {
   @@index([userId])
 }
 
-model Message {
+model CommunityChatMessage {
   id        String   @id @default(uuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   content   String
   messageType String @default("text")
   recipeId  String?
+  metadata  Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([createdAt])
 }
+
+model ChefChatMessage {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content     String
+  isAi        Boolean  @default(false)
+  messageType String   @default("text")
+  metadata    Json?
+  recipeId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([recipeId])
+}
+
 
 
