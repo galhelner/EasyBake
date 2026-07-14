@@ -361,7 +361,7 @@ export const streamChat = async (
                 });
               }
             }
-          } catch (e) {
+          } catch {
             // Ignore incomplete lines
           }
         }
