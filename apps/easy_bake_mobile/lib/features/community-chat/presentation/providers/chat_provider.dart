@@ -50,7 +50,10 @@ class ChatMessagesNotifier extends Notifier<List<ChatMessage>> {
     final pendingIndex = messages.indexWhere(
       (message) =>
           message.isPending &&
-          message.type == serverMessage.type &&
+          (message.type == serverMessage.type ||
+              (message.userId == 'ai-chef' &&
+                  (serverMessage.type == ChatMessageType.aiAssistant ||
+                      serverMessage.type == ChatMessageType.recipePreview))) &&
           (message.type != ChatMessageType.recipe ||
               message.recipeId == serverMessage.recipeId) &&
           (message.userId == serverMessage.userId ||
@@ -58,6 +61,7 @@ class ChatMessagesNotifier extends Notifier<List<ChatMessage>> {
                   serverMessage.userEmail.isNotEmpty &&
                   message.userEmail == serverMessage.userEmail)) &&
           (message.type == ChatMessageType.aiAssistant ||
+              message.type == ChatMessageType.recipePreview ||
               message.content == serverMessage.content ||
               _stripAiChefMention(message.content) == serverMessage.content),
     );
@@ -357,7 +361,8 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
       };
 
       chatService.onMessage = (message) {
-        if (message.type == ChatMessageType.aiAssistant) {
+        if (message.type == ChatMessageType.aiAssistant ||
+            message.type == ChatMessageType.recipePreview) {
           _awaitingAiChefResponse = false;
           _awaitingAiChefTypingLocalId = null;
           _awaitingAiChefQuestionLocalId = null;

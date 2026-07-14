@@ -104,6 +104,7 @@ class ChatService {
   Stream<ChatEvent> sendPrompt({
     required String prompt,
     required String pageContext,
+    required String sessionId,
     String? recipeId,
   }) async* {
     final normalizedPrompt = prompt.trim();
@@ -116,6 +117,7 @@ class ChatService {
     final payload = <String, dynamic>{
       'prompt': normalizedPrompt,
       'page_context': pageContext,
+      'session_id': sessionId,
       if (pageContext == 'recipe_detail' &&
           recipeId != null &&
           recipeId.trim().isNotEmpty)
@@ -448,6 +450,30 @@ class ChatService {
       return status == 'ok';
     } catch (_) {
       return false;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getChatHistory({
+    required String pageContext,
+    String? recipeId,
+  }) async {
+    try {
+      final response = await _dio.get<List<dynamic>>(
+        '/chat/history',
+        queryParameters: {
+          'pageContext': pageContext,
+          if (recipeId != null && recipeId.trim().isNotEmpty)
+            'recipeId': recipeId.trim(),
+        },
+      );
+      if (response.data != null) {
+        return response.data!
+            .map((item) => Map<String, dynamic>.from(item as Map))
+            .toList();
+      }
+      return const [];
+    } catch (_) {
+      return const [];
     }
   }
 }

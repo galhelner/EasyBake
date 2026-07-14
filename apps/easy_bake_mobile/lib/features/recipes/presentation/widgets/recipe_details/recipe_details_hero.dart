@@ -14,7 +14,10 @@ class RecipeDetailsHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasImage = imageUrl != null && imageUrl!.isNotEmpty;
+    final effectiveImageUrl = (imageUrl != null && imageUrl!.trim().isNotEmpty)
+        ? imageUrl!.trim()
+        : 'assets/default_recipe.jpg';
+    final isNetworkImage = effectiveImageUrl.startsWith('http://') || effectiveImageUrl.startsWith('https://');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,9 +41,20 @@ class RecipeDetailsHero extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  if (hasImage)
+                  if (isNetworkImage)
                     Image.network(
-                      imageUrl!,
+                      effectiveImageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Image.asset(
+                          'assets/default_recipe.jpg',
+                          fit: BoxFit.cover,
+                        );
+                      },
+                    )
+                  else
+                    Image.asset(
+                      effectiveImageUrl,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
@@ -53,16 +67,6 @@ class RecipeDetailsHero extends StatelessWidget {
                           ),
                         );
                       },
-                    )
-                  else
-                    Container(
-                      color: const Color(0xFFE5E6EA),
-                      alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.image_not_supported_outlined,
-                        color: kRecipeDetailsPrimaryBlue,
-                        size: 34,
-                      ),
                     ),
                   const DecoratedBox(
                     decoration: BoxDecoration(

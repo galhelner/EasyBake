@@ -12,6 +12,7 @@ import '../../../recipes/presentation/providers/recipe_providers.dart';
 import '../../../recipes/presentation/widgets/recipe_details/saving_status_card.dart';
 import '../../../recipes/domain/models/recipe_model.dart';
 import '../../../ai-chat/presentation/widgets/ai_chef_chat_typing_dots.dart';
+import '../../../ai-chat/presentation/widgets/ai_chef_recipe_preview.dart';
 import 'chat_avatar.dart';
 import 'shared_recipe_preview_card.dart';
 
@@ -122,6 +123,7 @@ class MessageTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isAiAssistant =
         message.type == ChatMessageType.aiAssistant ||
+        message.type == ChatMessageType.recipePreview ||
         message.userId == 'ai-chef';
     final avatarColor = _resolveSenderAccentColor(
       message,
@@ -217,6 +219,25 @@ class MessageTile extends ConsumerWidget {
                           _RecipePreviewCard(
                             recipeId: message.recipeId!,
                             isCurrentUser: isCurrentUser,
+                          )
+                        else if (message.type == ChatMessageType.recipePreview &&
+                            message.metadata != null)
+                          AiChefRecipePreview(
+                            recipeTitle: message.content,
+                            imageUrl: 'assets/default_recipe.jpg',
+                            recipePayload: message.metadata!,
+                            onViewRecipe: () {
+                              final recipe = RecipeModel.fromJson(message.metadata!);
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => RecipeDetailsPage(
+                                    initialRecipe: recipe,
+                                    showSaveButton: true,
+                                    popRouteAfterSaveAcknowledged: true,
+                                  ),
+                                ),
+                              );
+                            },
                           )
                         else if (isTypingPlaceholder)
                           const Padding(

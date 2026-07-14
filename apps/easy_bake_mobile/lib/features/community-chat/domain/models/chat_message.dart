@@ -1,6 +1,6 @@
 enum ChatMessageDeliveryStatus { pending, sent }
 
-enum ChatMessageType { text, recipe, aiAssistant }
+enum ChatMessageType { text, recipe, aiAssistant, recipePreview }
 
 ChatMessageType _parseChatMessageType(String? value) {
   switch ((value ?? '').trim().toLowerCase()) {
@@ -9,6 +9,9 @@ ChatMessageType _parseChatMessageType(String? value) {
     case 'ai-assistant':
     case 'aiassistant':
       return ChatMessageType.aiAssistant;
+    case 'recipepreview':
+    case 'recipe-preview':
+      return ChatMessageType.recipePreview;
     case 'text':
     default:
       return ChatMessageType.text;
@@ -21,6 +24,8 @@ String _serializeChatMessageType(ChatMessageType type) {
       return 'recipe';
     case ChatMessageType.aiAssistant:
       return 'ai-assistant';
+    case ChatMessageType.recipePreview:
+      return 'recipePreview';
     case ChatMessageType.text:
       return 'text';
   }
@@ -34,6 +39,7 @@ class ChatMessage {
   final String content;
   final ChatMessageType type;
   final String? recipeId;
+  final Map<String, dynamic>? metadata;
   final DateTime createdAt;
   final String? localId;
   final ChatMessageDeliveryStatus? deliveryStatus;
@@ -46,6 +52,7 @@ class ChatMessage {
     required this.content,
     this.type = ChatMessageType.text,
     this.recipeId,
+    this.metadata,
     required this.createdAt,
     this.localId,
     this.deliveryStatus,
@@ -61,6 +68,7 @@ class ChatMessage {
     String? content,
     ChatMessageType? type,
     String? recipeId,
+    Map<String, dynamic>? metadata,
     DateTime? createdAt,
     String? localId,
     ChatMessageDeliveryStatus? deliveryStatus,
@@ -73,6 +81,7 @@ class ChatMessage {
       content: content ?? this.content,
       type: type ?? this.type,
       recipeId: recipeId ?? this.recipeId,
+      metadata: metadata ?? this.metadata,
       createdAt: createdAt ?? this.createdAt,
       localId: localId ?? this.localId,
       deliveryStatus: deliveryStatus ?? this.deliveryStatus,
@@ -87,6 +96,7 @@ class ChatMessage {
     required String content,
     ChatMessageType type = ChatMessageType.text,
     String? recipeId,
+    Map<String, dynamic>? metadata,
     required DateTime createdAt,
   }) {
     return ChatMessage(
@@ -97,6 +107,7 @@ class ChatMessage {
       content: content,
       type: type,
       recipeId: recipeId,
+      metadata: metadata,
       createdAt: createdAt,
       localId: localId,
       deliveryStatus: ChatMessageDeliveryStatus.pending,
@@ -114,6 +125,7 @@ class ChatMessage {
       content: json['content'] as String,
       type: _parseChatMessageType(json['messageType'] as String?),
       recipeId: json['recipeId'] as String?,
+      metadata: json['metadata'] as Map<String, dynamic>?,
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
   }
@@ -126,6 +138,7 @@ class ChatMessage {
     'content': content,
     'messageType': _serializeChatMessageType(type),
     'recipeId': recipeId,
+    'metadata': metadata,
     'createdAt': createdAt.toIso8601String(),
   };
 

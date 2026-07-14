@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -87,6 +88,7 @@ class _AiChefChatPopupDialogState
   final List<ChatMessage> _messages = [const ChatMessage.connectionChecking()];
 
   StreamSubscription<ChatEvent>? _chatSubscription;
+  late final String _sessionId;
   bool _isAwaitingResponse = false;
   bool _isServiceOnline = false;
   bool _isRefreshingConnection = false;
@@ -109,6 +111,9 @@ class _AiChefChatPopupDialogState
   @override
   void initState() {
     super.initState();
+    final random = Random();
+    final time = DateTime.now().millisecondsSinceEpoch;
+    _sessionId = 'session_${time}_${random.nextInt(1000000)}';
     _initializeConnectionState();
   }
 
@@ -136,16 +141,73 @@ class _AiChefChatPopupDialogState
         ? l10n.aiChefGreetingWithName(fullName)
         : l10n.aiChefGreetingWithoutName;
 
+    final historyMessages = <ChatMessage>[];
+    if (isOnline) {
+      try {
+        final history = await widget.chatService.getChatHistory(
+          pageContext: _normalizedPageContext,
+          recipeId: widget.recipeId,
+        );
+        for (final item in history) {
+          final content = item['content']?.toString() ?? '';
+          final isAi = item['isAi'] as bool? ?? false;
+          final messageType = item['messageType']?.toString() ?? 'text';
+          final metadata = item['metadata'];
+
+          if (messageType == 'recipePreview' && metadata is Map) {
+            historyMessages.add(
+              ChatMessage.recipePreview(
+                recipeTitle: content,
+                recipePayload: Map<String, dynamic>.from(metadata),
+                imageUrl: 'assets/default_recipe.jpg',
+              ),
+            );
+          } else if (messageType == 'searchResults' && metadata is Map) {
+            historyMessages.add(
+              ChatMessage.searchResults(
+                recipes: metadata['recipes'] as List<dynamic>? ?? [],
+              ),
+            );
+          } else if (messageType == 'shoppingListAdded' && metadata is Map) {
+            historyMessages.add(
+              ChatMessage.shoppingListAdded(
+                items: List<String>.from(metadata['items'] ?? const []),
+              ),
+            );
+          } else if (messageType == 'swapSummary' && metadata is Map) {
+            historyMessages.add(
+              ChatMessage.swapSummary(
+                title: content,
+                swaps: List<String>.from(metadata['swaps'] ?? const []),
+              ),
+            );
+          } else if (content.isNotEmpty) {
+            historyMessages.add(
+              ChatMessage.text(
+                content,
+                sender: isAi ? ChatSender.ai : ChatSender.user,
+              ),
+            );
+          }
+        }
+      } catch (_) {
+        // Ignore and fallback to greeting
+      }
+    }
+
     setState(() {
       _isServiceOnline = isOnline;
       _isCheckingInitialConnection = false;
-      _messages
-        ..clear()
-        ..add(
-          isOnline
-              ? ChatMessage.text(greeting)
-              : ChatMessage.text(l10n.aiChefServiceUnavailableMessage),
-        );
+      _messages.clear();
+      if (isOnline) {
+        if (historyMessages.isNotEmpty) {
+          _messages.addAll(historyMessages);
+        } else {
+          _messages.add(ChatMessage.text(greeting));
+        }
+      } else {
+        _messages.add(ChatMessage.text(l10n.aiChefServiceUnavailableMessage));
+      }
     });
     _scrollToBottom();
   }
@@ -188,6 +250,7 @@ class _AiChefChatPopupDialogState
         .sendPrompt(
           prompt: message,
           pageContext: contextForRequest,
+          sessionId: _sessionId,
           recipeId: widget.recipeId,
         )
         .listen(_handleChatEvent);
