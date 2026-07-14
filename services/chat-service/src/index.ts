@@ -233,9 +233,9 @@ io.on('connection', async (socket: Socket) => {
           return;
         }
 
-        let assistantReply = '';
+        let result;
         try {
-          assistantReply = await generateAssistantReply(question);
+          result = await generateAssistantReply(question, authSocket.userId as string);
         } catch (error) {
           logger.error(`AI assistant request failed for ${userEmail}`, error);
           if (assistantFallback.length > 0) {
@@ -255,7 +255,9 @@ io.on('connection', async (socket: Socket) => {
           return;
         }
 
-        if (!assistantReply) {
+        const { textReply, recipe } = result;
+
+        if (!textReply && !recipe) {
           logger.warn(`AI assistant returned an empty reply for ${userEmail}`);
           if (assistantFallback.length > 0) {
             const savedAssistantMessage = await saveMessage('ai-chef', {
@@ -274,13 +276,27 @@ io.on('connection', async (socket: Socket) => {
           return;
         }
 
-        const savedAssistantMessage = await saveMessage('ai-chef', {
-          content: assistantReply,
-          messageType: 'ai-assistant'
-        });
+        // 1. Send the friendly chat text message if present
+        if (textReply) {
+          const savedTextMessage = await saveMessage('ai-chef', {
+            content: textReply,
+            messageType: 'ai-assistant'
+          });
+          io.to(COMMUNITY_ROOM).emit('new_message', savedTextMessage);
+          logger.info(`🤖 AI assistant text reply broadcasted for ${userEmail}`);
+        }
 
-        io.to(COMMUNITY_ROOM).emit('new_message', savedAssistantMessage);
-        logger.info(`🤖 AI assistant reply generated for ${userEmail}`);
+        // 2. Send the recipe preview card if a recipe was generated
+        if (recipe) {
+          const savedRecipeMessage = await saveMessage('ai-chef', {
+            content: recipe.title || 'Created Recipe',
+            messageType: 'recipePreview',
+            metadata: recipe
+          });
+          io.to(COMMUNITY_ROOM).emit('new_message', savedRecipeMessage);
+          logger.info(`🤖 AI assistant recipe preview broadcasted for ${userEmail}`);
+        }
+
         return;
       }
 

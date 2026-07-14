@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
   binaryTargets = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x"]
 }
 
@@ -14,7 +15,10 @@ model User {
   fullName  String?
   displayName String?
   recipes   Recipe[]
-  messages  Message[]
+  folders   Folder[]
+  communityChatMessages CommunityChatMessage[]
+  chefChatMessages ChefChatMessage[]
+  shoppingListItems ShoppingListItem[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -24,12 +28,28 @@ model Recipe {
   title        String
   instructions String[]
   healthScore  Int
+  embedding    Unsupported("vector(768)")?
   imageUrl     String?            @default("https://cdmkszvzdkromgqzexec.supabase.co/storage/v1/object/public/recipe-images/default-recipe.jpg")
   authorId     String
   author       User               @relation(fields: [authorId], references: [id])
   ingredients  RecipeIngredient[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  folderId     String?
+  folder       Folder?            @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+}
+
+model Folder {
+  id        String   @id @default(uuid())
+  name      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parentId  String?
+  parent    Folder?  @relation("FolderToFolder", fields: [parentId], references: [id], onDelete: Cascade)
+  children  Folder[] @relation("FolderToFolder")
+  recipes   Recipe[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Ingredient {
@@ -37,8 +57,9 @@ model Ingredient {
   name      String             @unique
   icon      String             @default("")
   recipes   RecipeIngredient[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  shoppingListItems ShoppingListItem[]
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
 }
 
 model RecipeIngredient {
@@ -53,16 +74,54 @@ model RecipeIngredient {
   @@unique([recipeId, ingredientId])
 }
 
-model Message {
+model ShoppingListItem {
+  id           String     @id @default(uuid())
+  userId       String
+  ingredientId String
+  checked      Boolean    @default(false)
+  amount       String?
+
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([userId, ingredientId])
+  @@index([userId])
+}
+
+model CommunityChatMessage {
   id        String   @id @default(uuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   content   String
   messageType String @default("text")
   recipeId  String?
+  metadata  Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([createdAt])
 }
+
+model ChefChatMessage {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content     String
+  isAi        Boolean  @default(false)
+  messageType String   @default("text")
+  metadata    Json?
+  recipeId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([recipeId])
+}
+
+
+

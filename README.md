@@ -73,6 +73,26 @@ Meet **AI Chef Assistant**: your smart kitchen partner designed to make cooking 
 - 📝 Turns rough meal ideas into structured, step-by-step recipes.
 - ⏱️ Adapts suggestions to available time and cooking complexity.
 
+### 🤖 ADK Multi-Agent Architecture
+
+EasyBake's AI orchestrator leverages the **Google ADK (Agent Development Kit)** to run a sophisticated multi-agent system in `services/ai-service`:
+
+```mermaid
+flowchart TD
+    User[👤 User Prompt] --> Router[🤖 Root Router Agent]
+    Router -->|Route Intent| Specialist{Specialist Selection}
+    Specialist -->|Recipe Queries| RS[🧑‍🍳 Recipe Specialist]
+    Specialist -->|List Management| SLS[🧺 Shopping List Specialist]
+    Specialist -->|Culinary Questions| KA[🍳 Kitchen Assistant]
+```
+
+* **Root Router (`root_router_agent`)**: Analyzes conversation history and current user intent to coordinate and delegate tasks to the appropriate specialist agent.
+* **Recipe Specialist (`recipe_specialist_agent`)**: Generates structured, step-by-step recipes and queries the database for matching recipes.
+* **Shopping List Specialist (`shopping_list_specialist_agent`)**: Handles adding individual ingredients or full recipes directly to the user's active shopping list.
+* **Kitchen Assistant (`kitchen_assistant_agent`)**: Answers general culinary questions, provides advice, and suggests ingredient substitutions (swaps).
+
+Conversations are managed inside user-isolated sessions (`community-chat-${userId}` in the community chat, and unique dynamic session IDs in the private chef chat), preserving context and variable states (such as authentication tokens and recipe contexts) throughout the interaction.
+
 ## 🧱 Product Modules
 
 EasyBake is a full-stack platform composed of one mobile app and three backend services:
@@ -232,6 +252,12 @@ flutter run
 ├─ 🧠 services
 │  ├─ ai-service
 │  │  ├─ app
+│  │  │  ├─ agents      <-- Google ADK multi-agent configurations
+│  │  │  ├─ api         <-- FastAPI route endpoints
+│  │  │  ├─ core        <-- Logging and configuration
+│  │  │  ├─ schemas     <-- Data validation request models
+│  │  │  ├─ services    <-- Agent/LLM orchestrator engines
+│  │  │  └─ utils       <-- Helper functions and tools
 │  │  ├─ tests
 │  │  └─ requirements.txt
 │  ├─ chat-service

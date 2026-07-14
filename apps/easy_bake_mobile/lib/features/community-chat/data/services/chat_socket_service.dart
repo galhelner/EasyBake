@@ -190,6 +190,7 @@ class ChatSocketService {
         ChatMessageType.text => 'text',
         ChatMessageType.recipe => 'recipe',
         ChatMessageType.aiAssistant => 'ai-assistant',
+        ChatMessageType.recipePreview => 'recipePreview',
       };
 
       debugPrint('[Chat] Sending $messageType message');

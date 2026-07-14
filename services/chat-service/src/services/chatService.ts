@@ -15,6 +15,7 @@ export interface ChatMessage {
   content: string;
   messageType: string;
   recipeId: string | null;
+  metadata?: any;
   createdAt: Date;
 }
 
@@ -22,6 +23,7 @@ interface SaveMessageInput {
   content: string;
   messageType?: string;
   recipeId?: string | null;
+  metadata?: any;
 }
 
 export const saveMessage = async (
@@ -34,10 +36,12 @@ export const saveMessage = async (
     ? 'recipe'
     : normalizedType === 'ai-assistant'
       ? 'ai-assistant'
-      : 'text';
-  const authorUserId = messageType === 'ai-assistant' ? AI_CHEF_USER_ID : userId;
+      : normalizedType === 'recipepreview'
+        ? 'recipePreview'
+        : 'text';
+  const authorUserId = (messageType === 'ai-assistant' || messageType === 'recipePreview') ? AI_CHEF_USER_ID : userId;
 
-  if (messageType === 'ai-assistant') {
+  if (messageType === 'ai-assistant' || messageType === 'recipePreview') {
     await prisma.user.upsert({
       where: { id: AI_CHEF_USER_ID },
       create: {
@@ -57,12 +61,13 @@ export const saveMessage = async (
   }
 
   try {
-    const message = await prisma.message.create({
+    const message = await prisma.communityChatMessage.create({
       data: {
         userId: authorUserId,
         content: input.content,
         messageType,
-        recipeId: messageType === 'recipe' ? input.recipeId ?? null : null
+        recipeId: messageType === 'recipe' ? input.recipeId ?? null : null,
+        metadata: input.metadata ?? null
       },
       include: {
         user: {
@@ -85,6 +90,7 @@ export const saveMessage = async (
       content: message.content,
       messageType,
       recipeId: messageType === 'recipe' ? input.recipeId ?? null : null,
+      metadata: message.metadata ?? null,
       createdAt: message.createdAt
     };
   } catch (error) {
@@ -97,7 +103,7 @@ export const getRecentMessages = async (limit: number = 50): Promise<ChatMessage
   const prisma = getPrismaClient();
 
   try {
-    const messages = await prisma.message.findMany({
+    const messages = await prisma.communityChatMessage.findMany({
       take: -limit,
       include: {
         user: {
@@ -132,6 +138,7 @@ export const getRecentMessages = async (limit: number = 50): Promise<ChatMessage
         content: msg.content,
         messageType: persistedType,
         recipeId: persistedRecipeId,
+        metadata: raw['metadata'] ?? null,
         createdAt: msg.createdAt
       };
     });
@@ -155,7 +162,15 @@ export const userExists = async (userId: string): Promise<boolean> => {
   }
 };
 
-export const generateAssistantReply = async (prompt: string): Promise<string> => {
+export interface AssistantReplyResult {
+  textReply?: string;
+  recipe?: any;
+}
+
+export const generateAssistantReply = async (
+  prompt: string,
+  userId: string
+): Promise<AssistantReplyResult> => {
   const normalizedPrompt = prompt.trim();
   if (!normalizedPrompt) {
     throw new Error('Prompt cannot be empty');
@@ -168,13 +183,30 @@ export const generateAssistantReply = async (prompt: string): Promise<string> =>
   );
 
   try {
-    const response = await fetch(`${AI_SERVICE_API_BASE_URL}/stream-assistant`, {
+    // Get last 10 messages from community chat as history context for the agent
+    let history: { role: string; content: string }[] = [];
+    try {
+      const recentMessages = await getRecentMessages(10);
+      history = recentMessages.map((msg) => ({
+        role: msg.userId === 'ai-chef' ? 'model' : 'user',
+        content: msg.content,
+      }));
+    } catch (historyError) {
+      logger.warn('Failed to load chat history for AI assistant context', historyError);
+    }
+
+    const response = await fetch(`${AI_SERVICE_API_BASE_URL}/agent/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'text/event-stream'
       },
-      body: JSON.stringify({ prompt: normalizedPrompt }),
+      body: JSON.stringify({
+        prompt: normalizedPrompt,
+        page_context: 'home',
+        session_id: `community-chat-${userId}`,
+        history
+      }),
       signal: abortController.signal
     });
     if (!response.ok || !response.body) {
@@ -182,7 +214,8 @@ export const generateAssistantReply = async (prompt: string): Promise<string> =>
     }
 
     const text = await response.text();
-    let answer = '';
+    let accumulatedText = '';
+    let createdRecipe: any = null;
 
     for (const block of text.split(/\n\n+/)) {
       const trimmedBlock = block.trim();
@@ -196,16 +229,21 @@ export const generateAssistantReply = async (prompt: string): Promise<string> =>
       }
 
       try {
-        const parsed = JSON.parse(payloadText) as { delta?: string; type?: string };
+        const parsed = JSON.parse(payloadText);
         if (parsed.type === 'text' && typeof parsed.delta === 'string') {
-          answer += parsed.delta;
+          accumulatedText += parsed.delta;
+        } else if (parsed.type === 'recipeCreated' && parsed.recipe) {
+          createdRecipe = parsed.recipe;
         }
       } catch {
         continue;
       }
     }
 
-    return answer.trim();
+    return {
+      textReply: accumulatedText.trim() || undefined,
+      recipe: createdRecipe || undefined,
+    };
   } catch (error) {
     if ((error as Error).name === 'AbortError') {
       throw new Error(`AI service request timed out after ${AI_SERVICE_REQUEST_TIMEOUT_MS}ms`);
