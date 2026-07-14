@@ -1,7 +1,6 @@
 import asyncio
 import json
 import os
-import re
 from collections.abc import Iterator
 from functools import lru_cache
 from pathlib import Path
@@ -23,6 +22,7 @@ from app.schemas.router import (
     SearchFiltersResponse,
     ShoppingListResponse,
 )
+from app.utils.helpers import strip_markdown_json_fences
 
 MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 EMBEDDING_DIM = int(os.getenv("GEMINI_EMBEDDING_DIM", "768"))
@@ -44,16 +44,23 @@ def _load_instruction(filename: str) -> str:
     return (INSTRUCTIONS_DIR / filename).read_text(encoding="utf-8")
 
 
+def _load_instruction_safe(filename: str) -> str:
+    try:
+        return _load_instruction(filename)
+    except FileNotFoundError:
+        return ""
+
+
 def _generate_structured_content(
     contents: str,
-    instruction_file: str,
+    system_instruction: str,
     response_schema: type[SchemaT],
 ) -> SchemaT:
     response = client.models.generate_content(
         model=MODEL_NAME,
         contents=contents,
         config=types.GenerateContentConfig(
-            system_instruction=_load_instruction(instruction_file),
+            system_instruction=system_instruction,
             response_mime_type="application/json",
             response_schema=response_schema,
         ),
@@ -179,17 +186,21 @@ async def classify_intent(request: RouterRequest) -> RouterResponse:
     response = await asyncio.to_thread(
         _generate_structured_content,
         _format_router_input(request),
-        "router.md",
+        _load_instruction_safe("router.md"),
         RouterResponse,
     )
     return _enforce_context_intent_policy(request, response)
 
 
+RECIPE_CREATOR_INSTRUCTION_PATH = Path(__file__).resolve().parents[1] / "agents" / "recipe_specialist" / "recipe_creator.md"
+
+
 async def generate_recipe(prompt: str) -> RecipeSchema:
+    instruction = RECIPE_CREATOR_INSTRUCTION_PATH.read_text(encoding="utf-8")
     recipe = await asyncio.to_thread(
         _generate_structured_content,
         prompt,
-        "recipe_creator.md",
+        instruction,
         RecipeSchema,
     )
     ingredient_names = [ingredient.name for ingredient in recipe.ingredients]
@@ -234,7 +245,7 @@ async def generate_assistant_response(prompt: str) -> AssistantResponse:
     return await asyncio.to_thread(
         _generate_structured_content,
         prompt,
-        "assistant_specialist.md",
+        _load_instruction_safe("assistant_specialist.md"),
         AssistantResponse,
     )
 
@@ -243,7 +254,7 @@ async def generate_health_audit(prompt: str) -> HealthAuditResponse:
     return await asyncio.to_thread(
         _generate_structured_content,
         prompt,
-        "health_specialist.md",
+        _load_instruction_safe("health_specialist.md"),
         HealthAuditResponse,
     )
 
@@ -252,7 +263,7 @@ async def parse_search_filters(prompt: str) -> SearchFiltersResponse:
     return await asyncio.to_thread(
         _generate_structured_content,
         prompt,
-        "search_specialist.md",
+        _load_instruction_safe("search_specialist.md"),
         SearchFiltersResponse,
     )
 
@@ -266,7 +277,7 @@ async def parse_shopping_list(prompt: str, recipe_context: str | None = None) ->
     return await asyncio.to_thread(
         _generate_structured_content,
         contents,
-        "shopping_list_specialist.md",
+        _load_instruction_safe("shopping_list_specialist.md"),
         ShoppingListResponse,
     )
 
@@ -349,13 +360,6 @@ def _extract_text_from_generative_response(response: object) -> str:
     raise ValueError("Gemini returned no text for ingredient generation")
 
 
-def _strip_markdown_json_fences(raw_text: str) -> str:
-    cleaned = raw_text.strip()
-    cleaned = re.sub(r"^```(?:json)?\\s*", "", cleaned, flags=re.IGNORECASE)
-    cleaned = re.sub(r"\\s*```$", "", cleaned)
-    return cleaned.strip()
-
-
 def _generate_ingredients_archive_sync() -> list[IngredientSchema]:
     response = client.models.generate_content(
         model=MODEL_NAME,
@@ -365,7 +369,7 @@ def _generate_ingredients_archive_sync() -> list[IngredientSchema]:
         ),
     )
     raw_text = _extract_text_from_generative_response(response)
-    cleaned_text = _strip_markdown_json_fences(raw_text)
+    cleaned_text = strip_markdown_json_fences(raw_text)
 
     try:
         payload = json.loads(cleaned_text)

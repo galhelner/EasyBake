@@ -10,16 +10,18 @@ from fastapi import FastAPI
 
 # Load environment variables from .env file before any imports that depend on them
 load_dotenv()
+os.environ.pop("GOOGLE_API_KEY", None)
+
 
 if __package__ in {None, ""}:
     sys.path.append(str(Path(__file__).resolve().parents[1]))
     from app.api.endpoints import router as ai_router
     from app.core.logger import get_logger
-    from app.services.gemini_service import MODEL_NAME
+    from app.services.llm_service import MODEL_NAME
 else:
     from app.api.endpoints import router as ai_router
     from app.core.logger import get_logger
-    from app.services.gemini_service import MODEL_NAME
+    from app.services.llm_service import MODEL_NAME
 
 logger = get_logger()
 
