@@ -1,7 +1,11 @@
 import { afterEach, describe, expect, it, jest } from '@jest/globals';
+import { Readable } from 'stream';
 
 type ChatControllerModule = {
 	streamChat: (req: any, res: any) => Promise<void>;
+	internalSearchRecipes: (req: any, res: any) => Promise<void>;
+	internalAddToShoppingList: (req: any, res: any) => Promise<void>;
+	internalAddRecipeToShoppingList: (req: any, res: any) => Promise<void>;
 };
 
 type ChatModuleLoad = {
@@ -9,6 +13,7 @@ type ChatModuleLoad = {
 	mockAxiosPost: ReturnType<typeof jest.fn>;
 	mockAxiosIsAxiosError: ReturnType<typeof jest.fn>;
 	mockPrismaUserFindUnique: ReturnType<typeof jest.fn>;
+	mockPrismaRecipeFindFirst: ReturnType<typeof jest.fn>;
 	mockLoggerInfo: ReturnType<typeof jest.fn>;
 	mockLoggerError: ReturnType<typeof jest.fn>;
 };
@@ -82,6 +87,7 @@ async function loadChatControllerModule(): Promise<ChatModuleLoad> {
 		mockAxiosPost,
 		mockAxiosIsAxiosError,
 		mockPrismaUserFindUnique,
+		mockPrismaRecipeFindFirst,
 		mockLoggerInfo,
 		mockLoggerError,
 	};
@@ -99,6 +105,7 @@ describe('chat controller', () => {
 			method: 'POST',
 			originalUrl: '/chat/stream',
 			body: { prompt: '', page_context: 'home' },
+			headers: {},
 		};
 		const res = createMockResponse();
 
@@ -111,17 +118,18 @@ describe('chat controller', () => {
 		expect(mockAxiosPost).not.toHaveBeenCalled();
 	});
 
-	it('returns upstream-friendly error when routing call fails', async () => {
+	it('returns upstream-friendly error when agent call fails', async () => {
 		const { controller, mockAxiosPost, mockAxiosIsAxiosError, mockLoggerError } =
 			await loadChatControllerModule();
 
 		mockAxiosIsAxiosError.mockReturnValue(false);
-		mockAxiosPost.mockRejectedValue(new Error('router unavailable'));
+		mockAxiosPost.mockRejectedValue(new Error('Agent unavailable'));
 
 		const req = {
 			method: 'POST',
 			originalUrl: '/chat/stream',
-			body: { prompt: 'hello', page_context: 'home' },
+			body: { prompt: 'hello', page_context: 'home', session_id: 'test-session' },
+			headers: { authorization: 'Bearer token' },
 		};
 		const res = createMockResponse();
 
@@ -134,75 +142,32 @@ describe('chat controller', () => {
 		});
 	});
 
-	it('handles CREATE_RECIPE intent and streams the generated payload', async () => {
+	it('successfully proxies agent stream', async () => {
 		const { controller, mockAxiosPost } = await loadChatControllerModule();
-		const generatedRecipe = {
-			title: 'Spicy Lentil Soup',
-			instructions: ['Cook lentils', 'Add spices'],
-		};
+		const dummyStream = new Readable();
+		dummyStream._read = () => {};
 
-		mockAxiosPost
-			.mockResolvedValueOnce({
-				data: {
-					intent: 'CREATE_RECIPE',
-					confidence: 0.99,
-				},
-			})
-			.mockResolvedValueOnce({
-				data: generatedRecipe,
-			});
+		mockAxiosPost.mockResolvedValueOnce({
+			data: dummyStream,
+		});
 
 		const req = {
 			method: 'POST',
 			originalUrl: '/chat/stream',
-			body: { prompt: 'Create healthy soup', page_context: 'home' },
+			body: { prompt: 'Cook something', page_context: 'home', session_id: 'test-session' },
+			headers: { authorization: 'Bearer token' },
+			on: jest.fn(),
 		};
 		const res = createMockResponse();
 
 		await controller.streamChat(req, res);
 
-		expect(mockAxiosPost).toHaveBeenCalledTimes(2);
+		expect(mockAxiosPost).toHaveBeenCalledTimes(1);
 		expect(res.writeHead).toHaveBeenCalledWith(
 			200,
 			expect.objectContaining({
 				'Content-Type': 'text/event-stream',
 			}),
 		);
-		expect(res.write).toHaveBeenCalledWith(
-			expect.stringContaining(JSON.stringify({ type: 'recipeCreated', recipe: generatedRecipe })),
-		);
-		expect(res.end).toHaveBeenCalled();
-	});
-
-	it('returns 401 for SEARCH_RECIPES intent when user is unauthenticated', async () => {
-		const { controller, mockAxiosPost, mockPrismaUserFindUnique } =
-			await loadChatControllerModule();
-
-		mockAxiosPost
-			.mockResolvedValueOnce({
-				data: {
-					intent: 'SEARCH_RECIPES',
-					confidence: 0.95,
-				},
-			})
-			.mockResolvedValueOnce({
-				data: {
-					query: 'high protein breakfast',
-				},
-			});
-
-		const req = {
-			method: 'POST',
-			originalUrl: '/chat/stream',
-			body: { prompt: 'Find breakfast recipes', page_context: 'home' },
-			user: undefined,
-		};
-		const res = createMockResponse();
-
-		await controller.streamChat(req, res);
-
-		expect(res.status).toHaveBeenCalledWith(401);
-		expect(res.json).toHaveBeenCalledWith({ error: 'Unauthorized' });
-		expect(mockPrismaUserFindUnique).not.toHaveBeenCalled();
 	});
 });

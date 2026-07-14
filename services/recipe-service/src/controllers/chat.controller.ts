@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { Response } from 'express';
 import { Readable } from 'stream';
+import { StringDecoder } from 'string_decoder';
 import { z } from 'zod';
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
 import prisma from '../services/prismaClient';
@@ -10,6 +11,7 @@ const chatRequestSchema = z
   .object({
     prompt: z.string().min(1),
     page_context: z.enum(['home', 'recipe_detail']),
+    session_id: z.string().min(1),
     recipe_id: z.string().min(1).optional(),
   })
   .superRefine((value, ctx) => {
@@ -21,19 +23,6 @@ const chatRequestSchema = z
       });
     }
   });
-
-type RouterIntent =
-  | 'CREATE_RECIPE'
-  | 'SEARCH_RECIPES'
-  | 'HEALTH_AUDIT'
-  | 'ASSISTANT_HELP'
-  | 'GENERAL_CHAT'
-  | 'ADD_TO_SHOPPING_LIST';
-
-interface RouterResponsePayload {
-  intent: RouterIntent;
-  confidence: number;
-}
 
 const normalizeIngredientName = (value: string): string => value.trim().toLowerCase();
 
@@ -67,10 +56,6 @@ const ensureIngredient = async (ingredientName: string) => {
     },
   });
 };
-
-interface FlushableResponse extends Response {
-  flush?: () => void;
-}
 
 interface RecipeContextPayload {
   id: string;
@@ -175,51 +160,8 @@ const getAxiosStatusCode = (error: unknown, fallbackStatus = 500): number => {
   return fallbackStatus;
 };
 
-const getInitFailureStatusCode = (error: unknown): number => {
-  const upstreamStatus = getAxiosStatusCode(error);
-  return upstreamStatus === 429 ? 429 : 500;
-};
-
-const getAxiosRetryAfter = (error: unknown): string | null => {
-  if (!axios.isAxiosError(error)) {
-    return null;
-  }
-
-  const retryAfter = error.response?.headers?.['retry-after'];
-  if (typeof retryAfter === 'string' && retryAfter.trim().length > 0) {
-    return retryAfter;
-  }
-
-  return null;
-};
-
-const parseRetryAfterSeconds = (
-  rawMessage: string,
-  retryAfterHeader: string | null,
-): number | null => {
-  if (retryAfterHeader) {
-    const fromHeader = Number.parseInt(retryAfterHeader, 10);
-    if (Number.isFinite(fromHeader) && fromHeader > 0) {
-      return fromHeader;
-    }
-  }
-
-  const retryInMatch = rawMessage.match(/retry in\s+([0-9]+(?:\.[0-9]+)?)s/i);
-  if (retryInMatch) {
-    return Math.max(1, Math.round(Number.parseFloat(retryInMatch[1])));
-  }
-
-  const retryDelayMatch = rawMessage.match(/retryDelay[^0-9]*([0-9]+)s/i);
-  if (retryDelayMatch) {
-    return Math.max(1, Number.parseInt(retryDelayMatch[1], 10));
-  }
-
-  return null;
-};
-
 const getFriendlyAiErrorMessage = (
   rawMessage: string,
-  retryAfterHeader: string | null = null,
 ): string => {
   const normalized = rawMessage.toLowerCase();
   const isRateLimited =
@@ -229,10 +171,6 @@ const getFriendlyAiErrorMessage = (
     || normalized.includes('429');
 
   if (isRateLimited) {
-    const retryAfterSeconds = parseRetryAfterSeconds(rawMessage, retryAfterHeader);
-    if (retryAfterSeconds) {
-      return `Rate limit reached, please try again in ${retryAfterSeconds} seconds.`;
-    }
     return 'Rate limit reached, please try again shortly.';
   }
 
@@ -241,131 +179,18 @@ const getFriendlyAiErrorMessage = (
 
 const getUserFacingAxiosErrorMessage = (error: unknown): string => {
   const rawMessage = getAxiosErrorMessage(error);
-  const retryAfter = getAxiosRetryAfter(error);
-  return getFriendlyAiErrorMessage(rawMessage, retryAfter);
+  return getFriendlyAiErrorMessage(rawMessage);
 };
 
 const logAxiosFailure = (label: string, error: unknown): void => {
   logger.error(
-    `${label} | status=${getAxiosStatusCode(error)} | retryAfter=${getAxiosRetryAfter(error) ?? 'none'} | detail=${getAxiosErrorMessage(error)}`,
+    `${label} | status=${getAxiosStatusCode(error)} | detail=${getAxiosErrorMessage(error)}`,
   );
 };
 
-const sendInitFailureJson = (
-  res: Response,
-  error: unknown,
-  intent: RouterIntent,
-): void => {
-  const statusCode = getInitFailureStatusCode(error);
-  const retryAfter = getAxiosRetryAfter(error);
-  if (retryAfter) {
-    res.setHeader('Retry-After', retryAfter);
-  }
-
-  res.status(statusCode).json({
-    error: getUserFacingAxiosErrorMessage(error),
-    intent,
-  });
-};
-
-const writeSseDelta = (res: FlushableResponse, content: string): void => {
-  if (!content) {
-    return;
-  }
-
-  res.write(`data: ${JSON.stringify({ delta: content })}\n\n`);
-  res.flush?.();
-};
-
-const writeSseEvent = (res: FlushableResponse, payload: Record<string, unknown>): void => {
-  res.write(`data: ${JSON.stringify(payload)}\n\n`);
-  res.flush?.();
-};
-
-/**
- * Forward already SSE-formatted stream from upstream.
- * This handles the new structured format where Python sends: data: {"delta": "...", "type": "text"}\n\n
- */
-const forwardStructuredSseStream = (
-  req: AuthenticatedRequest,
-  res: FlushableResponse,
-  upstreamStream: Readable,
-  onAbort: () => void,
-): void => {
-  let streamClosed = false;
-  let buffer = '';
-
-  const closeStream = (): void => {
-    if (streamClosed) {
-      return;
-    }
-
-    streamClosed = true;
-    if (!res.writableEnded) {
-      res.end();
-    }
-  };
-
-  req.on('close', () => {
-    onAbort();
-    if (!upstreamStream.destroyed) {
-      upstreamStream.destroy();
-    }
-    closeStream();
-  });
-
-  upstreamStream.on('data', (chunk: Buffer | string) => {
-    try {
-      const chunkText = chunk.toString();
-      if (!chunkText) {
-        return;
-      }
-
-      // Accumulate chunks until we have complete SSE lines
-      buffer += chunkText;
-
-      // Process complete lines (ending with \n\n for SSE)
-      let lineEndIndex = buffer.indexOf('\n\n');
-      while (lineEndIndex !== -1) {
-        const sseLine = buffer.substring(0, lineEndIndex + 2);
-        // Forward the SSE line as-is (already properly formatted from upstream)
-        res.write(sseLine);
-        res.flush?.();
-
-        buffer = buffer.substring(lineEndIndex + 2);
-        lineEndIndex = buffer.indexOf('\n\n');
-      }
-    } catch (streamParseError) {
-       
-      console.error('AI structured stream parse failed', streamParseError);
-      onAbort();
-      closeStream();
-    }
-  });
-
-  upstreamStream.on('end', () => {
-    // Flush any remaining buffer content
-    if (buffer.trim()) {
-      res.write(buffer);
-    }
-    logger.info('AI stream completed');
-    closeStream();
-  });
-
-  upstreamStream.on('error', (streamError: Error) => {
-     
-    console.error('AI upstream stream failed', streamError);
-    onAbort();
-
-    if (!res.writableEnded) {
-      // Send error as SSE formatted JSON
-      const errorObj = JSON.stringify({ type: 'error', message: 'AI stream interrupted. Please try again.' });
-      res.write(`data: ${errorObj}\n\n`);
-    }
-
-    closeStream();
-  });
-};
+// ----------------------------------------------------------------------
+// Express Gateway Endpoint
+// ----------------------------------------------------------------------
 
 export const streamChat = async (
   req: AuthenticatedRequest,
@@ -378,14 +203,18 @@ export const streamChat = async (
     return;
   }
 
-  const { prompt, page_context, recipe_id } = parsed.data;
+  if (!req.user?.id) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const { prompt, page_context, session_id, recipe_id } = parsed.data;
 
   let recipeContext: string | null = null;
   if (page_context === 'recipe_detail' && recipe_id) {
     try {
       recipeContext = await loadRecipeContext(req, recipe_id);
     } catch (error) {
-       
       console.error('Failed to load recipe context', { recipeId: recipe_id, error });
       res.status(500).json({ error: 'Failed to load recipe context' });
       return;
@@ -397,490 +226,475 @@ export const streamChat = async (
     }
   }
 
-  let routedIntent: RouterResponsePayload;
   try {
-    logger.info('Calling AI Service for: intent routing');
-    const routeResponse = await axios.post<RouterResponsePayload>(
-      `${AI_SERVICE_API_BASE_URL}/route`,
-      { prompt, page_context, recipe_context: recipeContext },
+    const user = await ensureUser(req.user.id);
+
+    const isRecipeDetail = page_context === 'recipe_detail' && typeof recipe_id === 'string' && recipe_id.trim().length > 0;
+    const currentRecipeId = isRecipeDetail ? recipe_id.trim() : null;
+
+    // 1. Fetch the last 10 messages (5 Q&As) to send to AI Agent as context (matching the current context)
+    const historyMessages = await prisma.chefChatMessage.findMany({
+      where: {
+        userId: user.id,
+        recipeId: currentRecipeId,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    });
+
+    const formattedHistory = historyMessages.reverse().map((msg) => ({
+      role: msg.isAi ? 'model' : 'user',
+      content: msg.content,
+    }));
+
+    // 2. Save the current user prompt to DB linked to context
+    await prisma.chefChatMessage.create({
+      data: {
+        userId: user.id,
+        content: prompt,
+        isAi: false,
+        recipeId: currentRecipeId,
+      },
+    });
+
+    logger.info('Forwarding chat request to unified AI Agent');
+
+    const aiResponse = await axios.post(
+      `${AI_SERVICE_API_BASE_URL}/agent/chat`,
+      {
+        prompt,
+        page_context,
+        session_id,
+        recipe_context: recipeContext,
+        recipe_id,
+        history: formattedHistory,
+      },
       {
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': req.headers.authorization || '',
+          'X-App-Secret': process.env.INTERNAL_APP_SECRET || '',
         },
-        timeout: 30000,
-      },
+        responseType: 'stream',
+        timeout: 0,
+      }
     );
 
-    routedIntent = routeResponse.data;
-    logger.info(`Intent detected: ${routedIntent.intent}`);
-  } catch (error) {
-    logAxiosFailure('AI router request failed', error);
-
-    const statusCode = getAxiosStatusCode(error);
-    const retryAfter = getAxiosRetryAfter(error);
-    if (retryAfter) {
-      res.setHeader('Retry-After', retryAfter);
-    }
-
-    res.status(statusCode).json({
-      error: getUserFacingAxiosErrorMessage(error),
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+      'X-Accel-Buffering': 'no',
     });
-    return;
-  }
 
-  const streamFromAi = async (endpoint: string): Promise<void> => {
-    const streamingResponse = res as FlushableResponse;
-    const upstreamAbortController = new AbortController();
-    const initializeGeminiStream = async (): Promise<Readable | null> => {
-      try {
-        logger.info(`Calling AI Service for: ${endpoint}`);
-        const upstreamResponse = await axios.post(
-          `${AI_SERVICE_API_BASE_URL}${endpoint}`,
-          { prompt, recipe_context: recipeContext },
-          {
-            headers: {
-              Accept: 'text/event-stream',
-              'Content-Type': 'application/json',
-            },
-            responseType: 'stream',
-            signal: upstreamAbortController.signal,
-            timeout: 0,
-          },
-        );
+    const upstreamStream = aiResponse.data as Readable;
+    upstreamStream.pipe(res);
 
-        return upstreamResponse.data as Readable;
-      } catch (error) {
-        logAxiosFailure('AI stream initialization failed', error);
-        sendInitFailureJson(res, error, routedIntent.intent);
-        return null;
-      }
-    };
+    // 3. Track and accumulate the AI response stream to save to DB
+    const decoder = new StringDecoder('utf-8');
+    let accumulatedAnswer = '';
+    let streamBuffer = '';
 
-    const upstreamStream = await initializeGeminiStream();
-    if (!upstreamStream) {
-      return;
-    }
-
-    try {
-      streamingResponse.writeHead(200, {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        Connection: 'keep-alive',
-        'X-Accel-Buffering': 'no',
-      });
-      streamingResponse.flushHeaders();
-
-      // Use the new structured SSE handler since Python now sends properly formatted SSE
-      forwardStructuredSseStream(req, streamingResponse, upstreamStream, () => {
-        upstreamAbortController.abort();
-      });
-    } catch (error) {
-       
-      console.error('AI stream setup failed after initialization', error);
-      if (!streamingResponse.headersSent) {
-        sendInitFailureJson(streamingResponse, error, routedIntent.intent);
-      } else if (!streamingResponse.writableEnded) {
-        writeSseDelta(streamingResponse, 'AI stream interrupted. Please try again.');
-        streamingResponse.end();
-      }
-    }
-  };
-
-  switch (routedIntent.intent) {
-    case 'ASSISTANT_HELP':
-    case 'GENERAL_CHAT':
-      await streamFromAi('/stream-assistant');
-      return;
-    case 'HEALTH_AUDIT':
-      await streamFromAi('/stream-health');
-      return;
-    case 'CREATE_RECIPE': {
-      try {
-        const streamingResponse = res as FlushableResponse;
-        streamingResponse.writeHead(200, {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          Connection: 'keep-alive',
-          'X-Accel-Buffering': 'no',
-        });
-        streamingResponse.flushHeaders();
-
-        writeSseEvent(streamingResponse, { type: 'intent', intent: 'CREATE_RECIPE' });
-
-        logger.info('Calling AI Service for: generate recipe');
-        const recipeResponse = await axios.post(
-          `${AI_SERVICE_API_BASE_URL}/generate-recipe`,
-          { prompt, recipe_context: recipeContext },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            timeout: 60000,
-          },
-        );
-
-        writeSseEvent(streamingResponse, {
-          type: 'recipeCreated',
-          recipe: recipeResponse.data,
-        });
-        streamingResponse.write('data: [DONE]\n\n');
-        streamingResponse.end();
-      } catch (error) {
-        logAxiosFailure('AI recipe generation failed', error);
-
-        const streamingResponse = res as FlushableResponse;
-        if (!streamingResponse.headersSent) {
-          streamingResponse.writeHead(200, {
-            'Content-Type': 'text/event-stream',
-            'Cache-Control': 'no-cache',
-            Connection: 'keep-alive',
-            'X-Accel-Buffering': 'no',
-          });
-          streamingResponse.flushHeaders();
-        }
-
-        writeSseEvent(streamingResponse, {
-          type: 'error',
-          message: getUserFacingAxiosErrorMessage(error),
-        });
-        streamingResponse.write('data: [DONE]\n\n');
-        streamingResponse.end();
-      }
-      return;
-    }
-    case 'SEARCH_RECIPES': {
-      const streamSemanticSearch = async (): Promise<void> => {
-        try {
-          logger.info('Calling AI Service for: search specialist');
-          const searchFiltersResponse = await axios.post(
-            `${AI_SERVICE_API_BASE_URL}/search-specialist`,
-            { prompt, recipe_context: recipeContext },
-            {
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              timeout: 30000,
-            },
-          );
-
-          const searchFilters = searchFiltersResponse.data;
-          const normalizedQuery = searchFilters.query || prompt;
-
-          // Get user context
-          if (!req.user?.id) {
-            res.status(401).json({ error: 'Unauthorized' });
-            return;
+    upstreamStream.on('data', async (chunk: Buffer) => {
+      streamBuffer += decoder.write(chunk);
+      let lineEnd;
+      while ((lineEnd = streamBuffer.indexOf('\n')) !== -1) {
+        const line = streamBuffer.slice(0, lineEnd).trim();
+        streamBuffer = streamBuffer.slice(lineEnd + 1);
+        if (line.startsWith('data:')) {
+          const dataStr = line.slice(5).trim();
+          if (dataStr === '[DONE]') {
+            continue;
           }
-
-          const user = await prisma.user.findUnique({
-            where: { authId: req.user.id },
-            select: { id: true },
-          });
-
-          if (!user) {
-            res.writeHead(200, {
-              'Content-Type': 'text/event-stream',
-              'Cache-Control': 'no-cache',
-              Connection: 'keep-alive',
-              'X-Accel-Buffering': 'no',
-            });
-            res.write(`data: ${JSON.stringify({ type: 'searchResults', recipes: [] })}\n\n`);
-            res.write('data: [DONE]\n\n');
-            res.end();
-            return;
-          }
-
-          // Generate embedding for the normalized query
-          logger.info(`Generating embedding for semantic search: "${normalizedQuery}"`);
-          const embeddingResponse = await axios.post(
-            `${AI_SERVICE_API_BASE_URL}/embeddings`,
-            { text: normalizedQuery },
-            {
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              timeout: 30000,
-            },
-          );
-
-          const embedding = embeddingResponse.data?.embedding;
-          if (!Array.isArray(embedding) || embedding.length === 0) {
-            throw new Error('Invalid embedding response from AI service');
-          }
-
-          // Convert embedding to vector literal
-          const vectorLiteral = `[${embedding.map((v: number) => Number(v).toString()).join(',')}]`;
-          const SEARCH_MAX_DISTANCE = Number(process.env.SEARCH_MAX_DISTANCE ?? '0.5');
-
-          // Search recipes using vector similarity (pgvector)
-          const searchResults = await prisma.$queryRaw<Array<{ id: string; distance: number }>>`
-            SELECT "id", ("embedding" <=> CAST(${vectorLiteral} AS vector)) AS "distance"
-            FROM "Recipe"
-            WHERE "embedding" IS NOT NULL
-              AND "authorId" = ${user.id}
-              AND ("embedding" <=> CAST(${vectorLiteral} AS vector)) <= ${SEARCH_MAX_DISTANCE}
-            ORDER BY "embedding" <=> CAST(${vectorLiteral} AS vector)
-            LIMIT 3
-          `;
-
-          logger.info(`Found ${searchResults.length} recipes matching the search`);
-
-          // Fetch full recipe details
-          const recipeIds = searchResults.map((result) => result.id);
-          let recipes: any[] = [];
-
-          if (recipeIds.length > 0) {
-            recipes = await prisma.recipe.findMany({
-              where: {
-                id: {
-                  in: recipeIds,
-                },
-              },
-              include: {
-                ingredients: {
-                  include: {
-                    ingredient: true,
-                  },
-                },
-              },
-            });
-
-            // Sort recipes based on search order
-            const recipeById = new Map(recipes.map((recipe) => [recipe.id, recipe]));
-            recipes = recipeIds
-              .map((id) => recipeById.get(id))
-              .filter(Boolean);
-          }
-
-          // Map recipes to DTO format
-          const recipeDTOs = recipes.map((recipe) => ({
-            id: recipe.id,
-            title: recipe.title,
-            healthScore: recipe.healthScore,
-            imageUrl: recipe.imageUrl || 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=300&h=200',
-            ingredients: recipe.ingredients?.map((ri: any) => ri.ingredient.name) || [],
-          }));
-
-          // Send SSE response with search results
-          res.writeHead(200, {
-            'Content-Type': 'text/event-stream',
-            'Cache-Control': 'no-cache',
-            Connection: 'keep-alive',
-            'X-Accel-Buffering': 'no',
-          });
-
-          // Send introduction message
-          const introMessage = recipeIds.length > 0
-            ? `Here are the recipes I found for you:`
-            : `I couldn't find any recipes matching "${normalizedQuery}". Try different keywords or ingredients!`;
-
-          res.write(`data: ${JSON.stringify({ delta: introMessage, type: 'text' })}\n\n`);
-
-          // Send search results as metadata event
-          if (recipeIds.length > 0) {
-            res.write(`data: ${JSON.stringify({ type: 'searchResults', recipes: recipeDTOs })}\n\n`);
-          }
-
-          // Signal completion
-          res.write('data: [DONE]\n\n');
-          res.end();
-        } catch (error) {
-          logAxiosFailure('AI semantic search failed', error);
-
-          const streamingResponse = res as FlushableResponse;
-          if (!streamingResponse.headersSent) {
-            streamingResponse.writeHead(200, {
-              'Content-Type': 'text/event-stream',
-              'Cache-Control': 'no-cache',
-              Connection: 'keep-alive',
-              'X-Accel-Buffering': 'no',
-            });
-          }
-
-          const errorMessage = getUserFacingAxiosErrorMessage(error);
-          streamingResponse.write(`data: ${JSON.stringify({ delta: errorMessage, type: 'text' })}\n\n`);
-          streamingResponse.write('data: [DONE]\n\n');
-          streamingResponse.end();
-        }
-      };
-
-      await streamSemanticSearch();
-      return;
-    }
-    case 'ADD_TO_SHOPPING_LIST': {
-      try {
-        const streamingResponse = res as FlushableResponse;
-        streamingResponse.writeHead(200, {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          Connection: 'keep-alive',
-          'X-Accel-Buffering': 'no',
-        });
-        streamingResponse.flushHeaders();
-
-        writeSseEvent(streamingResponse, { type: 'intent', intent: 'ADD_TO_SHOPPING_LIST' });
-
-        logger.info('Calling AI Service for: parse-shopping-list');
-        const aiResponse = await axios.post(
-          `${AI_SERVICE_API_BASE_URL}/parse-shopping-list`,
-          { prompt, recipe_context: recipeContext },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            timeout: 30000,
-          },
-        );
-
-        const { mode, items, recipe_name } = aiResponse.data;
-        logger.info(`AI parse-shopping-list: mode=${mode}, recipe_name=${recipe_name}, itemsCount=${items?.length ?? 0}`);
-
-        let itemsToAdd: Array<{ name: string; amount: string | null }> = [];
-
-        if (mode === 'recipe_context') {
-          if (recipe_id) {
-            const recipe = await prisma.recipe.findFirst({
-              where: {
-                id: recipe_id,
-                author: { authId: req.user!.id },
-              },
-              include: {
-                ingredients: {
-                  include: {
-                    ingredient: true,
-                  },
-                },
-              },
-            });
-            if (recipe) {
-              itemsToAdd = recipe.ingredients.map((ri) => ({
-                name: ri.ingredient.name,
-                amount: ri.amount || null,
-              }));
-            }
-          }
-          if (itemsToAdd.length === 0) {
-            itemsToAdd = (items || []).map((item: any) => {
-              if (typeof item === 'string') {
-                return { name: item, amount: null };
-              }
-              return { name: item.name, amount: item.amount || null };
-            });
-          }
-        } else if (mode === 'recipe_by_name' && recipe_name) {
-          const recipe = await prisma.recipe.findFirst({
-            where: {
-              title: { contains: recipe_name, mode: 'insensitive' },
-              author: { authId: req.user!.id },
-            },
-            include: {
-              ingredients: {
-                include: {
-                  ingredient: true,
-                },
-              },
-            },
-          });
-          if (recipe) {
-            itemsToAdd = recipe.ingredients.map((ri) => ({
-              name: ri.ingredient.name,
-              amount: ri.amount || null,
-            }));
-          } else {
-            writeSseEvent(streamingResponse, {
-              type: 'error',
-              message: `I couldn't find a recipe named "${recipe_name}" in your collection.`,
-            });
-            streamingResponse.write('data: [DONE]\n\n');
-            streamingResponse.end();
-            return;
-          }
-        } else {
-          // mode === 'explicit_items'
-          itemsToAdd = (items || []).map((item: any) => {
-            if (typeof item === 'string') {
-              return { name: item, amount: null };
-            }
-            return { name: item.name, amount: item.amount || null };
-          });
-        }
-
-        const user = await ensureUser(req.user!.id);
-        const addedItems: string[] = [];
-
-        if (itemsToAdd.length > 0) {
-          const prismaAny = prisma as any;
-          for (const item of itemsToAdd) {
-            const normalizedName = item.name.trim().toLowerCase();
-            if (!normalizedName) {
-              continue;
-            }
-
-            const ingredient = await ensureIngredient(normalizedName);
-
-            const existing = await prismaAny.shoppingListItem.findUnique({
-              where: {
-                userId_ingredientId: {
-                  userId: user.id,
-                  ingredientId: ingredient.id,
-                },
-              },
-            });
-
-            if (!existing) {
-              await prismaAny.shoppingListItem.create({
+          try {
+            const parsedChunk = JSON.parse(dataStr);
+            if (parsedChunk.type === 'text' && typeof parsedChunk.delta === 'string') {
+              accumulatedAnswer += parsedChunk.delta;
+            } else if (parsedChunk.type === 'recipeCreated' && parsedChunk.recipe) {
+              await prisma.chefChatMessage.create({
                 data: {
                   userId: user.id,
-                  ingredientId: ingredient.id,
-                  checked: false,
-                  amount: item.amount || null,
+                  content: parsedChunk.recipe.title || 'Your Recipe',
+                  isAi: true,
+                  messageType: 'recipePreview',
+                  metadata: parsedChunk.recipe,
+                  recipeId: currentRecipeId,
                 },
               });
-              addedItems.push(item.amount ? `${item.amount} ${item.name}` : item.name);
-            } else {
-              if (item.amount) {
-                await prismaAny.shoppingListItem.update({
-                  where: { id: existing.id },
+            } else if (parsedChunk.type === 'searchResults' && Array.isArray(parsedChunk.recipes)) {
+              await prisma.chefChatMessage.create({
+                data: {
+                  userId: user.id,
+                  content: '',
+                  isAi: true,
+                  messageType: 'searchResults',
+                  metadata: { recipes: parsedChunk.recipes },
+                  recipeId: currentRecipeId,
+                },
+              });
+            } else if (parsedChunk.type === 'shoppingListAdded' && Array.isArray(parsedChunk.items)) {
+              await prisma.chefChatMessage.create({
+                data: {
+                  userId: user.id,
+                  content: '',
+                  isAi: true,
+                  messageType: 'shoppingListAdded',
+                  metadata: { items: parsedChunk.items },
+                  recipeId: currentRecipeId,
+                },
+              });
+            } else if (parsedChunk.type === 'metadata') {
+              const swaps = parsedChunk.suggested_swaps ||
+                parsedChunk.healthier_swaps ||
+                parsedChunk.substitutions ||
+                parsedChunk.swaps;
+              if (Array.isArray(swaps) && swaps.length > 0) {
+                await prisma.chefChatMessage.create({
                   data: {
-                    amount: item.amount,
+                    userId: user.id,
+                    content: 'Suggested Substitutions',
+                    isAi: true,
+                    messageType: 'swapSummary',
+                    metadata: { swaps },
+                    recipeId: currentRecipeId,
                   },
                 });
               }
-              addedItems.push(item.amount ? `${item.amount} ${item.name}` : item.name);
             }
+          } catch (e) {
+            // Ignore incomplete lines
           }
         }
-
-        writeSseEvent(streamingResponse, {
-          type: 'shoppingListAdded',
-          items: addedItems,
-        });
-        streamingResponse.write('data: [DONE]\n\n');
-        streamingResponse.end();
-      } catch (error) {
-        logAxiosFailure('AI shopping list parse failed', error);
-
-        const streamingResponse = res as FlushableResponse;
-        if (!streamingResponse.headersSent) {
-          streamingResponse.writeHead(200, {
-            'Content-Type': 'text/event-stream',
-            'Cache-Control': 'no-cache',
-            Connection: 'keep-alive',
-            'X-Accel-Buffering': 'no',
-          });
-          streamingResponse.flushHeaders();
-        }
-
-        writeSseEvent(streamingResponse, {
-          type: 'error',
-          message: getUserFacingAxiosErrorMessage(error),
-        });
-        streamingResponse.write('data: [DONE]\n\n');
-        streamingResponse.end();
       }
+    });
+
+    let saved = false;
+    const saveAnswer = async () => {
+      if (saved) return;
+      saved = true;
+      const cleanAnswer = accumulatedAnswer.trim();
+      if (cleanAnswer) {
+        try {
+          await prisma.chefChatMessage.create({
+            data: {
+              userId: user.id,
+              content: cleanAnswer,
+              isAi: true,
+              recipeId: currentRecipeId,
+            },
+          });
+        } catch (err) {
+          logger.error('Failed to save AI response:', err);
+        }
+      }
+    };
+
+    upstreamStream.on('end', saveAnswer);
+
+    req.on('close', () => {
+      saveAnswer();
+      if (!upstreamStream.destroyed) {
+        upstreamStream.destroy();
+      }
+    });
+
+  } catch (error: any) {
+    logAxiosFailure('AI Agent request failed', error);
+    const statusCode = getAxiosStatusCode(error);
+    res.status(statusCode).json({
+      error: getUserFacingAxiosErrorMessage(error),
+    });
+  }
+};
+
+export const getChatHistory = async (
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    if (!req.user?.id) {
+      res.status(401).json({ error: 'Unauthorized' });
       return;
     }
-    default:
-      res.status(400).json({ error: `Unsupported intent: ${routedIntent.intent}` });
+
+    const { pageContext, recipeId } = req.query;
+
+    const user = await ensureUser(req.user.id);
+
+    const isRecipeDetail = pageContext === 'recipe_detail' && typeof recipeId === 'string' && recipeId.trim().length > 0;
+    const currentRecipeId = isRecipeDetail ? recipeId.trim() : null;
+
+    const history = await prisma.chefChatMessage.findMany({
+      where: {
+        userId: user.id,
+        recipeId: currentRecipeId,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: 20,
+    });
+
+    res.json(history.reverse());
+  } catch (error) {
+    console.error('Failed to fetch chef chat history', error);
+    res.status(500).json({ error: 'Failed to fetch chef chat history' });
+  }
+};
+
+// ----------------------------------------------------------------------
+// Internal Callback Endpoints
+// ----------------------------------------------------------------------
+
+export const internalSearchRecipes = async (
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    if (!req.user?.id) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const { embedding } = req.body;
+    if (!Array.isArray(embedding) || embedding.length === 0) {
+      res.status(400).json({ error: 'Invalid or missing embedding array' });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { authId: req.user.id },
+      select: { id: true },
+    });
+
+    if (!user) {
+      res.json([]);
+      return;
+    }
+
+
+    const vectorLiteral = `[${embedding.map((v: number) => Number(v).toString()).join(',')}]`;
+    const SEARCH_MAX_DISTANCE = Number(process.env.SEARCH_MAX_DISTANCE ?? '0.5');
+
+    const searchResults = await prisma.$queryRaw<Array<{ id: string; distance: number }>>`
+      SELECT "id", ("embedding" <=> CAST(${vectorLiteral} AS vector)) AS "distance"
+      FROM "Recipe"
+      WHERE "embedding" IS NOT NULL
+        AND "authorId" = ${user.id}
+        AND ("embedding" <=> CAST(${vectorLiteral} AS vector)) <= ${SEARCH_MAX_DISTANCE}
+      ORDER BY "embedding" <=> CAST(${vectorLiteral} AS vector)
+      LIMIT 3
+    `;
+
+    const recipeIds = searchResults.map((result) => result.id);
+    let recipes: any[] = [];
+
+    if (recipeIds.length > 0) {
+      recipes = await prisma.recipe.findMany({
+        where: {
+          id: {
+            in: recipeIds,
+          },
+        },
+        include: {
+          ingredients: {
+            include: {
+              ingredient: true,
+            },
+          },
+        },
+      });
+
+      const recipeById = new Map(recipes.map((recipe) => [recipe.id, recipe]));
+      recipes = recipeIds
+        .map((id) => recipeById.get(id))
+        .filter((recipe): recipe is NonNullable<typeof recipe> => Boolean(recipe));
+    }
+
+    const recipeDTOs = recipes.map((recipe) => ({
+      id: recipe.id,
+      title: recipe.title,
+      healthScore: recipe.healthScore,
+      imageUrl: recipe.imageUrl || 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=300&h=200',
+      ingredients: recipe.ingredients?.map((ri: any) => ri.ingredient.name) || [],
+    }));
+
+    res.json(recipeDTOs);
+  } catch (error) {
+    console.error('Internal recipes search failed', error);
+    res.status(500).json({ error: 'Internal recipes search failed' });
+  }
+};
+
+export const internalAddToShoppingList = async (
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    if (!req.user?.id) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const { items } = req.body;
+    if (!Array.isArray(items)) {
+      res.status(400).json({ error: 'Items array is required' });
+      return;
+    }
+
+    const user = await ensureUser(req.user.id);
+    const addedItems: string[] = [];
+
+    if (items.length > 0) {
+      const prismaAny = prisma as any;
+      for (const item of items) {
+        const name = typeof item === 'string' ? item : item.name;
+        const amount = typeof item === 'string' ? null : item.amount || null;
+
+        const normalizedName = name.trim().toLowerCase();
+        if (!normalizedName) {
+          continue;
+        }
+
+        const ingredient = await ensureIngredient(normalizedName);
+
+        const existing = await prismaAny.shoppingListItem.findUnique({
+          where: {
+            userId_ingredientId: {
+              userId: user.id,
+              ingredientId: ingredient.id,
+            },
+          },
+        });
+
+        if (!existing) {
+          await prismaAny.shoppingListItem.create({
+            data: {
+              userId: user.id,
+              ingredientId: ingredient.id,
+              checked: false,
+              amount: amount || null,
+            },
+          });
+        } else if (amount) {
+          await prismaAny.shoppingListItem.update({
+            where: { id: existing.id },
+            data: { amount },
+          });
+        }
+        addedItems.push(amount ? `${amount} ${name}` : name);
+      }
+    }
+
+    res.json(addedItems);
+  } catch (error) {
+    console.error('Internal add to shopping list failed', error);
+    res.status(500).json({ error: 'Internal add to shopping list failed' });
+  }
+};
+
+export const internalAddRecipeToShoppingList = async (
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    if (!req.user?.id) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const { recipeName, recipeId } = req.body;
+    let itemsToAdd: Array<{ name: string; amount: string | null }> = [];
+
+    if (recipeId) {
+      const recipe = await prisma.recipe.findFirst({
+        where: {
+          id: recipeId,
+          author: { authId: req.user.id },
+        },
+        include: {
+          ingredients: {
+            include: {
+              ingredient: true,
+            },
+          },
+        },
+      });
+      if (recipe) {
+        itemsToAdd = recipe.ingredients.map((ri) => ({
+          name: ri.ingredient.name,
+          amount: ri.amount || null,
+        }));
+      }
+    } else if (recipeName) {
+      const recipe = await prisma.recipe.findFirst({
+        where: {
+          title: { contains: recipeName, mode: 'insensitive' },
+          author: { authId: req.user.id },
+        },
+        include: {
+          ingredients: {
+            include: {
+              ingredient: true,
+            },
+          },
+        },
+      });
+      if (recipe) {
+        itemsToAdd = recipe.ingredients.map((ri) => ({
+          name: ri.ingredient.name,
+          amount: ri.amount || null,
+        }));
+      } else {
+        res.status(404).json({ error: 'Recipe not found' });
+        return;
+      }
+    }
+
+    const user = await ensureUser(req.user.id);
+    const addedItems: string[] = [];
+
+    if (itemsToAdd.length > 0) {
+      const prismaAny = prisma as any;
+      for (const item of itemsToAdd) {
+        const normalizedName = item.name.trim().toLowerCase();
+        if (!normalizedName) {
+          continue;
+        }
+
+        const ingredient = await ensureIngredient(normalizedName);
+
+        const existing = await prismaAny.shoppingListItem.findUnique({
+          where: {
+            userId_ingredientId: {
+              userId: user.id,
+              ingredientId: ingredient.id,
+            },
+          },
+        });
+
+        if (!existing) {
+          await prismaAny.shoppingListItem.create({
+            data: {
+              userId: user.id,
+              ingredientId: ingredient.id,
+              checked: false,
+              amount: item.amount || null,
+            },
+          });
+        } else if (item.amount) {
+          await prismaAny.shoppingListItem.update({
+            where: { id: existing.id },
+            data: { amount: item.amount },
+          });
+        }
+        addedItems.push(item.amount ? `${item.amount} ${item.name}` : item.name);
+      }
+    }
+
+    res.json(addedItems);
+  } catch (error) {
+    console.error('Internal add recipe to shopping list failed', error);
+    res.status(500).json({ error: 'Internal add recipe to shopping list failed' });
   }
 };
