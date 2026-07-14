@@ -45,6 +45,8 @@ async function loadChatControllerModule(): Promise<ChatModuleLoad> {
 	const mockPrismaUserFindUnique = jest.fn();
 	const mockPrismaRecipeFindFirst = jest.fn();
 	const mockPrismaRecipeFindMany = jest.fn();
+	const mockPrismaChefChatMessageFindMany = jest.fn(() => []);
+	const mockPrismaChefChatMessageCreate = jest.fn();
 	const mockPrismaQueryRaw = jest.fn();
 
 	const mockLoggerInfo = jest.fn();
@@ -67,6 +69,10 @@ async function loadChatControllerModule(): Promise<ChatModuleLoad> {
 			recipe: {
 				findFirst: mockPrismaRecipeFindFirst,
 				findMany: mockPrismaRecipeFindMany,
+			},
+			chefChatMessage: {
+				findMany: mockPrismaChefChatMessageFindMany,
+				create: mockPrismaChefChatMessageCreate,
 			},
 			$queryRaw: mockPrismaQueryRaw,
 		},
@@ -119,17 +125,19 @@ describe('chat controller', () => {
 	});
 
 	it('returns upstream-friendly error when agent call fails', async () => {
-		const { controller, mockAxiosPost, mockAxiosIsAxiosError, mockLoggerError } =
+		const { controller, mockAxiosPost, mockAxiosIsAxiosError, mockLoggerError, mockPrismaUserFindUnique } =
 			await loadChatControllerModule();
 
 		mockAxiosIsAxiosError.mockReturnValue(false);
 		mockAxiosPost.mockRejectedValue(new Error('Agent unavailable'));
+		mockPrismaUserFindUnique.mockResolvedValue({ id: 'test-user-id' });
 
 		const req = {
 			method: 'POST',
 			originalUrl: '/chat/stream',
 			body: { prompt: 'hello', page_context: 'home', session_id: 'test-session' },
 			headers: { authorization: 'Bearer token' },
+			user: { id: 'test-user-id' },
 		};
 		const res = createMockResponse();
 
@@ -143,19 +151,21 @@ describe('chat controller', () => {
 	});
 
 	it('successfully proxies agent stream', async () => {
-		const { controller, mockAxiosPost } = await loadChatControllerModule();
+		const { controller, mockAxiosPost, mockPrismaUserFindUnique } = await loadChatControllerModule();
 		const dummyStream = new Readable();
 		dummyStream._read = () => {};
 
 		mockAxiosPost.mockResolvedValueOnce({
 			data: dummyStream,
 		});
+		mockPrismaUserFindUnique.mockResolvedValue({ id: 'test-user-id' });
 
 		const req = {
 			method: 'POST',
 			originalUrl: '/chat/stream',
 			body: { prompt: 'Cook something', page_context: 'home', session_id: 'test-session' },
 			headers: { authorization: 'Bearer token' },
+			user: { id: 'test-user-id' },
 			on: jest.fn(),
 		};
 		const res = createMockResponse();
