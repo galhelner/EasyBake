@@ -7,7 +7,7 @@ jest.mock('../../../services/logger');
 
 describe('chatService', () => {
   const mockPrisma = {
-    message: {
+    communityChatMessage: {
       create: jest.fn<() => Promise<unknown>>(),
       findMany: jest.fn<() => Promise<unknown[]>>()
     },
@@ -27,12 +27,13 @@ describe('chatService', () => {
       const userId = 'user-123';
       const content = 'Hello, community!';
 
-      mockPrisma.message.create.mockResolvedValue({
+      mockPrisma.communityChatMessage.create.mockResolvedValue({
         id: 'msg-1',
         userId,
         content,
         messageType: 'text',
         recipeId: null,
+        metadata: null,
         createdAt: new Date(),
         user: {
           id: userId,
@@ -53,15 +54,17 @@ describe('chatService', () => {
         content,
         messageType: 'text',
         recipeId: null,
+        metadata: null,
         createdAt: expect.any(Date)
       });
 
-      expect(mockPrisma.message.create).toHaveBeenCalledWith({
+      expect(mockPrisma.communityChatMessage.create).toHaveBeenCalledWith({
         data: {
           userId,
           content,
           messageType: 'text',
-          recipeId: null
+          recipeId: null,
+          metadata: null
         },
         include: {
           user: {
@@ -77,7 +80,7 @@ describe('chatService', () => {
     });
 
     it('should throw an error if message save fails', async () => {
-      mockPrisma.message.create.mockRejectedValue(new Error('Database error'));
+      mockPrisma.communityChatMessage.create.mockRejectedValue(new Error('Database error'));
 
       await expect(saveMessage('user-123', { content: 'Hello' })).rejects.toThrow('Database error');
     });
@@ -87,12 +90,13 @@ describe('chatService', () => {
       const content = 'Shared a recipe';
       const recipeId = 'recipe-789';
 
-      mockPrisma.message.create.mockResolvedValue({
+      mockPrisma.communityChatMessage.create.mockResolvedValue({
         id: 'msg-2',
         userId,
         content,
         messageType: 'recipe',
         recipeId,
+        metadata: null,
         createdAt: new Date(),
         user: {
           id: userId,
@@ -108,12 +112,13 @@ describe('chatService', () => {
         recipeId
       });
 
-      expect(mockPrisma.message.create).toHaveBeenCalledWith({
+      expect(mockPrisma.communityChatMessage.create).toHaveBeenCalledWith({
         data: {
           userId,
           content,
           messageType: 'recipe',
-          recipeId
+          recipeId,
+          metadata: null
         },
         include: {
           user: {
@@ -132,12 +137,13 @@ describe('chatService', () => {
       const content = 'Here is the answer';
 
       mockPrisma.user.upsert.mockResolvedValue({});
-      mockPrisma.message.create.mockResolvedValue({
+      mockPrisma.communityChatMessage.create.mockResolvedValue({
         id: 'msg-ai-1',
         userId: 'ai-chef',
         content,
         messageType: 'ai-assistant',
         recipeId: null,
+        metadata: null,
         createdAt: new Date(),
         user: {
           id: 'ai-chef',
@@ -169,12 +175,13 @@ describe('chatService', () => {
         }
       });
 
-      expect(mockPrisma.message.create).toHaveBeenCalledWith({
+      expect(mockPrisma.communityChatMessage.create).toHaveBeenCalledWith({
         data: {
           userId: 'ai-chef',
           content,
           messageType: 'ai-assistant',
-          recipeId: null
+          recipeId: null,
+          metadata: null
         },
         include: {
           user: {
@@ -202,6 +209,7 @@ describe('chatService', () => {
           content: 'First message',
           messageType: 'text',
           recipeId: null,
+          metadata: null,
           createdAt: new Date('2026-04-15T10:00:00Z'),
           user: {
             id: 'user-1',
@@ -216,6 +224,7 @@ describe('chatService', () => {
           content: 'Second message',
           messageType: 'recipe',
           recipeId: 'recipe-2',
+          metadata: null,
           createdAt: new Date('2026-04-15T10:05:00Z'),
           user: {
             id: 'user-2',
@@ -226,7 +235,7 @@ describe('chatService', () => {
         }
       ];
 
-      mockPrisma.message.findMany.mockResolvedValue(messages);
+      mockPrisma.communityChatMessage.findMany.mockResolvedValue(messages);
 
       const result = await getRecentMessages(50);
 
@@ -236,11 +245,11 @@ describe('chatService', () => {
     });
 
     it('should use default limit of 50 if not provided', async () => {
-      mockPrisma.message.findMany.mockResolvedValue([]);
+      mockPrisma.communityChatMessage.findMany.mockResolvedValue([]);
 
       await getRecentMessages();
 
-      expect(mockPrisma.message.findMany).toHaveBeenCalledWith({
+      expect(mockPrisma.communityChatMessage.findMany).toHaveBeenCalledWith({
         take: -50,
         include: {
           user: {
