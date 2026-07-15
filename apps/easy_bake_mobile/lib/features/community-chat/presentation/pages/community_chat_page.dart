@@ -6,6 +6,7 @@ import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 import '../providers/chat_provider.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
+import '../../../home/presentation/pages/home_tabs_page.dart';
 import '../widgets/connection_pill.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/message_tile.dart';
@@ -33,7 +34,9 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
     _messageController = MentionTextEditingController();
     _chatServiceNotifier = ref.read(chatServiceProvider.notifier);
     Future.microtask(() {
-      _initializeChat();
+      if (ref.read(homeTabIndexProvider) == 1) {
+        _initializeChat();
+      }
     });
   }
 
@@ -184,8 +187,20 @@ class _CommunityChatState extends ConsumerState<CommunityChat> {
     final currentUserId = authNotifier.userId?.trim() ?? '';
     final currentUserEmail = authNotifier.email?.trim() ?? '';
 
+    ref.listen<int>(homeTabIndexProvider, (previous, next) {
+      if (next == 1 &&
+          ref.read(chatConnectionStateProvider) ==
+              ChatConnectionState.disconnected) {
+        _initializeChat();
+      }
+    });
+
     ref.listen<String?>(chatErrorProvider, (previous, next) {
       if (next == null || next == previous) {
+        return;
+      }
+
+      if (ref.read(homeTabIndexProvider) != 1) {
         return;
       }
 

@@ -291,6 +291,8 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
       BaseOptions(
         baseUrl: chatServerUrl,
         headers: {'Authorization': 'Bearer $token'},
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 10),
       ),
     );
 
