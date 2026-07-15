@@ -237,7 +237,9 @@ class RecipeService {
       ),
     );
 
-    return RecipeModel.fromJson(response.data as Map<String, dynamic>);
+    final data = Map<String, dynamic>.from(response.data as Map);
+    data['recipeBy'] = 'AI Chef';
+    return RecipeModel.fromJson(data);
   }
 
   Future<RecipeModel> updateRecipeWithOptionalImage(

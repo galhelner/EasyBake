@@ -941,4 +941,13 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get recipesHeaderLabel => 'מתכונים';
+
+  @override
+  String get recipeAuthorHint => 'נכתב על ידי';
+
+  @override
+  String get recipeAuthorLabel => 'מאת';
+
+  @override
+  String get aiChefName => 'שף ה-AI';
 }

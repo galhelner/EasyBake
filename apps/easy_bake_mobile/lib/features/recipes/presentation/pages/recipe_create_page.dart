@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'dart:typed_data';
 import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
+import '../../../auth/presentation/providers/auth_notifier.dart';
 import '../../data/services/recipe_service.dart';
 import '../../domain/models/ingredient_suggestion_model.dart';
 import '../../domain/models/recipe_model.dart';
@@ -40,6 +41,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
   final _formKey = GlobalKey<FormState>();
 
   final _titleController = TextEditingController();
+  final _authorController = TextEditingController();
 
   final List<TextEditingController> _ingredientControllers = [
     TextEditingController(),
@@ -83,20 +85,41 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
             : null);
   }
 
+  bool _isInitialized = false;
+
   @override
   void initState() {
     super.initState();
-    _applyInitialRecipe();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isInitialized) {
+      _applyInitialRecipe();
+      _isInitialized = true;
+    }
   }
 
   void _applyInitialRecipe() {
     final initialRecipe = _resolvedInitialRecipe;
 
     if (initialRecipe == null) {
+      final authState = ref.read(authNotifierProvider);
+      final fullName = authState.fullName?.trim();
+      _authorController.text = (fullName != null && fullName.isNotEmpty)
+          ? fullName
+          : (authState.displayName?.trim().isNotEmpty ?? false)
+              ? authState.displayName!.trim()
+              : 'EasyBake User';
       return;
     }
 
     _titleController.text = initialRecipe.title;
+    final initialAuthor = initialRecipe.recipeBy ?? '';
+    _authorController.text = (initialAuthor.toLowerCase() == 'ai chef')
+        ? AppLocalizations.of(context)!.aiChefName
+        : initialAuthor;
     _replaceControllerValues(_ingredientControllers, initialRecipe.ingredients);
     _replaceControllerValues(
       _ingredientAmountControllers,
@@ -230,6 +253,8 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
   Future<void> _saveRecipe() async {
     if (!_validateRequiredFields()) return;
 
+    final aiChefLocalizedName = AppLocalizations.of(context)!.aiChefName;
+
     setState(() {
       _isLoading = true;
     });
@@ -240,6 +265,12 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
       final ingredientIcons = _collectIngredientIconsByName();
       final instructions = _collectValues(_instructionControllers);
 
+      final authorText = _authorController.text.trim();
+      final recipeByValue = (authorText.toLowerCase() == 'ai chef' ||
+          authorText.toLowerCase() == aiChefLocalizedName.toLowerCase())
+          ? 'AI Chef'
+          : authorText;
+
       final recipe = RecipeModel(
         title: _titleController.text.trim(),
         ingredients: ingredients,
@@ -247,6 +278,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
         ingredientAmounts: ingredientAmounts,
         instructions: instructions,
         healthScore: 5,
+        recipeBy: recipeByValue,
       );
 
       final service = ref.read(recipeServiceProvider);
@@ -274,6 +306,12 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
       final ingredientIcons = _collectIngredientIconsByName();
       final instructions = _collectValues(_instructionControllers);
 
+      final authorText = _authorController.text.trim();
+      final recipeByValue = (authorText.toLowerCase() == 'ai chef' ||
+          authorText.toLowerCase() == aiChefLocalizedName.toLowerCase())
+          ? 'AI Chef'
+          : authorText;
+
       final attemptedRecipe = RecipeModel(
         title: _titleController.text.trim(),
         ingredients: ingredients,
@@ -281,6 +319,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
         ingredientAmounts: ingredientAmounts,
         instructions: instructions,
         healthScore: 5,
+        recipeBy: recipeByValue,
       );
 
       final existingId = _resolvedInitialRecipe?.id;
@@ -556,6 +595,7 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
   @override
   void dispose() {
     _titleController.dispose();
+    _authorController.dispose();
     for (final timer in _ingredientSearchDebouncers) {
       timer?.cancel();
     }
@@ -1026,6 +1066,15 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                         isEditMode: _isEditMode,
                       ),
                       const SizedBox(height: 20),
+                      Text(
+                        l10n.recipeTitleHint,
+                        style: const TextStyle(
+                          color: _kPrimaryBlue,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       RecipeCreateInputField(
                         controller: _titleController,
                         hintText: l10n.recipeTitleHint,
@@ -1035,6 +1084,24 @@ class _RecipeCreatePageState extends ConsumerState<RecipeCreatePage> {
                         minLines: 1,
                         maxLines: 3,
                         onChanged: _handleTitleChanged,
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        l10n.recipeAuthorHint,
+                        style: const TextStyle(
+                          color: _kPrimaryBlue,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      RecipeCreateInputField(
+                        controller: _authorController,
+                        hintText: l10n.recipeAuthorHint,
+                        primaryColor: _kPrimaryBlue,
+                        hintColor: _kHintText,
+                        minLines: 1,
+                        maxLines: 1,
                       ),
                       if (_titleError != null) ...[
                         const SizedBox(height: 10),

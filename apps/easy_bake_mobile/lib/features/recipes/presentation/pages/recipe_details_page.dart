@@ -325,6 +325,7 @@ class _RecipeDetailsPageState extends ConsumerState<RecipeDetailsPage> {
                     RecipeDetailsHero(
                       title: _recipe.title,
                       imageUrl: _recipe.imageUrl,
+                      recipeBy: _recipe.recipeBy,
                     ),
                     const SizedBox(height: 20),
                     RecipeDetailsTabBar(

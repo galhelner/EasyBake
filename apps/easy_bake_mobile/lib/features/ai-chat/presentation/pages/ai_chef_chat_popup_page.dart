@@ -677,7 +677,9 @@ class _AiChefChatPopupDialogState
                                         if (payload == null) {
                                           return;
                                         }
-                                        widget.onOpenRecipeCreated(payload);
+                                        final updatedPayload = Map<String, dynamic>.from(payload);
+                                        updatedPayload['recipeBy'] = 'AI Chef';
+                                        widget.onOpenRecipeCreated(updatedPayload);
                                       },
                                       onRecipeTap: _openRecipeDetailsFromSearch,
                                       onNavigateToShoppingList:

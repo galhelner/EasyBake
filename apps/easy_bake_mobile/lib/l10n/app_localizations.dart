@@ -1741,6 +1741,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Recipes'**
   String get recipesHeaderLabel;
+
+  /// Hint text shown in the recipe author input field.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipe By'**
+  String get recipeAuthorHint;
+
+  /// Label text shown in the recipe details header prefixing the author name.
+  ///
+  /// In en, this message translates to:
+  /// **'By'**
+  String get recipeAuthorLabel;
+
+  /// Name of the AI Chef.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Chef'**
+  String get aiChefName;
 }
 
 class _AppLocalizationsDelegate

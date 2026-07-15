@@ -227,7 +227,9 @@ class MessageTile extends ConsumerWidget {
                             imageUrl: 'assets/default_recipe.jpg',
                             recipePayload: message.metadata!,
                             onViewRecipe: () {
-                              final recipe = RecipeModel.fromJson(message.metadata!);
+                              final data = Map<String, dynamic>.from(message.metadata!);
+                              data['recipeBy'] = 'AI Chef';
+                              final recipe = RecipeModel.fromJson(data);
                               Navigator.of(context).push(
                                 MaterialPageRoute(
                                   builder: (_) => RecipeDetailsPage(

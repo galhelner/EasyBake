@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 import 'recipe_details_theme.dart';
 
@@ -7,10 +8,12 @@ class RecipeDetailsHero extends StatelessWidget {
     super.key,
     required this.title,
     required this.imageUrl,
+    this.recipeBy,
   });
 
   final String title;
   final String? imageUrl;
+  final String? recipeBy;
 
   @override
   Widget build(BuildContext context) {
@@ -96,6 +99,17 @@ class RecipeDetailsHero extends StatelessWidget {
             letterSpacing: -0.25,
           ),
         ),
+        if (recipeBy != null && recipeBy!.trim().isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Text(
+            '${AppLocalizations.of(context)!.recipeAuthorLabel} ${recipeBy!.toLowerCase() == 'ai chef' ? AppLocalizations.of(context)!.aiChefName : recipeBy}',
+            style: const TextStyle(
+              color: Color(0xFF6E8298),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ],
     );
   }
