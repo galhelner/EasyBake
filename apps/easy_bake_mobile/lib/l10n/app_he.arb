@@ -1135,5 +1135,17 @@
   "folderMovedMessage": "התיקייה הועברה",
   "deleteFolderConfirmationMessage": "האם אתה בטוח שברצונך למחוק תיקייה זו?",
   "foldersHeaderLabel": "תיקיות",
-  "recipesHeaderLabel": "מתכונים"
+  "recipesHeaderLabel": "מתכונים",
+  "recipeAuthorHint": "נכתב על ידי",
+  "@recipeAuthorHint": {
+    "description": "רמז לשדה שם המחבר בטופס יצירת מתכון."
+  },
+  "recipeAuthorLabel": "מאת",
+  "@recipeAuthorLabel": {
+    "description": "תווית המופיעה לפני שם המחבר בפרטי המתכון."
+  },
+  "aiChefName": "שף ה-AI",
+  "@aiChefName": {
+    "description": "שם שף ה-AI."
+  }
 }

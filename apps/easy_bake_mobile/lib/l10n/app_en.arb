@@ -1135,5 +1135,17 @@
   "folderMovedMessage": "Folder moved",
   "deleteFolderConfirmationMessage": "Are you sure you want to delete this folder?",
   "foldersHeaderLabel": "Folders",
-  "recipesHeaderLabel": "Recipes"
+  "recipesHeaderLabel": "Recipes",
+  "recipeAuthorHint": "Recipe By",
+  "@recipeAuthorHint": {
+    "description": "Hint text shown in the recipe author input field."
+  },
+  "recipeAuthorLabel": "By",
+  "@recipeAuthorLabel": {
+    "description": "Label text shown in the recipe details header prefixing the author name."
+  },
+  "aiChefName": "AI Chef",
+  "@aiChefName": {
+    "description": "Name of the AI Chef."
+  }
 }

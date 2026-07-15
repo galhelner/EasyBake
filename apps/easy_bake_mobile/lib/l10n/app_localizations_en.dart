@@ -959,4 +959,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recipesHeaderLabel => 'Recipes';
+
+  @override
+  String get recipeAuthorHint => 'Recipe By';
+
+  @override
+  String get recipeAuthorLabel => 'By';
+
+  @override
+  String get aiChefName => 'AI Chef';
 }

@@ -22,8 +22,8 @@ interface HealthScoreApiResponse {
 const toVectorLiteral = (embedding: number[]): string =>
   `[${embedding.map((value) => Number(value).toString()).join(',')}]`;
 
-const buildRecipeEmbeddingText = (title: string, ingredientNames: string[], instructions: string[]): string =>
-  `Title: ${title}\nIngredients: ${ingredientNames.join(', ')}\nInstructions: ${instructions.join(' ')}`;
+const buildRecipeEmbeddingText = (title: string, ingredientNames: string[], instructions: string[], recipeBy?: string | null): string =>
+  `Title: ${title}\nIngredients: ${ingredientNames.join(', ')}\nInstructions: ${instructions.join(' ')}${recipeBy ? `\nCreated by: ${recipeBy}` : ''}`;
 
 const generateEmbedding = async (text: string): Promise<number[]> => {
   logger.info('Calling AI Service for: generate embedding');
@@ -195,6 +195,7 @@ const createRecipeSchema = z.object({
     z.number().int().min(0).max(100).optional(),
   ),
   folderId: z.string().uuid().optional().nullable(),
+  recipeBy: z.string().trim().optional(),
 }).strict();
 
 const semanticSearchSchema = z.object({
@@ -225,6 +226,7 @@ export interface RecipeDTO {
   authorId: string;
   ingredients: IngredientDTO[];
   folderId?: string | null;
+  recipeBy?: string | null;
 }
 
 const mapRecipeToDTO = (recipe: any): RecipeDTO => ({
@@ -244,6 +246,7 @@ const mapRecipeToDTO = (recipe: any): RecipeDTO => ({
           : undefined,
     })) ?? [],
   folderId: recipe.folderId ?? null,
+  recipeBy: recipe.recipeBy ?? null,
 });
 
 interface NormalizedIngredient {
@@ -401,7 +404,7 @@ export const createRecipe = async (
       return;
     }
 
-    const { title, instructions, ingredients, healthScore: clientHealthScore, folderId } = parsed.data;
+    const { title, instructions, ingredients, healthScore: clientHealthScore, folderId, recipeBy } = parsed.data;
     const imageUrl = req.file ? await uploadImage(req.file) : DEFAULT_RECIPE_IMAGE_URL;
 
     const normalizedIngredients = normalizeIngredients(ingredients);
@@ -415,11 +418,21 @@ export const createRecipe = async (
       logger.info(`Using client-provided health score ${healthScore} for "${title}"`);
     }
 
+    let resolvedRecipeBy = recipeBy;
+    if (!resolvedRecipeBy || resolvedRecipeBy.trim() === '') {
+      const user = await prisma.user.findUnique({
+        where: { authId: req.user.id },
+        select: { displayName: true, fullName: true, email: true },
+      });
+      resolvedRecipeBy = user?.displayName ?? user?.fullName ?? user?.email ?? 'User';
+    }
+
     const createData: any = {
       title,
       instructions,
       healthScore,
-      folderId: folderId || null,
+      folder: folderId ? { connect: { id: folderId } } : undefined,
+      recipeBy: resolvedRecipeBy,
       author: {
         connectOrCreate: {
           where: { authId: req.user.id },
@@ -473,7 +486,7 @@ export const createRecipe = async (
     );
 
     try {
-      const embeddingText = buildRecipeEmbeddingText(title, ingredientNames, instructions);
+      const embeddingText = buildRecipeEmbeddingText(title, ingredientNames, instructions, resolvedRecipeBy);
       const embedding = await generateEmbedding(embeddingText);
       await saveRecipeEmbedding(createdRecipe.id, embedding);
     } catch (embeddingError) {
@@ -518,7 +531,8 @@ export const searchRecipes = async (
       return;
     }
 
-    const embedding = await generateEmbedding(parsed.data.query);
+    const query = parsed.data.query;
+    const embedding = await generateEmbedding(query);
     const vector = toVectorLiteral(embedding);
 
     const searchResults = await prisma.$queryRaw<Array<{ id: string; distance: number }>>`
@@ -531,8 +545,7 @@ export const searchRecipes = async (
       LIMIT 5
     `;
 
-    logger.info(`Calling AI Service for: semantic search embedding for query "${parsed.data.query}"`);
-
+    logger.info(`Calling AI Service for: semantic search embedding for query "${query}"`);
 
     const recipeIds = searchResults.map((result) => result.id);
 
@@ -736,7 +749,7 @@ export const updateRecipe = async (
       return;
     }
 
-    const { title, instructions, ingredients, remove_image: removeImage, healthScore: clientHealthScore, folderId } = parsed.data;
+    const { title, instructions, ingredients, remove_image: removeImage, healthScore: clientHealthScore, folderId, recipeBy } = parsed.data;
     const normalizedIngredients = normalizeIngredients(ingredients);
     const ingredientNames = normalizedIngredients.map((ingredient) => ingredient.name);
     const healthScore =
@@ -763,7 +776,8 @@ export const updateRecipe = async (
         instructions,
         healthScore,
         imageUrl,
-        folderId: folderId !== undefined ? (folderId || null) : undefined,
+        folder: folderId !== undefined ? (folderId ? { connect: { id: folderId } } : { disconnect: true }) : undefined,
+        recipeBy: recipeBy !== undefined ? (recipeBy || null) : undefined,
         ingredients: {
           deleteMany: {},
           create: normalizedIngredients.map((ingredient) => ({
@@ -806,7 +820,7 @@ export const updateRecipe = async (
     );
 
     try {
-      const embeddingText = buildRecipeEmbeddingText(title, ingredientNames, instructions);
+      const embeddingText = buildRecipeEmbeddingText(title, ingredientNames, instructions, updatedRecipe.recipeBy);
       const embedding = await generateEmbedding(embeddingText);
       await saveRecipeEmbedding(updatedRecipe.id, embedding);
     } catch (embeddingError) {
@@ -962,7 +976,7 @@ export const moveRecipe = async (
         id: existingRecipe.id,
       },
       data: {
-        folderId: folderId || null,
+        folder: folderId ? { connect: { id: folderId } } : { disconnect: true },
       },
       include: {
         ingredients: {

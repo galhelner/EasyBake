@@ -30,6 +30,7 @@ model Recipe {
   healthScore  Int
   embedding    Unsupported("vector(768)")?
   imageUrl     String?            @default("https://cdmkszvzdkromgqzexec.supabase.co/storage/v1/object/public/recipe-images/default-recipe.jpg")
+  recipeBy     String?            @map("recipe_by")
   authorId     String
   author       User               @relation(fields: [authorId], references: [id])
   ingredients  RecipeIngredient[]

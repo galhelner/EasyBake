@@ -474,16 +474,15 @@ export const internalSearchRecipes = async (
 
 
     const vectorLiteral = `[${embedding.map((v: number) => Number(v).toString()).join(',')}]`;
-    const SEARCH_MAX_DISTANCE = Number(process.env.SEARCH_MAX_DISTANCE ?? '0.5');
 
     const searchResults = await prisma.$queryRaw<Array<{ id: string; distance: number }>>`
       SELECT "id", ("embedding" <=> CAST(${vectorLiteral} AS vector)) AS "distance"
       FROM "Recipe"
       WHERE "embedding" IS NOT NULL
         AND "authorId" = ${user.id}
-        AND ("embedding" <=> CAST(${vectorLiteral} AS vector)) <= ${SEARCH_MAX_DISTANCE}
+        AND ("embedding" <=> CAST(${vectorLiteral} AS vector)) <= 0.85
       ORDER BY "embedding" <=> CAST(${vectorLiteral} AS vector)
-      LIMIT 3
+      LIMIT 10
     `;
 
     const recipeIds = searchResults.map((result) => result.id);
@@ -517,6 +516,7 @@ export const internalSearchRecipes = async (
       healthScore: recipe.healthScore,
       imageUrl: recipe.imageUrl || 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=300&h=200',
       ingredients: recipe.ingredients?.map((ri: any) => ri.ingredient.name) || [],
+      recipeBy: recipe.recipeBy ?? null,
     }));
 
     res.json(recipeDTOs);
