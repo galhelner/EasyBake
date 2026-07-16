@@ -1759,6 +1759,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'AI Chef'**
   String get aiChefName;
+
+  /// Confirmation message shown before clearing AI Chef chat history.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to clear the chat history?'**
+  String get clearChatHistoryConfirm;
+
+  /// Status message shown while clearing AI Chef chat history.
+  ///
+  /// In en, this message translates to:
+  /// **'Clearing chat history...'**
+  String get clearingChatHistory;
+
+  /// Status message shown when AI Chef chat history is successfully cleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat history cleared'**
+  String get chatHistoryCleared;
+
+  /// Error message shown when clearing AI Chef chat history fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to clear chat history.'**
+  String get clearChatHistoryError;
+
+  /// Label for clear buttons.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get clearButtonLabel;
 }
 
 class _AppLocalizationsDelegate

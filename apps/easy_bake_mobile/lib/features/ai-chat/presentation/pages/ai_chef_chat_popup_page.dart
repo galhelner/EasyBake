@@ -8,6 +8,8 @@ import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
 import '../../../recipes/domain/models/recipe_model.dart';
 import '../../../recipes/presentation/pages/recipe_details_page.dart';
+import '../../../recipes/presentation/widgets/recipe_list/delete_confirmation_dialog.dart';
+import '../../../recipes/presentation/widgets/recipe_list/deleting_status_card.dart';
 import '../../data/services/chat_service.dart';
 import '../widgets/ai_chef_chat_popup_composer.dart';
 import '../widgets/ai_chef_chat_popup_header.dart';
@@ -594,6 +596,7 @@ class _AiChefChatPopupDialogState
                   isRefreshingConnection: _isRefreshingConnection,
                   onRefreshConnection: _refreshConnectionStatus,
                   onClose: () => Navigator.of(context).pop(),
+                  onClearChat: _hasClearableHistory ? _performClearChatHistory : null,
                 ),
                 Expanded(
                   child: ListView.builder(
@@ -706,6 +709,127 @@ class _AiChefChatPopupDialogState
           ),
         ),
       ),
+    );
+  }
+
+  bool get _hasClearableHistory {
+    if (_isCheckingInitialConnection) {
+      return false;
+    }
+    if (_messages.isEmpty) {
+      return false;
+    }
+    if (_messages.length > 1) {
+      return true;
+    }
+
+    final firstMsg = _messages.first;
+    if (firstMsg.sender == ChatSender.user) {
+      return true;
+    }
+
+    final l10n = AppLocalizations.of(context)!;
+    final authState = ref.read(authNotifierProvider);
+    final fullName = authState.fullName?.trim();
+    final greeting = fullName != null && fullName.isNotEmpty
+        ? l10n.aiChefGreetingWithName(fullName)
+        : l10n.aiChefGreetingWithoutName;
+
+    final offlineMsg = l10n.aiChefServiceUnavailableMessage;
+
+    if (firstMsg.text == greeting ||
+        firstMsg.text == offlineMsg ||
+        firstMsg.kind == ChatMessageKind.connectionChecking) {
+      return false;
+    }
+
+    return true;
+  }
+
+  Future<void> _performClearChatHistory() async {
+    final l10n = AppLocalizations.of(context)!;
+
+    await showDeleteConfirmationDialog(
+      context,
+      message: l10n.clearChatHistoryConfirm,
+      onDelete: () async {
+        if (!mounted) {
+          return;
+        }
+
+        var isDeleting = true;
+        var deleteSucceeded = false;
+        String? deleteErrorMessage;
+
+        await showDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          builder: (dialogContext) {
+            final dialogL10n = AppLocalizations.of(dialogContext)!;
+
+            return StatefulBuilder(
+              builder: (ctx, setDialogState) {
+                if (isDeleting) {
+                  Future.microtask(() async {
+                    try {
+                      final success = await widget.chatService.clearChatHistory(
+                        pageContext: _normalizedPageContext,
+                        recipeId: widget.recipeId,
+                      );
+                      deleteSucceeded = success;
+                      if (!success) {
+                        deleteErrorMessage = dialogL10n.clearChatHistoryError;
+                      }
+                      if (dialogContext.mounted) {
+                        setDialogState(() {
+                          isDeleting = false;
+                        });
+                      }
+                      if (success && mounted) {
+                        final authState = ref.read(authNotifierProvider);
+                        final fullName = authState.fullName?.trim();
+                        final greeting = fullName != null && fullName.isNotEmpty
+                            ? dialogL10n.aiChefGreetingWithName(fullName)
+                            : dialogL10n.aiChefGreetingWithoutName;
+
+                        setState(() {
+                          _messages.clear();
+                          _messages.add(ChatMessage.text(greeting));
+                        });
+                      }
+                    } catch (error) {
+                      deleteSucceeded = false;
+                      deleteErrorMessage = dialogL10n.clearChatHistoryError;
+                      if (dialogContext.mounted) {
+                        setDialogState(() {
+                          isDeleting = false;
+                        });
+                      }
+                    }
+                  });
+                }
+
+                return Dialog(
+                  backgroundColor: Colors.transparent,
+                  insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                  child: Center(
+                    child: DeletingStatusCard(
+                      isDeleting: isDeleting,
+                      deleteSucceeded: deleteSucceeded,
+                      deleteErrorMessage: deleteErrorMessage,
+                      deletingMessage: dialogL10n.clearingChatHistory,
+                      deletedMessage: dialogL10n.chatHistoryCleared,
+                      onOk: () {
+                        Navigator.of(dialogContext).pop();
+                      },
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 

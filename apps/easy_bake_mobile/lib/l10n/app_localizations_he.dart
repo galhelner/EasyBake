@@ -950,4 +950,20 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get aiChefName => 'שף ה-AI';
+
+  @override
+  String get clearChatHistoryConfirm =>
+      'האם אתה בטוח שברצונך למחוק את היסטוריית הצ\'אט?';
+
+  @override
+  String get clearingChatHistory => 'מוחק את היסטוריית הצ\'אט...';
+
+  @override
+  String get chatHistoryCleared => 'היסטוריית הצ\'אט נמחקה';
+
+  @override
+  String get clearChatHistoryError => 'מחיקת היסטוריית הצ\'אט נכשלה.';
+
+  @override
+  String get clearButtonLabel => 'נקה';
 }

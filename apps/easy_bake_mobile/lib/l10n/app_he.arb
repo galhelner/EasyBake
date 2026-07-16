@@ -1147,5 +1147,25 @@
   "aiChefName": "שף ה-AI",
   "@aiChefName": {
     "description": "שם שף ה-AI."
+  },
+  "clearChatHistoryConfirm": "האם אתה בטוח שברצונך למחוק את היסטוריית הצ'אט?",
+  "@clearChatHistoryConfirm": {
+    "description": "Confirmation message shown before clearing AI Chef chat history."
+  },
+  "clearingChatHistory": "מוחק את היסטוריית הצ'אט...",
+  "@clearingChatHistory": {
+    "description": "Status message shown while clearing AI Chef chat history."
+  },
+  "chatHistoryCleared": "היסטוריית הצ'אט נמחקה",
+  "@chatHistoryCleared": {
+    "description": "Status message shown when AI Chef chat history is successfully cleared."
+  },
+  "clearChatHistoryError": "מחיקת היסטוריית הצ'אט נכשלה.",
+  "@clearChatHistoryError": {
+    "description": "Error message shown when clearing AI Chef chat history fails."
+  },
+  "clearButtonLabel": "נקה",
+  "@clearButtonLabel": {
+    "description": "Label for clear buttons."
   }
 }

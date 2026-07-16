@@ -968,4 +968,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiChefName => 'AI Chef';
+
+  @override
+  String get clearChatHistoryConfirm =>
+      'Are you sure you want to clear the chat history?';
+
+  @override
+  String get clearingChatHistory => 'Clearing chat history...';
+
+  @override
+  String get chatHistoryCleared => 'Chat history cleared';
+
+  @override
+  String get clearChatHistoryError => 'Failed to clear chat history.';
+
+  @override
+  String get clearButtonLabel => 'Clear';
 }

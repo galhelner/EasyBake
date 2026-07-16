@@ -476,6 +476,25 @@ class ChatService {
       return const [];
     }
   }
+
+  Future<bool> clearChatHistory({
+    required String pageContext,
+    String? recipeId,
+  }) async {
+    try {
+      final response = await _dio.delete<Map<String, dynamic>>(
+        '/chat/history',
+        queryParameters: {
+          'pageContext': pageContext,
+          if (recipeId != null && recipeId.trim().isNotEmpty)
+            'recipeId': recipeId.trim(),
+        },
+      );
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
 }
 
 final chatServiceProvider = Provider<ChatService>((ref) {
