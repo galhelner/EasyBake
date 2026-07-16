@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../core/widgets/skeleton.dart';
+
 class DashboardRecipesLoadingState extends StatelessWidget {
   const DashboardRecipesLoadingState({super.key});
 
@@ -25,25 +27,28 @@ class DashboardRecipesLoadingState extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
+                const Skeleton(
                   height: 96,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE6EEF7),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
+                  width: double.infinity,
+                  borderRadius: 16,
                 ),
                 const SizedBox(height: 10),
-                Container(height: 14, width: 124, color: const Color(0xFFE6EEF7)),
+                const Skeleton(
+                  height: 14,
+                  width: 124,
+                  borderRadius: 4,
+                ),
                 const SizedBox(height: 8),
-                Container(height: 10, width: 86, color: const Color(0xFFE6EEF7)),
+                const Skeleton(
+                  height: 10,
+                  width: 86,
+                  borderRadius: 4,
+                ),
                 const Spacer(),
-                Container(
+                const Skeleton(
                   height: 24,
                   width: 66,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE6EEF7),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
+                  borderRadius: 12,
                 ),
               ],
             ),
