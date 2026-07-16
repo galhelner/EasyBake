@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   streamChat,
   getChatHistory,
+  clearChatHistory,
   internalSearchRecipes,
   internalAddToShoppingList,
   internalAddRecipeToShoppingList,
@@ -13,6 +14,7 @@ const router = Router();
 router.use(authMiddleware);
 
 router.get('/history', getChatHistory);
+router.delete('/history', clearChatHistory);
 router.post('/', streamChat);
 
 router.post('/internal/recipes/search', internalSearchRecipes);

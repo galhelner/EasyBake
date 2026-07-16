@@ -3,6 +3,7 @@ import { Readable } from 'stream';
 
 type ChatControllerModule = {
 	streamChat: (req: any, res: any) => Promise<void>;
+	clearChatHistory: (req: any, res: any) => Promise<void>;
 	internalSearchRecipes: (req: any, res: any) => Promise<void>;
 	internalAddToShoppingList: (req: any, res: any) => Promise<void>;
 	internalAddRecipeToShoppingList: (req: any, res: any) => Promise<void>;
@@ -14,6 +15,7 @@ type ChatModuleLoad = {
 	mockAxiosIsAxiosError: ReturnType<typeof jest.fn>;
 	mockPrismaUserFindUnique: ReturnType<typeof jest.fn>;
 	mockPrismaRecipeFindFirst: ReturnType<typeof jest.fn>;
+	mockPrismaChefChatMessageDeleteMany: ReturnType<typeof jest.fn>;
 	mockLoggerInfo: ReturnType<typeof jest.fn>;
 	mockLoggerError: ReturnType<typeof jest.fn>;
 };
@@ -47,6 +49,7 @@ async function loadChatControllerModule(): Promise<ChatModuleLoad> {
 	const mockPrismaRecipeFindMany = jest.fn();
 	const mockPrismaChefChatMessageFindMany = jest.fn(() => []);
 	const mockPrismaChefChatMessageCreate = jest.fn();
+	const mockPrismaChefChatMessageDeleteMany = jest.fn();
 	const mockPrismaQueryRaw = jest.fn();
 
 	const mockLoggerInfo = jest.fn();
@@ -73,6 +76,7 @@ async function loadChatControllerModule(): Promise<ChatModuleLoad> {
 			chefChatMessage: {
 				findMany: mockPrismaChefChatMessageFindMany,
 				create: mockPrismaChefChatMessageCreate,
+				deleteMany: mockPrismaChefChatMessageDeleteMany,
 			},
 			$queryRaw: mockPrismaQueryRaw,
 		},
@@ -94,6 +98,7 @@ async function loadChatControllerModule(): Promise<ChatModuleLoad> {
 		mockAxiosIsAxiosError,
 		mockPrismaUserFindUnique,
 		mockPrismaRecipeFindFirst,
+		mockPrismaChefChatMessageDeleteMany,
 		mockLoggerInfo,
 		mockLoggerError,
 	};
@@ -179,5 +184,66 @@ describe('chat controller', () => {
 				'Content-Type': 'text/event-stream',
 			}),
 		);
+	});
+
+	describe('clearChatHistory', () => {
+		it('returns 401 if unauthorized', async () => {
+			const { controller } = await loadChatControllerModule();
+			const req = {
+				query: { pageContext: 'home' },
+			};
+			const res = createMockResponse();
+
+			await controller.clearChatHistory(req, res);
+
+			expect(res.status).toHaveBeenCalledWith(401);
+			expect(res.json).toHaveBeenCalledWith({ error: 'Unauthorized' });
+		});
+
+		it('successfully clears chat history for home context', async () => {
+			const { controller, mockPrismaUserFindUnique, mockPrismaChefChatMessageDeleteMany } = await loadChatControllerModule();
+			mockPrismaUserFindUnique.mockResolvedValue({ id: 'test-user-db-id' });
+
+			const req = {
+				query: { pageContext: 'home' },
+				user: { id: 'test-auth-id' },
+			};
+			const res = createMockResponse();
+
+			await controller.clearChatHistory(req, res);
+
+			expect(mockPrismaUserFindUnique).toHaveBeenCalledWith({
+				where: { authId: 'test-auth-id' },
+				select: { id: true },
+			});
+			expect(mockPrismaChefChatMessageDeleteMany).toHaveBeenCalledWith({
+				where: {
+					userId: 'test-user-db-id',
+					recipeId: null,
+				},
+			});
+			expect(res.json).toHaveBeenCalledWith({ message: 'Chat history cleared successfully' });
+		});
+
+		it('successfully clears chat history for recipe context', async () => {
+			const { controller, mockPrismaUserFindUnique, mockPrismaChefChatMessageDeleteMany } = await loadChatControllerModule();
+			mockPrismaUserFindUnique.mockResolvedValue({ id: 'test-user-db-id' });
+
+			const req = {
+				query: { pageContext: 'recipe_detail', recipeId: 'test-recipe-id' },
+				user: { id: 'test-auth-id' },
+			};
+			const res = createMockResponse();
+
+			await controller.clearChatHistory(req, res);
+
+			expect(mockPrismaChefChatMessageDeleteMany).toHaveBeenCalledWith({
+				where: {
+					userId: 'test-user-db-id',
+					recipeId: 'test-recipe-id',
+				},
+			});
+			expect(res.json).toHaveBeenCalledWith({ message: 'Chat history cleared successfully' });
+		});
 	});
 });

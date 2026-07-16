@@ -442,6 +442,38 @@ export const getChatHistory = async (
   }
 };
 
+export const clearChatHistory = async (
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    if (!req.user?.id) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const { pageContext, recipeId } = req.query;
+
+    const user = await ensureUser(req.user.id);
+
+    const isRecipeDetail = pageContext === 'recipe_detail' && typeof recipeId === 'string' && recipeId.trim().length > 0;
+    const currentRecipeId = isRecipeDetail ? recipeId.trim() : null;
+
+    await prisma.chefChatMessage.deleteMany({
+      where: {
+        userId: user.id,
+        recipeId: currentRecipeId,
+      },
+    });
+
+    res.json({ message: 'Chat history cleared successfully' });
+  } catch (error) {
+    console.error('Failed to clear chef chat history', error);
+    res.status(500).json({ error: 'Failed to clear chef chat history' });
+  }
+};
+
+
 // ----------------------------------------------------------------------
 // Internal Callback Endpoints
 // ----------------------------------------------------------------------
