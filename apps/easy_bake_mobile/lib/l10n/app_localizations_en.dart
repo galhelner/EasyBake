@@ -984,4 +984,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clearButtonLabel => 'Clear';
+
+  @override
+  String get copiedToClipboard => 'Copied to clipboard';
 }

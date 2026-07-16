@@ -1167,5 +1167,9 @@
   "clearButtonLabel": "Clear",
   "@clearButtonLabel": {
     "description": "Label for clear buttons."
+  },
+  "copiedToClipboard": "Copied to clipboard",
+  "@copiedToClipboard": {
+    "description": "Toast message displayed when text is copied to the clipboard."
   }
 }

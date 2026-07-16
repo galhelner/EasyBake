@@ -1789,6 +1789,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear'**
   String get clearButtonLabel;
+
+  /// Toast message displayed when text is copied to the clipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get copiedToClipboard;
 }
 
 class _AppLocalizationsDelegate

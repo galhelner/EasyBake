@@ -1167,5 +1167,9 @@
   "clearButtonLabel": "נקה",
   "@clearButtonLabel": {
     "description": "Label for clear buttons."
+  },
+  "copiedToClipboard": "הועתק ללוח",
+  "@copiedToClipboard": {
+    "description": "Toast message displayed when text is copied to the clipboard."
   }
 }

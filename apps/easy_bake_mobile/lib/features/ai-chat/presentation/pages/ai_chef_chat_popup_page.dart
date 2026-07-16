@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../../../../core/widgets/app_toast.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
@@ -98,6 +100,8 @@ class _AiChefChatPopupDialogState
   int? _typingMessageIndex;
   int? _activeStreamingMessageIndex;
   bool _recipeIntentAnnounced = false;
+  bool _showToast = false;
+  Timer? _toastTimer;
 
   String get _normalizedPageContext {
     final normalized = widget.pageContext.trim().toLowerCase();
@@ -122,6 +126,7 @@ class _AiChefChatPopupDialogState
   @override
   void dispose() {
     _chatSubscription?.cancel();
+    _toastTimer?.cancel();
     _questionController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -556,6 +561,59 @@ class _AiChefChatPopupDialogState
     });
   }
 
+  String _getCopyableText(ChatMessage message) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (message.kind) {
+      case ChatMessageKind.text:
+        return message.text;
+      case ChatMessageKind.recipePreview:
+        return message.recipeTitle ?? '';
+      case ChatMessageKind.swapSummary:
+        final buffer = StringBuffer(message.title ?? l10n.aiChefSuggestedSubstitutionsTitle);
+        if (message.swaps != null) {
+          for (final swap in message.swaps!) {
+            buffer.write('\n• $swap');
+          }
+        }
+        return buffer.toString();
+      case ChatMessageKind.searchResults:
+        return message.text;
+      case ChatMessageKind.shoppingListAdded:
+        final buffer = StringBuffer(l10n.aiChefShoppingListAddedTitle);
+        if (message.shoppingListItems != null) {
+          for (final item in message.shoppingListItems!) {
+            buffer.write('\n• $item');
+          }
+        }
+        return buffer.toString();
+      default:
+        return message.text;
+    }
+  }
+
+  void _copyMessageToClipboard(ChatMessage message) {
+    final text = _getCopyableText(message);
+    if (text.isEmpty) {
+      return;
+    }
+    Clipboard.setData(ClipboardData(text: text));
+    _showCopiedToastNotification();
+  }
+
+  void _showCopiedToastNotification() {
+    _toastTimer?.cancel();
+    setState(() {
+      _showToast = true;
+    });
+    _toastTimer = Timer(const Duration(milliseconds: 1500), () {
+      if (mounted) {
+        setState(() {
+          _showToast = false;
+        });
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
@@ -673,20 +731,48 @@ class _AiChefChatPopupDialogState
                                       ),
                                       borderRadius: bubbleRadius,
                                     ),
-                                    child: ChatMessageBuilder(
-                                      message: message,
-                                      onOpenRecipe: () {
-                                        final payload = message.recipePayload;
-                                        if (payload == null) {
-                                          return;
-                                        }
-                                        final updatedPayload = Map<String, dynamic>.from(payload);
-                                        updatedPayload['recipeBy'] = 'AI Chef';
-                                        widget.onOpenRecipeCreated(updatedPayload);
-                                      },
-                                      onRecipeTap: _openRecipeDetailsFromSearch,
-                                      onNavigateToShoppingList:
-                                          _navigateToShoppingList,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        SelectionArea(
+                                          child: ChatMessageBuilder(
+                                            message: message,
+                                            onOpenRecipe: () {
+                                              final payload = message.recipePayload;
+                                              if (payload == null) {
+                                                return;
+                                              }
+                                              final updatedPayload = Map<String, dynamic>.from(payload);
+                                              updatedPayload['recipeBy'] = 'AI Chef';
+                                              widget.onOpenRecipeCreated(updatedPayload);
+                                            },
+                                            onRecipeTap: _openRecipeDetailsFromSearch,
+                                            onNavigateToShoppingList:
+                                                _navigateToShoppingList,
+                                          ),
+                                        ),
+                                        if (!isAi &&
+                                            message.kind != ChatMessageKind.typing &&
+                                            message.kind != ChatMessageKind.connectionChecking) ...[
+                                          const SizedBox(height: 2),
+                                          Align(
+                                            alignment: AlignmentDirectional.centerEnd,
+                                            child: InkWell(
+                                              onTap: () => _copyMessageToClipboard(message),
+                                              borderRadius: BorderRadius.circular(4),
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(2),
+                                                child: Icon(
+                                                  Icons.copy_rounded,
+                                                  size: 17,
+                                                  color: const Color(0xFF5E7388).withValues(alpha: 0.8),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ],
                                     ),
                                   ),
                                 ),
@@ -697,6 +783,27 @@ class _AiChefChatPopupDialogState
                       );
                     },
                   ),
+                ),
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeInOut,
+                  child: _showToast
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          child: AnimatedOpacity(
+                            opacity: _showToast ? 1.0 : 0.0,
+                            duration: const Duration(milliseconds: 200),
+                            child: AppToast(
+                              message: AppLocalizations.of(context)!.copiedToClipboard,
+                              leading: Image.asset(
+                                'assets/app_logo.png',
+                                width: 18,
+                                height: 18,
+                              ),
+                            ),
+                          ),
+                        )
+                      : const SizedBox.shrink(),
                 ),
                 AiChefChatPopupComposer(
                   controller: _questionController,

@@ -966,4 +966,7 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get clearButtonLabel => 'נקה';
+
+  @override
+  String get copiedToClipboard => 'הועתק ללוח';
 }
