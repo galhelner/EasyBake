@@ -98,7 +98,7 @@ class _AiChefChatPopupDialogState
   bool _isRefreshingConnection = false;
   bool _isCheckingInitialConnection = true;
   int? _typingMessageIndex;
-  int? _activeStreamingMessageIndex;
+  int? _currentAiResponseMessageIndex;
   bool _recipeIntentAnnounced = false;
   bool _showToast = false;
   Timer? _toastTimer;
@@ -235,7 +235,7 @@ class _AiChefChatPopupDialogState
       _messages.add(ChatMessage.text(message, sender: ChatSender.user));
       _messages.add(const ChatMessage.typing());
       _typingMessageIndex = _messages.length - 1;
-      _activeStreamingMessageIndex = null;
+      _currentAiResponseMessageIndex = null;
       _isAwaitingResponse = true;
     });
 
@@ -280,12 +280,12 @@ class _AiChefChatPopupDialogState
         setState(() {
           _isServiceOnline = true;
           _removeTypingIndicator();
-          if (_activeStreamingMessageIndex == null) {
+          if (_currentAiResponseMessageIndex == null) {
             _messages.add(const ChatMessage.text(''));
-            _activeStreamingMessageIndex = _messages.length - 1;
+            _currentAiResponseMessageIndex = _messages.length - 1;
           }
 
-          final index = _activeStreamingMessageIndex!;
+          final index = _currentAiResponseMessageIndex!;
           final existing = _messages[index];
           _messages[index] = existing.copyWith(text: '${existing.text}$delta');
         });
@@ -300,7 +300,17 @@ class _AiChefChatPopupDialogState
           setState(() {
             _isServiceOnline = true;
             _removeTypingIndicator();
-            _messages.add(ChatMessage.text(l10n.aiChefCreatingRecipeMessage));
+            if (_currentAiResponseMessageIndex == null) {
+              _messages.add(ChatMessage.text(l10n.aiChefCreatingRecipeMessage));
+              _currentAiResponseMessageIndex = _messages.length - 1;
+            } else {
+              final index = _currentAiResponseMessageIndex!;
+              final existing = _messages[index];
+              final separator = existing.text.isNotEmpty && !existing.text.endsWith('\n') ? '\n' : '';
+              _messages[index] = existing.copyWith(
+                text: '${existing.text}$separator${l10n.aiChefCreatingRecipeMessage}',
+              );
+            }
             _messages.add(const ChatMessage.typing());
             _typingMessageIndex = _messages.length - 1;
             _recipeIntentAnnounced = true;
@@ -311,9 +321,19 @@ class _AiChefChatPopupDialogState
           setState(() {
             _isServiceOnline = true;
             _removeTypingIndicator();
-            _messages.add(
-              ChatMessage.text(l10n.aiChefAddingToShoppingListMessage),
-            );
+            if (_currentAiResponseMessageIndex == null) {
+              _messages.add(
+                ChatMessage.text(l10n.aiChefAddingToShoppingListMessage),
+              );
+              _currentAiResponseMessageIndex = _messages.length - 1;
+            } else {
+              final index = _currentAiResponseMessageIndex!;
+              final existing = _messages[index];
+              final separator = existing.text.isNotEmpty && !existing.text.endsWith('\n') ? '\n' : '';
+              _messages[index] = existing.copyWith(
+                text: '${existing.text}$separator${l10n.aiChefAddingToShoppingListMessage}',
+              );
+            }
             _messages.add(const ChatMessage.typing());
             _typingMessageIndex = _messages.length - 1;
             _recipeIntentAnnounced = true;
@@ -329,16 +349,26 @@ class _AiChefChatPopupDialogState
         setState(() {
           _isServiceOnline = true;
           _removeTypingIndicator();
-          _activeStreamingMessageIndex = null;
-          _messages.add(
-            ChatMessage.recipePreview(
+          if (_currentAiResponseMessageIndex != null &&
+              _currentAiResponseMessageIndex! < _messages.length) {
+            final index = _currentAiResponseMessageIndex!;
+            final existing = _messages[index];
+            _messages[index] = existing.copyWith(
               recipeTitle: recipeTitle,
               imageUrl: imageUrl,
               recipePayload: recipe,
-            ),
-          );
+            );
+          } else {
+            _messages.add(
+              ChatMessage.text('').copyWith(
+                recipeTitle: recipeTitle,
+                imageUrl: imageUrl,
+                recipePayload: recipe,
+              ),
+            );
+            _currentAiResponseMessageIndex = _messages.length - 1;
+          }
           _recipeIntentAnnounced = false;
-          _isAwaitingResponse = false;
         });
         _scrollToBottom();
       case ChatEventType.shoppingListAdded:
@@ -346,14 +376,22 @@ class _AiChefChatPopupDialogState
         setState(() {
           _isServiceOnline = true;
           _removeTypingIndicator();
-          _activeStreamingMessageIndex = null;
-          _messages.add(
-            ChatMessage.shoppingListAdded(
-              items: items != null ? List<String>.from(items) : const [],
-            ),
-          );
+          if (_currentAiResponseMessageIndex != null &&
+              _currentAiResponseMessageIndex! < _messages.length) {
+            final index = _currentAiResponseMessageIndex!;
+            final existing = _messages[index];
+            _messages[index] = existing.copyWith(
+              shoppingListItems: items != null ? List<String>.from(items) : const [],
+            );
+          } else {
+            _messages.add(
+              ChatMessage.text('').copyWith(
+                shoppingListItems: items != null ? List<String>.from(items) : const [],
+              ),
+            );
+            _currentAiResponseMessageIndex = _messages.length - 1;
+          }
           _recipeIntentAnnounced = false;
-          _isAwaitingResponse = false;
         });
         _scrollToBottom();
       case ChatEventType.searchResults:
@@ -365,17 +403,21 @@ class _AiChefChatPopupDialogState
         setState(() {
           _isServiceOnline = true;
           _removeTypingIndicator();
-          if (_activeStreamingMessageIndex != null &&
-              _activeStreamingMessageIndex! < _messages.length) {
-            final existing = _messages[_activeStreamingMessageIndex!];
-            _messages[_activeStreamingMessageIndex!] = existing.copyWith(
+          if (_currentAiResponseMessageIndex != null &&
+              _currentAiResponseMessageIndex! < _messages.length) {
+            final index = _currentAiResponseMessageIndex!;
+            final existing = _messages[index];
+            _messages[index] = existing.copyWith(
               recipes: recipes,
             );
           } else {
-            _messages.add(ChatMessage.searchResults(recipes: recipes));
+            _messages.add(
+              ChatMessage.text('').copyWith(
+                recipes: recipes,
+              ),
+            );
+            _currentAiResponseMessageIndex = _messages.length - 1;
           }
-          _activeStreamingMessageIndex = null;
-          _isAwaitingResponse = false;
         });
         _scrollToBottom();
       case ChatEventType.error:
@@ -388,7 +430,7 @@ class _AiChefChatPopupDialogState
         setState(() {
           _isServiceOnline = !event.isConnectionIssue;
           _removeTypingIndicator();
-          _activeStreamingMessageIndex = null;
+          _currentAiResponseMessageIndex = null;
           _messages.add(ChatMessage.text(errorMessage));
           _recipeIntentAnnounced = false;
           _isAwaitingResponse = false;
@@ -403,20 +445,52 @@ class _AiChefChatPopupDialogState
 
         setState(() {
           _isServiceOnline = true;
-          _messages.add(
-            ChatMessage.swapSummary(
+          if (_currentAiResponseMessageIndex != null &&
+              _currentAiResponseMessageIndex! < _messages.length) {
+            final index = _currentAiResponseMessageIndex!;
+            final existing = _messages[index];
+            _messages[index] = existing.copyWith(
               title: l10n.aiChefSuggestedSubstitutionsTitle,
               swaps: swapSuggestions,
-            ),
-          );
+            );
+          } else {
+            _messages.add(
+              ChatMessage.text('').copyWith(
+                title: l10n.aiChefSuggestedSubstitutionsTitle,
+                swaps: swapSuggestions,
+              ),
+            );
+            _currentAiResponseMessageIndex = _messages.length - 1;
+          }
         });
         _scrollToBottom();
         return;
       case ChatEventType.done:
         setState(() {
           _removeTypingIndicator();
-          _normalizeActiveStreamingMessage();
-          _activeStreamingMessageIndex = null;
+          if (_currentAiResponseMessageIndex != null &&
+              _currentAiResponseMessageIndex! < _messages.length) {
+            final index = _currentAiResponseMessageIndex!;
+            final existing = _messages[index];
+
+            ChatMessageKind finalKind = ChatMessageKind.text;
+            if (existing.recipePayload != null) {
+              finalKind = ChatMessageKind.recipePreview;
+            } else if (existing.shoppingListItems != null &&
+                existing.shoppingListItems!.isNotEmpty) {
+              finalKind = ChatMessageKind.shoppingListAdded;
+            } else if (existing.recipes != null &&
+                existing.recipes!.isNotEmpty) {
+              finalKind = ChatMessageKind.searchResults;
+            } else if (existing.swaps != null &&
+                existing.swaps!.isNotEmpty) {
+              finalKind = ChatMessageKind.swapSummary;
+            }
+
+            _messages[index] = existing.copyWith(kind: finalKind);
+          }
+          _normalizeCurrentAiResponseMessage();
+          _currentAiResponseMessageIndex = null;
           _recipeIntentAnnounced = false;
           _isAwaitingResponse = false;
         });
@@ -502,8 +576,8 @@ class _AiChefChatPopupDialogState
     return values.toSet().toList();
   }
 
-  void _normalizeActiveStreamingMessage() {
-    final index = _activeStreamingMessageIndex;
+  void _normalizeCurrentAiResponseMessage() {
+    final index = _currentAiResponseMessageIndex;
     if (index == null || index < 0 || index >= _messages.length) {
       return;
     }
@@ -520,6 +594,9 @@ class _AiChefChatPopupDialogState
 
     if (normalized.isEmpty) {
       _messages.removeAt(index);
+      if (_currentAiResponseMessageIndex == index) {
+        _currentAiResponseMessageIndex = null;
+      }
       return;
     }
 
@@ -539,9 +616,9 @@ class _AiChefChatPopupDialogState
 
     _messages.removeAt(typingIndex);
 
-    if (_activeStreamingMessageIndex != null &&
-        _activeStreamingMessageIndex! > typingIndex) {
-      _activeStreamingMessageIndex = _activeStreamingMessageIndex! - 1;
+    if (_currentAiResponseMessageIndex != null &&
+        _currentAiResponseMessageIndex! > typingIndex) {
+      _currentAiResponseMessageIndex = _currentAiResponseMessageIndex! - 1;
     }
 
     _typingMessageIndex = null;

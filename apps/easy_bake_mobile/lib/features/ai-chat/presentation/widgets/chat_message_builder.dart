@@ -102,16 +102,27 @@ class ChatMessage {
   final List<dynamic>? recipes;
   final List<String>? shoppingListItems;
 
-  ChatMessage copyWith({String? text, List<dynamic>? recipes, List<String>? shoppingListItems}) {
+  ChatMessage copyWith({
+    String? text,
+    ChatMessageKind? kind,
+    ChatSender? sender,
+    String? recipeTitle,
+    Map<String, dynamic>? recipePayload,
+    String? imageUrl,
+    String? title,
+    List<String>? swaps,
+    List<dynamic>? recipes,
+    List<String>? shoppingListItems,
+  }) {
     return ChatMessage._(
       text: text ?? this.text,
-      kind: kind,
-      sender: sender,
-      recipeTitle: recipeTitle,
-      recipePayload: recipePayload,
-      imageUrl: imageUrl,
-      title: title,
-      swaps: swaps,
+      kind: kind ?? this.kind,
+      sender: sender ?? this.sender,
+      recipeTitle: recipeTitle ?? this.recipeTitle,
+      recipePayload: recipePayload ?? this.recipePayload,
+      imageUrl: imageUrl ?? this.imageUrl,
+      title: title ?? this.title,
+      swaps: swaps ?? this.swaps,
       recipes: recipes ?? this.recipes,
       shoppingListItems: shoppingListItems ?? this.shoppingListItems,
     );
@@ -143,30 +154,68 @@ class ChatMessageBuilder extends StatelessWidget {
       case ChatMessageKind.connectionChecking:
         return const AiChefConnectionChecking();
       case ChatMessageKind.recipePreview:
-        return AiChefRecipePreview(
+        final previewWidget = AiChefRecipePreview(
           recipeTitle: message.recipeTitle ?? l10n.aiChefYourRecipeFallback,
           imageUrl: message.imageUrl ?? '',
           recipePayload: message.recipePayload ?? {},
           onViewRecipe: onOpenRecipe,
         );
+        if (message.text.isNotEmpty) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AiChefMessageText(message.text),
+              const SizedBox(height: 12),
+              previewWidget,
+            ],
+          );
+        }
+        return previewWidget;
       case ChatMessageKind.swapSummary:
-        return AiChefSwapSummary(
+        final swapWidget = AiChefSwapSummary(
           title: message.title ?? l10n.aiChefSuggestedSubstitutionsTitle,
           swaps: message.swaps ?? [],
         );
+        if (message.text.isNotEmpty) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AiChefMessageText(message.text),
+              const SizedBox(height: 12),
+              swapWidget,
+            ],
+          );
+        }
+        return swapWidget;
       case ChatMessageKind.searchResults:
-      case ChatMessageKind.text when message.recipes != null:
         return AiChefSearchResults(
           message: message.text,
           recipes: message.recipes ?? [],
           onRecipeTap: onRecipeTap,
         );
       case ChatMessageKind.shoppingListAdded:
-        return AiChefShoppingListAdded(
+        final shoppingWidget = AiChefShoppingListAdded(
           items: message.shoppingListItems ?? [],
           onNavigateToShoppingList: onNavigateToShoppingList ?? () {},
         );
+        if (message.text.isNotEmpty) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AiChefMessageText(message.text),
+              const SizedBox(height: 12),
+              shoppingWidget,
+            ],
+          );
+        }
+        return shoppingWidget;
       case ChatMessageKind.text:
+        if (message.text.isEmpty) {
+          return const AiChefChatTypingDots();
+        }
         return AiChefMessageText(message.text);
     }
   }
