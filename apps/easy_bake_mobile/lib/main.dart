@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_bake_mobile/l10n/app_localizations.dart';
@@ -186,28 +186,31 @@ class _AnimatedSplash extends StatelessWidget {
                 opacity: textOpacity,
                 child: SlideTransition(
                   position: textSlide,
-                  child: const Column(
-                    children: [
-                      Text(
-                        'EasyBake',
-                        style: TextStyle(
-                          fontSize: 34,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.3,
-                          color: Color(0xFF0F3559),
+                  child: const Directionality(
+                    textDirection: TextDirection.ltr,
+                    child: Column(
+                      children: [
+                        Text(
+                          'EasyBake',
+                          style: TextStyle(
+                            fontSize: 34,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.3,
+                            color: Color(0xFF0F3559),
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'The brain behind your best meals.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF315C84),
+                        SizedBox(height: 8),
+                        Text(
+                          'The brain behind your best meals.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF315C84),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
