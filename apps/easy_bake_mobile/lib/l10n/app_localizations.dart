@@ -1301,13 +1301,13 @@ abstract class AppLocalizations {
   /// Title shown at the top of the AI chef chat popup.
   ///
   /// In en, this message translates to:
-  /// **'EasyBake AI Chef'**
+  /// **'EasyBake AI Chat'**
   String get aiChefPopupTitle;
 
   /// Subtitle shown under the AI chef popup title.
   ///
   /// In en, this message translates to:
-  /// **'Chat assistant'**
+  /// **'Chef Pierre'**
   String get aiChefPopupSubtitle;
 
   /// Status pill text shown while checking connection in the AI chef popup.

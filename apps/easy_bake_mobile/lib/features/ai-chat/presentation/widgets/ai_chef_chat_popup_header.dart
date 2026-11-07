@@ -84,7 +84,7 @@ class AiChefChatPopupHeader extends StatelessWidget {
                   ],
                 ),
                 child: Image.asset(
-                  'assets/ai_chef_logo.png',
+                  'assets/pierre_portrait.png',
                   fit: BoxFit.contain,
                 ),
               ),

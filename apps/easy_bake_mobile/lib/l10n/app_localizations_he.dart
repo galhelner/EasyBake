@@ -681,10 +681,10 @@ class AppLocalizationsHe extends AppLocalizations {
   String get createRecipeModalTitle => 'יצירת המתכון שלך';
 
   @override
-  String get aiChefPopupTitle => 'שף ה-AI של EasyBake';
+  String get aiChefPopupTitle => 'צ\'אט AI של EasyBake';
 
   @override
-  String get aiChefPopupSubtitle => 'עוזר הצ\'אט';
+  String get aiChefPopupSubtitle => 'השף פייר';
 
   @override
   String get aiChefPopupCheckingLabel => 'בודק...';

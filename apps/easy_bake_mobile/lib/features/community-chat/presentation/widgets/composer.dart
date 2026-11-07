@@ -534,7 +534,7 @@ class _MentionPopupCard extends StatelessWidget {
                 height: 28,
                 child: ClipOval(
                   child: Image.asset(
-                    'assets/ai_chef_logo.png',
+                    'assets/pierre_portrait.png',
                     fit: BoxFit.cover,
                   ),
                 ),

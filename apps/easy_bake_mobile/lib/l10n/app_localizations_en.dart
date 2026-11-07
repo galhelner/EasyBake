@@ -693,10 +693,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createRecipeModalTitle => 'Create Your Recipe';
 
   @override
-  String get aiChefPopupTitle => 'EasyBake AI Chef';
+  String get aiChefPopupTitle => 'EasyBake AI Chat';
 
   @override
-  String get aiChefPopupSubtitle => 'Chat assistant';
+  String get aiChefPopupSubtitle => 'Chef Pierre';
 
   @override
   String get aiChefPopupCheckingLabel => 'Checking...';

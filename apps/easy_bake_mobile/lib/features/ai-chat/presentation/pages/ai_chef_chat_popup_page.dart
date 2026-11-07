@@ -782,7 +782,7 @@ class _AiChefChatPopupDialogState
                                   ),
                                   child: isAi
                                       ? Image.asset(
-                                          'assets/ai_chef_logo.png',
+                                          'assets/pierre_portrait.png',
                                           fit: BoxFit.contain,
                                         )
                                       : const Icon(
