@@ -136,6 +136,7 @@ class ChatMessageBuilder extends StatelessWidget {
     required this.onOpenRecipe,
     required this.onRecipeTap,
     this.onNavigateToShoppingList,
+    this.textColor = const Color(0xFF17324B),
     super.key,
   });
 
@@ -143,6 +144,7 @@ class ChatMessageBuilder extends StatelessWidget {
   final VoidCallback onOpenRecipe;
   final Function(Map<String, dynamic>) onRecipeTap;
   final VoidCallback? onNavigateToShoppingList;
+  final Color textColor;
 
   @override
   Widget build(BuildContext context) {
@@ -216,7 +218,7 @@ class ChatMessageBuilder extends StatelessWidget {
         if (message.text.isEmpty) {
           return const AiChefChatTypingDots();
         }
-        return AiChefMessageText(message.text);
+        return AiChefMessageText(message.text, color: textColor);
     }
   }
 }

@@ -38,7 +38,8 @@ Whenever you are asked to generate, modify, or review UI code for the EasyBake a
 
 ## 6. Verification and Analysis Guidelines
 - **NEVER** run `flutter test` to check changes or compile correctness.
-- **ALWAYS** run `flutter analyze` instead to verify code correctness and check for static analysis issues.
+- **Only** run `flutter analyze` when there are massive or wide-ranging changes across the project.
+- For small or targeted changes, prefer running `dart analyze <specific_file(s)>` on only the modified file(s), or skip analysis for minor tweaks to keep development fast (the user will let you know if anything is wrong).
 
 ## 7. Git & Version Control Guidelines
 - Only perform git operations that modify repository state (such as `git add`, `git commit`, `git push`, or `git checkout`) when explicitly requested by the user.

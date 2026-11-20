@@ -978,4 +978,13 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get askPierreLabel => 'שאל את פייר';
+
+  @override
+  String get copyTextLabel => 'העתק טקסט';
+
+  @override
+  String get aiChefHeaderRoleLabel => 'שף ה-AI של EasyBake';
+
+  @override
+  String get aiChefLoadingChatMessage => 'טוען את הצ\'אט...';
 }

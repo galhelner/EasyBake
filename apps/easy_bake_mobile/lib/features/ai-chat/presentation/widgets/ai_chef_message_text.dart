@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
 
-/// Renders a plain text message from AI Chef
+/// Renders a plain text message in the AI Chef chat window.
 class AiChefMessageText extends StatelessWidget {
   const AiChefMessageText(
     this.text, {
+    this.color = const Color(0xFF17324B),
     super.key,
   });
 
   final String text;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(
-        fontSize: 14,
-        color: Colors.black,
-        height: 1.35,
+      style: TextStyle(
+        fontSize: 14.0,
+        color: color,
+        height: 1.4,
       ),
     );
   }

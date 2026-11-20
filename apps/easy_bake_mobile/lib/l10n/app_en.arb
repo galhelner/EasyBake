@@ -1183,5 +1183,17 @@
   "askPierreLabel": "Ask Pierre",
   "@askPierreLabel": {
     "description": "Primary label on the floating AI Chef assistant button."
+  },
+  "copyTextLabel": "Copy text",
+  "@copyTextLabel": {
+    "description": "Action label shown in the long-press popup menu to copy a chat message."
+  },
+  "aiChefHeaderRoleLabel": "EasyBake AI Chef",
+  "@aiChefHeaderRoleLabel": {
+    "description": "Role subtitle displayed below Chef Pierre in the AI chat header."
+  },
+  "aiChefLoadingChatMessage": "Loading chat...",
+  "@aiChefLoadingChatMessage": {
+    "description": "Message shown in the centered loading card while the AI Chef chat initializes."
   }
 }

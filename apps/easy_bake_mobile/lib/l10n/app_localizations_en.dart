@@ -997,4 +997,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get askPierreLabel => 'Ask Pierre';
+
+  @override
+  String get copyTextLabel => 'Copy text';
+
+  @override
+  String get aiChefHeaderRoleLabel => 'EasyBake AI Chef';
+
+  @override
+  String get aiChefLoadingChatMessage => 'Loading chat...';
 }

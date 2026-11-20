@@ -1813,6 +1813,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ask Pierre'**
   String get askPierreLabel;
+
+  /// Action label shown in the long-press popup menu to copy a chat message.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy text'**
+  String get copyTextLabel;
+
+  /// Role subtitle displayed below Chef Pierre in the AI chat header.
+  ///
+  /// In en, this message translates to:
+  /// **'EasyBake AI Chef'**
+  String get aiChefHeaderRoleLabel;
+
+  /// Message shown in the centered loading card while the AI Chef chat initializes.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading chat...'**
+  String get aiChefLoadingChatMessage;
 }
 
 class _AppLocalizationsDelegate
