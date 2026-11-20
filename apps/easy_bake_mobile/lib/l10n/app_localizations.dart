@@ -1807,6 +1807,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Join EasyBake and start baking with Pierre'**
   String get registerHeaderSubtitle;
+
+  /// Primary label on the floating AI Chef assistant button.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask Pierre'**
+  String get askPierreLabel;
 }
 
 class _AppLocalizationsDelegate

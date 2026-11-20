@@ -1179,5 +1179,9 @@
   "registerHeaderSubtitle": "Join EasyBake and start baking with Pierre",
   "@registerHeaderSubtitle": {
     "description": "Subtitle shown below the title on the registration form."
+  },
+  "askPierreLabel": "Ask Pierre",
+  "@askPierreLabel": {
+    "description": "Primary label on the floating AI Chef assistant button."
   }
 }

@@ -34,16 +34,7 @@ class BottomActions extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(
-            width: 68,
-            height: 68,
-            child: _TapScaleEffect(
-              onTap: null,
-              child: AiChefChatButton(
-                onTap: onAiCreate,
-              ),
-            ),
-          ),
+          AiChefChatButton(onTap: onAiCreate),
         ],
       ),
     );

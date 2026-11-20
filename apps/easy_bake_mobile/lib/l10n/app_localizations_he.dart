@@ -975,4 +975,7 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get registerHeaderSubtitle => 'הצטרף ל-EasyBake והתחל לאפות עם פייר';
+
+  @override
+  String get askPierreLabel => 'שאל את פייר';
 }

@@ -1179,5 +1179,9 @@
   "registerHeaderSubtitle": "הצטרף ל-EasyBake והתחל לאפות עם פייר",
   "@registerHeaderSubtitle": {
     "description": "Subtitle shown below the title on the registration form."
+  },
+  "askPierreLabel": "שאל את פייר",
+  "@askPierreLabel": {
+    "description": "Primary label on the floating AI Chef assistant button."
   }
 }
