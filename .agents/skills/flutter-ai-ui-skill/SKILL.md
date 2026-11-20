@@ -41,4 +41,4 @@ Whenever you are asked to generate, modify, or review UI code for the EasyBake a
 - **ALWAYS** run `flutter analyze` instead to verify code correctness and check for static analysis issues.
 
 ## 7. Git & Version Control Guidelines
-- **NEVER** perform git operations that modify repository state (such as `git add`, `git commit`, `git push`, or `git checkout`).
+- Only perform git operations that modify repository state (such as `git add`, `git commit`, `git push`, or `git checkout`) when explicitly requested by the user.

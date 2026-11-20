@@ -969,4 +969,10 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get copiedToClipboard => 'הועתק ללוח';
+
+  @override
+  String get registerHeaderTitle => 'צור את החשבון שלך';
+
+  @override
+  String get registerHeaderSubtitle => 'הצטרף ל-EasyBake והתחל לאפות עם פייר';
 }

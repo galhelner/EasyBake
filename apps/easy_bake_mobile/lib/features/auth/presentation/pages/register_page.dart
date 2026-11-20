@@ -1,7 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 import '../widgets/auth_input_field.dart';
+import '../widgets/register_form_header.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({
@@ -26,63 +27,20 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   static const _kButtonBlue = Color(0xFF8BB3D6);
-  static const _kActionBlue = Color(0xFF1B75DD);
-  static const _kPrimaryText = Color(0xFF1E2C44);
-  static const _kProgressTrack = Color(0xFFE1EBF6);
 
-  late final PageController _pageController;
-  int _currentPage = 0;
-
+  final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  final _nameFormKey = GlobalKey<FormState>();
-  final _emailFormKey = GlobalKey<FormState>();
-  final _passwordFormKey = GlobalKey<FormState>();
-
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
-  bool _showNameStepErrorLogo = false;
-  bool _showEmailStepError = false;
-  bool _showPasswordStepError = false;
-
-  void _resetNameStepErrorVisuals() {
-    if (_showNameStepErrorLogo) {
-      setState(() => _showNameStepErrorLogo = false);
-      _nameFormKey.currentState?.validate();
-    }
-  }
-
-  void _resetEmailStepErrorVisuals() {
-    if (_showEmailStepError) {
-      setState(() => _showEmailStepError = false);
-      _emailFormKey.currentState?.validate();
-    }
-  }
-
-  void _resetPasswordStepErrorVisuals() {
-    if (_showPasswordStepError) {
-      setState(() => _showPasswordStepError = false);
-      _passwordFormKey.currentState?.validate();
-    }
-  }
-
-  bool get _isAnyPasswordVisible {
-    return !_obscurePassword || !_obscureConfirmPassword;
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController(initialPage: 0);
-  }
+  bool _showErrors = false;
 
   @override
   void dispose() {
-    _pageController.dispose();
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -90,9 +48,15 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
-  String? _validateName(String? value) {
-    final l10n = AppLocalizations.of(context)!;
+  void _onFieldChanged() {
+    if (_showErrors) {
+      setState(() => _showErrors = false);
+      _formKey.currentState?.validate();
+    }
+  }
 
+  String? _validateName(String? value, AppLocalizations l10n) {
+    if (!_showErrors) return null;
     if (value == null || value.trim().isEmpty) {
       return l10n.registerErrorNameRequired;
     }
@@ -102,9 +66,8 @@ class _RegisterPageState extends State<RegisterPage> {
     return null;
   }
 
-  String? _validateEmail(String? value) {
-    final l10n = AppLocalizations.of(context)!;
-
+  String? _validateEmail(String? value, AppLocalizations l10n) {
+    if (!_showErrors) return null;
     final email = value?.trim() ?? '';
     if (email.isEmpty) {
       return l10n.registerErrorEmailRequired;
@@ -115,78 +78,28 @@ class _RegisterPageState extends State<RegisterPage> {
     return null;
   }
 
-  Future<void> _proceedToNextStep() async {
-    if (_isLoading) {
-      return;
+  String? _validatePassword(String? value, AppLocalizations l10n) {
+    if (!_showErrors) return null;
+    final password = value ?? '';
+    if (password.isEmpty) {
+      return l10n.registerErrorPasswordRequired;
     }
-
-    if (_currentPage == 1) {
-      setState(() => _showEmailStepError = true);
+    if (password.length < 8) {
+      return l10n.registerErrorPasswordMinLength;
     }
-
-    if (_currentPage == 0) {
-      final nameValidationError = _validateName(_nameController.text);
-      if (nameValidationError != null) {
-        setState(() => _showNameStepErrorLogo = true);
-        _nameFormKey.currentState?.validate();
-        return;
-      }
-
-      if (_showNameStepErrorLogo) {
-        setState(() => _showNameStepErrorLogo = false);
-      }
-    }
-
-    final isCurrentStepValid = switch (_currentPage) {
-      0 => true,
-      1 => _emailFormKey.currentState?.validate() ?? false,
-      _ => true,
-    };
-
-    if (!isCurrentStepValid || _currentPage >= 2) {
-      return;
-    }
-
-    if (_currentPage == 1) {
-      setState(() => _isLoading = true);
-
-      try {
-        final exists = await widget.onCheckEmailExists(
-          _emailController.text.trim(),
-        );
-
-        if (exists == null) {
-          return;
-        }
-
-        if (exists) {
-          if (mounted) {
-            await widget.onEmailExists();
-          }
-          return;
-        }
-      } finally {
-        if (mounted) {
-          setState(() => _isLoading = false);
-        }
-      }
-    }
-
-    await _pageController.nextPage(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
+    return null;
   }
 
-  Future<void> _goToPreviousStep() async {
-    if (_isLoading || _currentPage == 0) {
-      return;
+  String? _validateConfirmPassword(String? value, AppLocalizations l10n) {
+    if (!_showErrors) return null;
+    final confirmPassword = value ?? '';
+    if (confirmPassword.isEmpty) {
+      return l10n.registerErrorConfirmPasswordRequired;
     }
-
-    await _pageController.previousPage(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
+    if (confirmPassword != _passwordController.text) {
+      return l10n.registerErrorPasswordMismatch;
+    }
+    return null;
   }
 
   Future<void> _handleRegister() async {
@@ -194,43 +107,30 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    setState(() => _showPasswordStepError = true);
-
-    final hasNameError = _validateName(_nameController.text) != null;
-    if (hasNameError) {
-      setState(() => _showNameStepErrorLogo = true);
-      await _pageController.animateToPage(
-        0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-      _nameFormKey.currentState?.validate();
-      return;
-    }
-
-    final hasEmailError = _validateEmail(_emailController.text) != null;
-    if (hasEmailError) {
-      setState(() => _showEmailStepError = true);
-      await _pageController.animateToPage(
-        1,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-      _emailFormKey.currentState?.validate();
-      return;
-    }
-
-    final isPasswordValid = _passwordFormKey.currentState?.validate() ?? false;
-    if (!isPasswordValid) {
-      setState(() => _showPasswordStepError = true);
+    setState(() => _showErrors = true);
+    if (!(_formKey.currentState?.validate() ?? false)) {
       return;
     }
 
     setState(() => _isLoading = true);
     try {
+      final email = _emailController.text.trim();
+      final exists = await widget.onCheckEmailExists(email);
+
+      if (exists == null) {
+        return;
+      }
+
+      if (exists) {
+        if (mounted) {
+          await widget.onEmailExists();
+        }
+        return;
+      }
+
       await widget.onSubmit(
         fullName: _nameController.text.trim(),
-        email: _emailController.text.trim(),
+        email: email,
         password: _passwordController.text.trim(),
       );
     } finally {
@@ -244,113 +144,78 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return ConstrainedBox(
-          constraints: BoxConstraints(minHeight: constraints.maxHeight),
-          child: Column(
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Column(
-                  children: [
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
-                      child: Text(
-                        l10n.registerStepIndicatorLabel(_currentPage + 1, 3),
-                        key: ValueKey<int>(_currentPage),
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: _kPrimaryText,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildProgressBar(),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: PageView(
-                  controller: _pageController,
-                  physics: const NeverScrollableScrollPhysics(),
-                  onPageChanged: (page) {
-                    setState(() => _currentPage = page);
-                  },
-                  children: [
-                    _buildIdentityStep(l10n),
-                    _buildCommunicationStep(l10n),
-                    _buildSecurityStep(l10n),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildProgressBar() {
-    return Row(
-      children: List.generate(3, (index) {
-        final isActive = index <= _currentPage;
-        return Expanded(
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOut,
-            height: 6,
-            margin: EdgeInsetsDirectional.only(end: index < 2 ? 8 : 0),
-            decoration: BoxDecoration(
-              color: isActive ? _kActionBlue : _kProgressTrack,
-              borderRadius: BorderRadius.circular(999),
-            ),
-          ),
-        );
-      }),
-    );
-  }
-
-  Widget _buildIdentityStep(AppLocalizations l10n) {
     return Form(
-      key: _nameFormKey,
+      key: _formKey,
       child: Column(
         mainAxisSize: MainAxisSize.max,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 6),
-          Center(
-            child: Container(
-              height: 190,
-              decoration: BoxDecoration(color: Colors.transparent),
-              child: Image.asset(
-                'assets/ai_chef_whats_your_name.png',
-                fit: BoxFit.contain,
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 4),
+                  const RegisterFormHeader(),
+                  const SizedBox(height: 16),
+                  AuthInputField(
+                    controller: _nameController,
+                    icon: Icons.person_outline,
+                    hint: l10n.fullNameHint,
+                    hintFontSize: 15,
+                    validator: (value) => _validateName(value, l10n),
+                    onChanged: (_) => _onFieldChanged(),
+                  ),
+                  const SizedBox(height: 12),
+                  AuthInputField(
+                    controller: _emailController,
+                    icon: Icons.email_outlined,
+                    hint: l10n.emailAddressHint,
+                    hintFontSize: 15,
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) => _validateEmail(value, l10n),
+                    onChanged: (_) => _onFieldChanged(),
+                  ),
+                  const SizedBox(height: 12),
+                  AuthInputField(
+                    controller: _passwordController,
+                    icon: Icons.lock_outline,
+                    hint: l10n.passwordHint,
+                    hintFontSize: 15,
+                    obscureText: _obscurePassword,
+                    onToggleObscure: () {
+                      setState(() => _obscurePassword = !_obscurePassword);
+                    },
+                    validator: (value) => _validatePassword(value, l10n),
+                    onChanged: (_) => _onFieldChanged(),
+                  ),
+                  const SizedBox(height: 12),
+                  AuthInputField(
+                    controller: _confirmPasswordController,
+                    icon: Icons.lock_reset_outlined,
+                    hint: l10n.confirmPasswordHint,
+                    hintFontSize: 15,
+                    obscureText: _obscureConfirmPassword,
+                    onToggleObscure: () {
+                      setState(
+                        () => _obscureConfirmPassword =
+                            !_obscureConfirmPassword,
+                      );
+                    },
+                    validator: (value) => _validateConfirmPassword(value, l10n),
+                    onChanged: (_) => _onFieldChanged(),
+                  ),
+                  const SizedBox(height: 8),
+                ],
               ),
             ),
           ),
-          const SizedBox(height: 18),
-          AuthInputField(
-            controller: _nameController,
-            icon: Icons.person_outline,
-            hint: l10n.fullNameHint,
-            hintFontSize: 14,
-            validator: (value) {
-              if (!_showNameStepErrorLogo) {
-                return null;
-              }
-              return _validateName(value);
-            },
-            onChanged: (_) => _resetNameStepErrorVisuals(),
-          ),
-          const Spacer(),
+          const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
             height: 52,
             child: ElevatedButton(
-              onPressed: _isLoading ? null : _proceedToNextStep,
+              onPressed: _isLoading ? null : _handleRegister,
               style:
                   ElevatedButton.styleFrom(
                     backgroundColor: _kButtonBlue,
@@ -364,270 +229,24 @@ class _RegisterPageState extends State<RegisterPage> {
                       Colors.white.withValues(alpha: 0.14),
                     ),
                   ),
-              child: Text(
-                l10n.nextButtonLabel,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.3,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCommunicationStep(AppLocalizations l10n) {
-    return Form(
-      key: _emailFormKey,
-      child: Column(
-        mainAxisSize: MainAxisSize.max,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SizedBox(height: 6),
-          Center(
-            child: Container(
-              height: 190,
-              decoration: const BoxDecoration(color: Colors.transparent),
-              child: Image.asset(
-                'assets/ai_chef_whats_your_email.png',
-                fit: BoxFit.contain,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          const SizedBox(height: 18),
-          AuthInputField(
-            controller: _emailController,
-            icon: Icons.email_outlined,
-            hint: l10n.emailAddressHint,
-            hintFontSize: 14,
-            keyboardType: TextInputType.emailAddress,
-            validator: (value) {
-              if (!_showEmailStepError) {
-                return null;
-              }
-
-              return _validateEmail(value);
-            },
-            onChanged: (_) => _resetEmailStepErrorVisuals(),
-          ),
-          const Spacer(),
-          Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 52,
-                  child: OutlinedButton(
-                    onPressed: _isLoading ? null : _goToPreviousStep,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: _kButtonBlue,
-                      side: const BorderSide(color: _kButtonBlue, width: 1.5),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
                       ),
-                    ),
-                    child: Text(
-                      l10n.backButtonLabel,
+                    )
+                  : Text(
+                      l10n.registerLabel,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.3,
                       ),
                     ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: SizedBox(
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _proceedToNextStep,
-                    style:
-                        ElevatedButton.styleFrom(
-                          backgroundColor: _kButtonBlue,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ).copyWith(
-                          overlayColor: WidgetStatePropertyAll(
-                            Colors.white.withValues(alpha: 0.14),
-                          ),
-                        ),
-                    child: _isLoading && _currentPage == 1
-                        ? const SizedBox(
-                            height: 22,
-                            width: 22,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : Text(
-                          l10n.nextButtonLabel,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSecurityStep(AppLocalizations l10n) {
-    return Form(
-      key: _passwordFormKey,
-      child: Column(
-        mainAxisSize: MainAxisSize.max,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SizedBox(height: 6),
-          Center(
-            child: Container(
-              height: 170,
-              decoration: const BoxDecoration(color: Colors.transparent),
-              child: Image.asset(
-                _isAnyPasswordVisible
-                    ? 'assets/ai_chef_enter_your_password_show.png'
-                    : 'assets/ai_chef_enter_your_password_hide.png',
-                fit: BoxFit.contain,
-              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          AuthInputField(
-            controller: _passwordController,
-            icon: Icons.lock_outline,
-            hint: l10n.passwordHint,
-            hintFontSize: 14,
-            obscureText: _obscurePassword,
-            onToggleObscure: () {
-              setState(() {
-                _obscurePassword = !_obscurePassword;
-              });
-            },
-            validator: (value) {
-              if (!_showPasswordStepError) {
-                return null;
-              }
-
-              final password = value ?? '';
-              if (password.isEmpty) {
-                return l10n.registerErrorPasswordRequired;
-              }
-              if (password.length < 8) {
-                return l10n.registerErrorPasswordMinLength;
-              }
-              return null;
-            },
-            onChanged: (_) => _resetPasswordStepErrorVisuals(),
-          ),
-          const SizedBox(height: 10),
-          AuthInputField(
-            controller: _confirmPasswordController,
-            icon: Icons.lock_reset_outlined,
-            hint: l10n.confirmPasswordHint,
-            hintFontSize: 14,
-            obscureText: _obscureConfirmPassword,
-            onToggleObscure: () {
-              setState(() {
-                _obscureConfirmPassword = !_obscureConfirmPassword;
-              });
-            },
-            validator: (value) {
-              if (!_showPasswordStepError) {
-                return null;
-              }
-
-              final confirmPassword = value ?? '';
-              if (confirmPassword.isEmpty) {
-                return l10n.registerErrorConfirmPasswordRequired;
-              }
-              if (confirmPassword != _passwordController.text) {
-                return l10n.registerErrorPasswordMismatch;
-              }
-              return null;
-            },
-            onChanged: (_) => _resetPasswordStepErrorVisuals(),
-          ),
-          const Spacer(),
-          Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 52,
-                  child: OutlinedButton(
-                    onPressed: _isLoading ? null : _goToPreviousStep,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: _kButtonBlue,
-                      side: const BorderSide(color: _kButtonBlue, width: 1.5),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: Text(
-                      l10n.backButtonLabel,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.3,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: SizedBox(
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _handleRegister,
-                    style:
-                        ElevatedButton.styleFrom(
-                          backgroundColor: _kButtonBlue,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ).copyWith(
-                          overlayColor: WidgetStatePropertyAll(
-                            Colors.white.withValues(alpha: 0.14),
-                          ),
-                        ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            height: 22,
-                            width: 22,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : Text(
-                          l10n.registerLabel,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                  ),
-                ),
-              ),
-            ],
           ),
         ],
       ),

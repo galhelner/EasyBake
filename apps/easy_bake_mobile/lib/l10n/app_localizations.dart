@@ -1795,6 +1795,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copied to clipboard'**
   String get copiedToClipboard;
+
+  /// Title shown at the top of the registration form.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your account'**
+  String get registerHeaderTitle;
+
+  /// Subtitle shown below the title on the registration form.
+  ///
+  /// In en, this message translates to:
+  /// **'Join EasyBake and start baking with Pierre'**
+  String get registerHeaderSubtitle;
 }
 
 class _AppLocalizationsDelegate

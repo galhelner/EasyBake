@@ -1171,5 +1171,13 @@
   "copiedToClipboard": "Copied to clipboard",
   "@copiedToClipboard": {
     "description": "Toast message displayed when text is copied to the clipboard."
+  },
+  "registerHeaderTitle": "Create your account",
+  "@registerHeaderTitle": {
+    "description": "Title shown at the top of the registration form."
+  },
+  "registerHeaderSubtitle": "Join EasyBake and start baking with Pierre",
+  "@registerHeaderSubtitle": {
+    "description": "Subtitle shown below the title on the registration form."
   }
 }

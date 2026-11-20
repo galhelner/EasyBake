@@ -1171,5 +1171,13 @@
   "copiedToClipboard": "הועתק ללוח",
   "@copiedToClipboard": {
     "description": "Toast message displayed when text is copied to the clipboard."
+  },
+  "registerHeaderTitle": "צור את החשבון שלך",
+  "@registerHeaderTitle": {
+    "description": "Title shown at the top of the registration form."
+  },
+  "registerHeaderSubtitle": "הצטרף ל-EasyBake והתחל לאפות עם פייר",
+  "@registerHeaderSubtitle": {
+    "description": "Subtitle shown below the title on the registration form."
   }
 }

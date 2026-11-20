@@ -987,4 +987,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get copiedToClipboard => 'Copied to clipboard';
+
+  @override
+  String get registerHeaderTitle => 'Create your account';
+
+  @override
+  String get registerHeaderSubtitle =>
+      'Join EasyBake and start baking with Pierre';
 }
