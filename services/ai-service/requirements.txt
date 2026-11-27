@@ -1,7 +1,7 @@
-fastapi
-uvicorn
-python-dotenv
-google-genai
-pydantic
-gunicorn
-google-adk
+fastapi==0.165.0
+uvicorn==0.51.0
+python-dotenv==1.2.2
+google-genai>=2.34.0,<3.0.0
+pydantic==2.13.4
+gunicorn==25.3.0
+google-adk==2.15.0
