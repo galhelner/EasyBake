@@ -8,12 +8,12 @@ jest.mock('../../../services/logger');
 describe('chatService', () => {
   const mockPrisma = {
     communityChatMessage: {
-      create: jest.fn<() => Promise<unknown>>(),
-      findMany: jest.fn<() => Promise<unknown[]>>()
+      create: jest.fn<(...args: unknown[]) => Promise<unknown>>(),
+      findMany: jest.fn<(...args: unknown[]) => Promise<unknown[]>>()
     },
     user: {
-      upsert: jest.fn<() => Promise<unknown>>(),
-      findUnique: jest.fn<() => Promise<unknown>>()
+      upsert: jest.fn<(...args: unknown[]) => Promise<unknown>>(),
+      findUnique: jest.fn<(...args: unknown[]) => Promise<unknown>>()
     }
   };
 

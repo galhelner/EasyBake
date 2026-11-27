@@ -246,11 +246,14 @@ export const generateAssistantReply = async (
     };
   } catch (error) {
     if ((error as Error).name === 'AbortError') {
-      throw new Error(`AI service request timed out after ${AI_SERVICE_REQUEST_TIMEOUT_MS}ms`);
+      throw new Error(`AI service request timed out after ${AI_SERVICE_REQUEST_TIMEOUT_MS}ms`, {
+        cause: error,
+      });
     }
 
     throw new Error(
       `Failed to reach AI service at ${AI_SERVICE_API_BASE_URL}: ${(error as Error).message}`,
+      { cause: error },
     );
   } finally {
     clearTimeout(timeoutId);
