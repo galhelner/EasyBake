@@ -2,23 +2,62 @@ import asyncio
 from typing import Optional, AsyncIterator, Any
 from google.genai import types
 from google.adk import Event
+from google.adk.agents.callback_context import CallbackContext
+from google.adk.models.google_llm import Gemini
+from google.adk.models.llm_request import LlmRequest
+from google.adk.models.llm_response import LlmResponse
+from google.adk.plugins import BasePlugin
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from app.agents.root_router.agent import get_root_router_agent
 from app.agents.tools import auth_token_var, stream_queue_var, recipe_id_var
 from app.core.logger import get_logger
+from app.services.llm_service import FALLBACK_MODEL_NAME, is_fallback_worthy_error
 
 logger = get_logger()
+
+
+class ModelFallbackPlugin(BasePlugin):
+    """Falls back to a secondary Gemini model on transient 503/429 model errors."""
+
+    def __init__(self, fallback_model: str = FALLBACK_MODEL_NAME):
+        super().__init__(name="model_fallback_plugin")
+        self.fallback_model = fallback_model
+
+    async def on_model_error_callback(
+        self,
+        *,
+        callback_context: CallbackContext,
+        llm_request: LlmRequest,
+        error: Exception,
+    ) -> Optional[LlmResponse]:
+        if (
+            not self.fallback_model
+            or llm_request.model == self.fallback_model
+            or not is_fallback_worthy_error(error)
+        ):
+            return None
+
+        logger.warning(
+            f"ADK model '{llm_request.model}' failed ({error}); falling back to '{self.fallback_model}'."
+        )
+        fallback_request = llm_request.model_copy(update={"model": self.fallback_model})
+        fallback_llm = Gemini(model=self.fallback_model)
+        async for response in fallback_llm.generate_content_async(fallback_request, stream=False):
+            return response
+        return None
 
 
 class AgentService:
     def __init__(self):
         # InMemory session store and runner
         self.sessions = InMemorySessionService()
+        plugins = [ModelFallbackPlugin(FALLBACK_MODEL_NAME)] if FALLBACK_MODEL_NAME else []
         self.runner = Runner(
             agent=get_root_router_agent(),
             session_service=self.sessions,
-            app_name="EasyBake"
+            app_name="EasyBake",
+            plugins=plugins,
         )
 
     async def chat_stream(

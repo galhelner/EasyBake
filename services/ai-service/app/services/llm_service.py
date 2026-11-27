@@ -8,6 +8,7 @@ from typing import TypeVar
 
 from google import genai
 from google.genai import types
+from google.genai.errors import APIError
 from pydantic import BaseModel, TypeAdapter
 
 from app.core.logger import get_logger
@@ -24,7 +25,8 @@ from app.schemas.router import (
 )
 from app.utils.helpers import strip_markdown_json_fences
 
-MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite")
+FALLBACK_MODEL_NAME = os.getenv("GEMINI_FALLBACK_MODEL", "gemini-3.1-flash-lite")
 EMBEDDING_DIM = int(os.getenv("GEMINI_EMBEDDING_DIM", "768"))
 INSTRUCTIONS_DIR = Path(__file__).resolve().parents[1] / "instructions"
 logger = get_logger()
@@ -51,13 +53,53 @@ def _load_instruction_safe(filename: str) -> str:
         return ""
 
 
+def is_fallback_worthy_error(error: Exception) -> bool:
+    """Return True when an error indicates transient model unavailability or rate limiting."""
+    target: Exception = error
+    last_attempt = getattr(error, "last_attempt", None)
+    if last_attempt is not None and hasattr(last_attempt, "exception"):
+        inner = last_attempt.exception()
+        if isinstance(inner, Exception):
+            target = inner
+
+    if isinstance(target, APIError) and getattr(target, "code", None) in (429, 503):
+        return True
+
+    message = str(target)
+    return any(token in message for token in ("503", "UNAVAILABLE", "429", "RESOURCE_EXHAUSTED"))
+
+
+def _generate_content_with_fallback(
+    *,
+    contents: object,
+    config: types.GenerateContentConfig,
+    model: str = MODEL_NAME,
+):
+    try:
+        return client.models.generate_content(
+            model=model,
+            contents=contents,
+            config=config,
+        )
+    except Exception as error:
+        if not FALLBACK_MODEL_NAME or FALLBACK_MODEL_NAME == model or not is_fallback_worthy_error(error):
+            raise
+        logger.warning(
+            f"Primary model '{model}' failed ({error}); falling back to '{FALLBACK_MODEL_NAME}'."
+        )
+        return client.models.generate_content(
+            model=FALLBACK_MODEL_NAME,
+            contents=contents,
+            config=config,
+        )
+
+
 def _generate_structured_content(
     contents: str,
     system_instruction: str,
     response_schema: type[SchemaT],
 ) -> SchemaT:
-    response = client.models.generate_content(
-        model=MODEL_NAME,
+    response = _generate_content_with_fallback(
         contents=contents,
         config=types.GenerateContentConfig(
             system_instruction=system_instruction,
@@ -117,24 +159,28 @@ def _generate_embedding_sync(text: str) -> list[float]:
     )
 
 
+def _open_stream(model: str, prompt: str, config: types.GenerateContentConfig):
+    return client.models.generate_content_stream(
+        model=model,
+        contents=prompt,
+        config=config,
+    )
+
+
 def stream_generate_content(prompt: str, instruction_file: str) -> Iterator[str]:
     config = types.GenerateContentConfig(
         system_instruction=_load_instruction(instruction_file),
     )
 
-    if hasattr(client.models, "generate_content_stream"):
-        stream = client.models.generate_content_stream(
-            model=MODEL_NAME,
-            contents=prompt,
-            config=config,
+    try:
+        stream = _open_stream(MODEL_NAME, prompt, config)
+    except Exception as error:
+        if not FALLBACK_MODEL_NAME or FALLBACK_MODEL_NAME == MODEL_NAME or not is_fallback_worthy_error(error):
+            raise
+        logger.warning(
+            f"Primary model '{MODEL_NAME}' stream failed ({error}); falling back to '{FALLBACK_MODEL_NAME}'."
         )
-    else:
-        stream = client.models.generate_content(
-            model=MODEL_NAME,
-            contents=prompt,
-            config=config,
-            stream=True,
-        )
+        stream = _open_stream(FALLBACK_MODEL_NAME, prompt, config)
 
     def _raw_chunk_iterator() -> Iterator[str]:
         for chunk in stream:
@@ -213,8 +259,7 @@ def _generate_recipe_from_image_sync(
     image_bytes: bytes,
     mime_type: str,
 ) -> ImageRecipeExtractionSchema:
-    response = client.models.generate_content(
-        model=MODEL_NAME,
+    response = _generate_content_with_fallback(
         contents=[types.Part.from_bytes(data=image_bytes, mime_type=mime_type)],
         config=types.GenerateContentConfig(
             system_instruction=_load_instruction("image_recipe_creator.md"),
@@ -293,8 +338,7 @@ def _calculate_health_score_sync(
     ingredients: list[str],
     instructions: list[str],
 ) -> int:
-    response = client.models.generate_content(
-        model=MODEL_NAME,
+    response = _generate_content_with_fallback(
         contents=(
             f"Title: {title}\n"
             f"Ingredients: {', '.join(ingredients)}\n"
@@ -361,8 +405,7 @@ def _extract_text_from_generative_response(response: object) -> str:
 
 
 def _generate_ingredients_archive_sync() -> list[IngredientSchema]:
-    response = client.models.generate_content(
-        model=MODEL_NAME,
+    response = _generate_content_with_fallback(
         contents="Generate the ingredient archive now.",
         config=types.GenerateContentConfig(
             system_instruction=_load_instruction("ingredient_generator.md"),
