@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AiChefChatBubble extends StatelessWidget {
-  const AiChefChatBubble({super.key, this.label = 'AI Chef Chat'});
+  const AiChefChatBubble({super.key, this.label = 'Ask Pierre'});
 
   final String label;
 

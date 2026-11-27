@@ -693,10 +693,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createRecipeModalTitle => 'Create Your Recipe';
 
   @override
-  String get aiChefPopupTitle => 'EasyBake AI Chef';
+  String get aiChefPopupTitle => 'EasyBake AI Chat';
 
   @override
-  String get aiChefPopupSubtitle => 'Chat assistant';
+  String get aiChefPopupSubtitle => 'Chef Pierre';
 
   @override
   String get aiChefPopupCheckingLabel => 'Checking...';
@@ -987,4 +987,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get copiedToClipboard => 'Copied to clipboard';
+
+  @override
+  String get registerHeaderTitle => 'Create your account';
+
+  @override
+  String get registerHeaderSubtitle =>
+      'Join EasyBake and start baking with Pierre';
+
+  @override
+  String get askPierreLabel => 'Ask Pierre';
+
+  @override
+  String get copyTextLabel => 'Copy text';
+
+  @override
+  String get aiChefHeaderRoleLabel => 'EasyBake AI Chef';
+
+  @override
+  String get aiChefLoadingChatMessage => 'Loading chat...';
 }

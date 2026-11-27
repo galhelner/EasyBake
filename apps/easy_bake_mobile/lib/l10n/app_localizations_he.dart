@@ -681,10 +681,10 @@ class AppLocalizationsHe extends AppLocalizations {
   String get createRecipeModalTitle => 'יצירת המתכון שלך';
 
   @override
-  String get aiChefPopupTitle => 'שף ה-AI של EasyBake';
+  String get aiChefPopupTitle => 'צ\'אט AI של EasyBake';
 
   @override
-  String get aiChefPopupSubtitle => 'עוזר הצ\'אט';
+  String get aiChefPopupSubtitle => 'השף פייר';
 
   @override
   String get aiChefPopupCheckingLabel => 'בודק...';
@@ -969,4 +969,22 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get copiedToClipboard => 'הועתק ללוח';
+
+  @override
+  String get registerHeaderTitle => 'צור את החשבון שלך';
+
+  @override
+  String get registerHeaderSubtitle => 'הצטרף ל-EasyBake והתחל לאפות עם פייר';
+
+  @override
+  String get askPierreLabel => 'שאל את פייר';
+
+  @override
+  String get copyTextLabel => 'העתק טקסט';
+
+  @override
+  String get aiChefHeaderRoleLabel => 'שף ה-AI של EasyBake';
+
+  @override
+  String get aiChefLoadingChatMessage => 'טוען את הצ\'אט...';
 }

@@ -477,8 +477,8 @@
   "summaryCardUnavailableMessage": "סיכום המתכונים אינו זמין כרגע",
   "logoutButtonShortLabel": "יציאה",
   "createRecipeModalTitle": "יצירת המתכון שלך",
-  "aiChefPopupTitle": "שף ה-AI של EasyBake",
-  "aiChefPopupSubtitle": "עוזר הצ'אט",
+  "aiChefPopupTitle": "צ'אט AI של EasyBake",
+  "aiChefPopupSubtitle": "השף פייר",
   "aiChefPopupCheckingLabel": "בודק...",
   "aiChefPopupRefreshLabel": "רענון",
   "aiChefGreetingWithoutName": "איך אני יכול לעזור לך?",
@@ -1171,5 +1171,29 @@
   "copiedToClipboard": "הועתק ללוח",
   "@copiedToClipboard": {
     "description": "Toast message displayed when text is copied to the clipboard."
+  },
+  "registerHeaderTitle": "צור את החשבון שלך",
+  "@registerHeaderTitle": {
+    "description": "Title shown at the top of the registration form."
+  },
+  "registerHeaderSubtitle": "הצטרף ל-EasyBake והתחל לאפות עם פייר",
+  "@registerHeaderSubtitle": {
+    "description": "Subtitle shown below the title on the registration form."
+  },
+  "askPierreLabel": "שאל את פייר",
+  "@askPierreLabel": {
+    "description": "Primary label on the floating AI Chef assistant button."
+  },
+  "copyTextLabel": "העתק טקסט",
+  "@copyTextLabel": {
+    "description": "Action label shown in the long-press popup menu to copy a chat message."
+  },
+  "aiChefHeaderRoleLabel": "שף ה-AI של EasyBake",
+  "@aiChefHeaderRoleLabel": {
+    "description": "Role subtitle displayed below Chef Pierre in the AI chat header."
+  },
+  "aiChefLoadingChatMessage": "טוען את הצ'אט...",
+  "@aiChefLoadingChatMessage": {
+    "description": "Message shown in the centered loading card while the AI Chef chat initializes."
   }
 }

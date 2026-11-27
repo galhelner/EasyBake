@@ -97,9 +97,10 @@ class ChatService {
   ChatService(this._dio);
 
   final Dio _dio;
-  static const _chatConnectTimeout = Duration(seconds: 45);
-  static const _chatSendTimeout = Duration(seconds: 45);
-  static const _chatReceiveTimeout = Duration(seconds: 180);
+  static const _chatConnectTimeout = Duration(seconds: 15);
+  static const _chatSendTimeout = Duration(seconds: 15);
+  static const _chatReceiveTimeout = Duration(seconds: 30);
+  static const _chatStreamInactivityTimeout = Duration(seconds: 30);
 
   Stream<ChatEvent> sendPrompt({
     required String prompt,
@@ -124,11 +125,13 @@ class ChatService {
         'recipe_id': recipeId.trim(),
     };
 
+    final cancelToken = CancelToken();
     Response<ResponseBody> response;
     try {
       response = await _dio.post<ResponseBody>(
         '/chat',
         data: payload,
+        cancelToken: cancelToken,
         options: Options(
           responseType: ResponseType.stream,
           connectTimeout: _chatConnectTimeout,
@@ -162,18 +165,21 @@ class ChatService {
     final isSse = contentType.contains('text/event-stream');
 
     if (isSse) {
-      yield* _consumeSse(body.stream);
+      yield* _consumeSse(body.stream, cancelToken: cancelToken);
       return;
     }
 
-    yield* _consumeJson(body.stream);
+    yield* _consumeJson(body.stream, cancelToken: cancelToken);
   }
 
-  Stream<ChatEvent> _consumeSse(Stream<List<int>> source) async* {
+  Stream<ChatEvent> _consumeSse(
+    Stream<List<int>> source, {
+    required CancelToken cancelToken,
+  }) async* {
     var buffer = '';
 
     try {
-      await for (final chunk in source) {
+      await for (final chunk in source.timeout(_chatStreamInactivityTimeout)) {
         if (chunk.isEmpty) {
           continue;
         }
@@ -192,6 +198,14 @@ class ChatService {
       if (buffer.trim().isNotEmpty) {
         yield* _parseSseEventBlock(buffer);
       }
+    } on TimeoutException {
+      if (!cancelToken.isCancelled) {
+        cancelToken.cancel('stream_timeout');
+      }
+      yield const ChatEvent.error(
+        ChatErrorKind.serverSlow,
+        isConnectionIssue: true,
+      );
     } catch (_) {
       yield const ChatEvent.error(ChatErrorKind.streamInterrupted);
     }
@@ -276,13 +290,26 @@ class ChatService {
     }
   }
 
-  Stream<ChatEvent> _consumeJson(Stream<List<int>> source) async* {
+  Stream<ChatEvent> _consumeJson(
+    Stream<List<int>> source, {
+    required CancelToken cancelToken,
+  }) async* {
     final collected = <int>[];
 
     try {
-      await for (final chunk in source) {
+      await for (final chunk in source.timeout(_chatStreamInactivityTimeout)) {
         collected.addAll(chunk);
       }
+    } on TimeoutException {
+      if (!cancelToken.isCancelled) {
+        cancelToken.cancel('stream_timeout');
+      }
+      yield const ChatEvent.error(
+        ChatErrorKind.serverSlow,
+        isConnectionIssue: true,
+      );
+      yield const ChatEvent.done();
+      return;
     } catch (_) {
       yield const ChatEvent.error(ChatErrorKind.couldNotReadServerResponse);
       yield const ChatEvent.done();

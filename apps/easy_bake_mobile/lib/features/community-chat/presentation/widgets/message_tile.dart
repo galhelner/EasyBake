@@ -135,7 +135,7 @@ class MessageTile extends ConsumerWidget {
     final avatarIcon = isCurrentUser
         ? Icons.person
         : (isAiAssistant ? Icons.smart_toy_rounded : Icons.groups);
-    final avatarImageAsset = isAiAssistant ? 'assets/ai_chef_logo.png' : null;
+    final avatarImageAsset = isAiAssistant ? 'assets/pierre_portrait.png' : null;
     final senderName = (message.userFullName?.trim().isNotEmpty ?? false)
         ? message.userFullName!.trim()
         : (message.userEmail.isNotEmpty ? message.userEmail : 'Baker');

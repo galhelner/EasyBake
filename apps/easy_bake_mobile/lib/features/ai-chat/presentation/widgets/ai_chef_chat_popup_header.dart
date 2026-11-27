@@ -22,179 +22,297 @@ class AiChefChatPopupHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final statusColor = isCheckingInitialConnection
+        ? const Color(0xFF8BB3D6)
+        : isServiceOnline
+        ? const Color(0xFF4ADE80)
+        : const Color(0xFFF87171);
+
+    final showOfflineBanner = !isServiceOnline && !isCheckingInitialConnection;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 6, 8, 12),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFFEAF2F5), Color(0xFFDCE8EE)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          colors: [Color(0xFF315C84), Color(0xFF17324B)],
+          begin: AlignmentDirectional.topStart,
+          end: AlignmentDirectional.bottomEnd,
         ),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-        border: Border(bottom: BorderSide(color: Color(0xFFD0DCE3))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: IconButton(
-              onPressed: onClose,
-              icon: const Icon(
-                Icons.close_rounded,
-                color: Color(0xFF3C536B),
-                size: 20,
-              ),
-              constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
-              padding: EdgeInsets.zero,
-              splashRadius: 16,
+          Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(
+              16.0,
+              14.0,
+              12.0,
+              14.0,
             ),
-          ),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFFFDFCF8), Color(0xFFFFF0D9)],
-                  ),
-                  border: Border.all(
-                    color: const Color(0xFF2E4E69).withValues(alpha: 0.12),
-                    width: 1.2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF2E4E69).withValues(alpha: 0.18),
-                      blurRadius: 12,
-                      offset: const Offset(0, 5),
-                    ),
-                    BoxShadow(
-                      color: Colors.white.withValues(alpha: 0.85),
-                      blurRadius: 8,
-                      offset: const Offset(0, -2),
-                    ),
-                  ],
-                ),
-                child: Image.asset(
-                  'assets/ai_chef_logo.png',
-                  fit: BoxFit.contain,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      l10n.aiChefPopupTitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF253852),
-                        letterSpacing: 0.1,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      l10n.aiChefPopupSubtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF557089),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              // Status Pill
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isCheckingInitialConnection
-                      ? const Color(0xFFE3F2FD)
-                      : isServiceOnline
-                          ? const Color(0xFFE8F5E9)
-                          : const Color(0xFFFCE4EC),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isCheckingInitialConnection
-                        ? const Color(0xFFD3DADF)
-                        : isServiceOnline
-                            ? const Color(0xFFA5D6A7)
-                            : const Color(0xFFF48FB1),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _HeaderPierreAvatar(statusColor: statusColor),
+                const SizedBox(width: 12.0),
+                Expanded(
+                  child: _HeaderTitleBlock(
+                    title: l10n.aiChefPopupSubtitle,
+                    roleLabel: l10n.aiChefHeaderRoleLabel,
                   ),
                 ),
-                child: Text(
-                  isCheckingInitialConnection
-                      ? l10n.aiChefPopupCheckingLabel
-                      : isServiceOnline
-                          ? l10n.connectionPillOnlineLabel
-                          : l10n.connectionPillOfflineLabel,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: isCheckingInitialConnection
-                        ? const Color(0xFF6A7884)
-                        : isServiceOnline
-                            ? const Color(0xFF2E7D32)
-                            : const Color(0xFFC2185B),
-                    fontWeight: FontWeight.w600,
+                const SizedBox(width: 8.0),
+                if (onClearChat != null) ...[
+                  _HeaderActionButton(
+                    icon: Icons.delete_outline_rounded,
+                    tooltip: l10n.clearButtonLabel,
+                    onPressed: onClearChat,
                   ),
-                ),
-              ),
-              if (!isServiceOnline && !isCheckingInitialConnection) ...[
-                const SizedBox(width: 4),
-                SizedBox(
-                  height: 28,
-                  child: OutlinedButton.icon(
-                    onPressed: isRefreshingConnection ? null : onRefreshConnection,
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFFDAA4A4)),
-                      foregroundColor: const Color(0xFFB93838),
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                    ),
-                    icon: isRefreshingConnection
-                        ? const SizedBox(
-                            width: 12,
-                            height: 12,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 1.8,
-                              color: Color(0xFFB93838),
-                            ),
-                          )
-                        : const Icon(Icons.refresh_rounded, size: 14),
-                    label: Text(
-                      l10n.aiChefPopupRefreshLabel,
-                      style: const TextStyle(fontSize: 10),
-                    ),
-                  ),
+                  const SizedBox(width: 6.0),
+                ],
+                _HeaderActionButton(
+                  icon: Icons.close_rounded,
+                  tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                  onPressed: onClose,
                 ),
               ],
-              const SizedBox(width: 4),
-              IconButton(
-                onPressed: onClearChat,
-                icon: Icon(
-                  Icons.delete_outline_rounded,
-                  color: onClearChat != null ? Colors.red[400] : null,
-                ),
-                tooltip: l10n.clearButtonLabel,
-                constraints: const BoxConstraints(),
-                padding: const EdgeInsets.all(6),
+            ),
+          ),
+          if (showOfflineBanner)
+            _OfflineReconnectBanner(
+              label: l10n.connectionPillOfflineLabel,
+              refreshLabel: l10n.aiChefPopupRefreshLabel,
+              isRefreshing: isRefreshingConnection,
+              onRefresh: onRefreshConnection,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeaderPierreAvatar extends StatelessWidget {
+  const _HeaderPierreAvatar({required this.statusColor});
+
+  final Color statusColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 52.0,
+      height: 52.0,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            width: 52.0,
+            height: 52.0,
+            padding: const EdgeInsets.all(2.0),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                begin: AlignmentDirectional.topStart,
+                end: AlignmentDirectional.bottomEnd,
+                colors: [Color(0xFFF6FAFF), Color(0xFFDDEBFF)],
               ),
-            ],
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.85),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF0F3559).withValues(alpha: 0.28),
+                  blurRadius: 10.0,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: ClipOval(
+              child: Image.asset(
+                'assets/pierre_portrait.png',
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+          PositionedDirectional(
+            end: 0,
+            bottom: 0,
+            child: Container(
+              width: 14.0,
+              height: 14.0,
+              decoration: BoxDecoration(
+                color: statusColor,
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFF17324B), width: 2.2),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeaderTitleBlock extends StatelessWidget {
+  const _HeaderTitleBlock({required this.title, required this.roleLabel});
+
+  final String title;
+  final String roleLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontSize: 17.0,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+            letterSpacing: 0.1,
+            height: 1.15,
+          ),
+        ),
+        const SizedBox(height: 4.0),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.auto_awesome_rounded,
+              size: 12.0,
+              color: Color(0xFFDDEBFF),
+            ),
+            const SizedBox(width: 4.0),
+            Flexible(
+              child: Text(
+                roleLabel,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 12.0,
+                  color: Color(0xFFDDEBFF),
+                  fontWeight: FontWeight.w500,
+                  height: 1.15,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _HeaderActionButton extends StatelessWidget {
+  const _HeaderActionButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Colors.white.withValues(alpha: 0.14),
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onPressed,
+          child: SizedBox(
+            width: 34.0,
+            height: 34.0,
+            child: Icon(icon, size: 18.0, color: Colors.white),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _OfflineReconnectBanner extends StatelessWidget {
+  const _OfflineReconnectBanner({
+    required this.label,
+    required this.refreshLabel,
+    required this.isRefreshing,
+    required this.onRefresh,
+  });
+
+  final String label;
+  final String refreshLabel;
+  final bool isRefreshing;
+  final VoidCallback onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsetsDirectional.fromSTEB(16.0, 8.0, 12.0, 8.0),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.18),
+        border: Border(
+          top: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+        ),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.cloud_off_rounded,
+            size: 15.0,
+            color: Color(0xFFFCA5A5),
+          ),
+          const SizedBox(width: 8.0),
+          Expanded(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Color(0xFFFEE2E2),
+                fontSize: 12.0,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8.0),
+          SizedBox(
+            height: 28.0,
+            child: TextButton.icon(
+              onPressed: isRefreshing ? null : onRefresh,
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.white.withValues(alpha: 0.16),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+              ),
+              icon: isRefreshing
+                  ? const SizedBox(
+                      width: 12.0,
+                      height: 12.0,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 1.8,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.refresh_rounded, size: 14.0),
+              label: Text(
+                refreshLabel,
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           ),
         ],
       ),

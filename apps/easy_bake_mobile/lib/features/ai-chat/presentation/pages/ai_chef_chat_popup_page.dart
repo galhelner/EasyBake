@@ -15,6 +15,8 @@ import '../../../recipes/presentation/widgets/recipe_list/deleting_status_card.d
 import '../../data/services/chat_service.dart';
 import '../widgets/ai_chef_chat_popup_composer.dart';
 import '../widgets/ai_chef_chat_popup_header.dart';
+import '../widgets/ai_chef_loading_card.dart';
+import '../widgets/ai_chef_message_bubble.dart';
 import '../widgets/chat_message_builder.dart';
 import '../../../home/presentation/pages/home_tabs_page.dart';
 import '../../../shopping-list/presentation/providers/shopping_list_providers.dart';
@@ -89,7 +91,7 @@ class _AiChefChatPopupDialogState
     extends ConsumerState<_AiChefChatPopupDialog> {
   final TextEditingController _questionController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final List<ChatMessage> _messages = [const ChatMessage.connectionChecking()];
+  final List<ChatMessage> _messages = [];
 
   StreamSubscription<ChatEvent>? _chatSubscription;
   late final String _sessionId;
@@ -695,12 +697,12 @@ class _AiChefChatPopupDialogState
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final dialogWidth = mediaQuery.size.width < 420
-        ? mediaQuery.size.width * 0.9
-        : 360.0;
+        ? mediaQuery.size.width * 0.92
+        : 380.0;
 
     return Dialog(
       backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTap: () => FocusScope.of(context).unfocus(),
@@ -708,187 +710,107 @@ class _AiChefChatPopupDialogState
           child: Container(
             width: dialogWidth,
             constraints: BoxConstraints(
-              maxHeight: mediaQuery.size.height * 0.82,
+              maxHeight: mediaQuery.size.height * 0.84,
               minHeight: 460,
             ),
             decoration: BoxDecoration(
-              color: const Color(0xFFF2F7F7),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: const [
+              color: const Color(0xFFF6FAFF),
+              borderRadius: BorderRadius.circular(20.0),
+              border: Border.all(
+                color: const Color(0xFFDDEBFF),
+                width: 1.0,
+              ),
+              boxShadow: [
                 BoxShadow(
-                  color: Color(0x80000000),
-                  blurRadius: 28,
-                  offset: Offset(0, 14),
+                  color: const Color(0xFF0F3559).withValues(alpha: 0.28),
+                  blurRadius: 32.0,
+                  offset: const Offset(0, 14),
                 ),
               ],
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AiChefChatPopupHeader(
-                  isCheckingInitialConnection: _isCheckingInitialConnection,
-                  isServiceOnline: _isServiceOnline,
-                  isRefreshingConnection: _isRefreshingConnection,
-                  onRefreshConnection: _refreshConnectionStatus,
-                  onClose: () => Navigator.of(context).pop(),
-                  onClearChat: _hasClearableHistory ? _performClearChatHistory : null,
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-                    itemCount: _messages.length,
-                    itemBuilder: (context, index) {
-                      final message = _messages[index];
-                      final isAi = message.sender == ChatSender.ai;
-                      final bubbleRadius = BorderRadiusDirectional.only(
-                        topStart: Radius.circular(isAi ? 3 : 12),
-                        topEnd: Radius.circular(isAi ? 12 : 3),
-                        bottomStart: const Radius.circular(12),
-                        bottomEnd: const Radius.circular(12),
-                      );
-
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: Align(
-                          alignment: isAi
-                              ? AlignmentDirectional.centerStart
-                              : AlignmentDirectional.centerEnd,
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                              maxWidth: dialogWidth * 0.82,
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: isAi
-                                  ? CrossAxisAlignment.start
-                                  : CrossAxisAlignment.end,
-                              children: [
-                                Container(
-                                  width: 30,
-                                  height: 30,
-                                  margin: const EdgeInsets.only(bottom: 6),
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: isAi
-                                        ? const Color(0xFFF3F7FA)
-                                        : const Color(0xFFEAF2F5),
-                                    border: Border.all(
-                                      color: isAi
-                                          ? const Color(0xFFB8CAD8)
-                                          : const Color(0xFF9FB5C6),
-                                    ),
-                                  ),
-                                  child: isAi
-                                      ? Image.asset(
-                                          'assets/ai_chef_logo.png',
-                                          fit: BoxFit.contain,
-                                        )
-                                      : const Icon(
-                                          Icons.person_rounded,
-                                          size: 18,
-                                          color: Color(0xFF5E7388),
-                                        ),
-                                ),
-                                Padding(
-                                  padding: EdgeInsetsDirectional.only(
-                                    start: isAi ? 18 : 0,
-                                    end: isAi ? 0 : 18,
-                                  ),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 10,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      border: Border.all(
-                                        color: const Color(0xFF2B3D5A),
-                                      ),
-                                      borderRadius: bubbleRadius,
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        SelectionArea(
-                                          child: ChatMessageBuilder(
-                                            message: message,
-                                            onOpenRecipe: () {
-                                              final payload = message.recipePayload;
-                                              if (payload == null) {
-                                                return;
-                                              }
-                                              final updatedPayload = Map<String, dynamic>.from(payload);
-                                              updatedPayload['recipeBy'] = 'AI Chef';
-                                              widget.onOpenRecipeCreated(updatedPayload);
-                                            },
-                                            onRecipeTap: _openRecipeDetailsFromSearch,
-                                            onNavigateToShoppingList:
-                                                _navigateToShoppingList,
-                                          ),
-                                        ),
-                                        if (!isAi &&
-                                            message.kind != ChatMessageKind.typing &&
-                                            message.kind != ChatMessageKind.connectionChecking) ...[
-                                          const SizedBox(height: 2),
-                                          Align(
-                                            alignment: AlignmentDirectional.centerEnd,
-                                            child: InkWell(
-                                              onTap: () => _copyMessageToClipboard(message),
-                                              borderRadius: BorderRadius.circular(4),
-                                              child: Padding(
-                                                padding: const EdgeInsets.all(2),
-                                                child: Icon(
-                                                  Icons.copy_rounded,
-                                                  size: 17,
-                                                  color: const Color(0xFF5E7388).withValues(alpha: 0.8),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AiChefChatPopupHeader(
+                    isCheckingInitialConnection: _isCheckingInitialConnection,
+                    isServiceOnline: _isServiceOnline,
+                    isRefreshingConnection: _isRefreshingConnection,
+                    onRefreshConnection: _refreshConnectionStatus,
+                    onClose: () => Navigator.of(context).pop(),
+                    onClearChat:
+                        _hasClearableHistory ? _performClearChatHistory : null,
                   ),
-                ),
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeInOut,
-                  child: _showToast
-                      ? Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          child: AnimatedOpacity(
-                            opacity: _showToast ? 1.0 : 0.0,
-                            duration: const Duration(milliseconds: 200),
-                            child: AppToast(
-                              message: AppLocalizations.of(context)!.copiedToClipboard,
-                              leading: Image.asset(
-                                'assets/app_logo.png',
-                                width: 18,
-                                height: 18,
+                  Expanded(
+                    child: _isCheckingInitialConnection
+                        ? const Center(child: AiChefLoadingCard())
+                        : ListView.builder(
+                            controller: _scrollController,
+                            padding: const EdgeInsetsDirectional.fromSTEB(
+                              12.0,
+                              16.0,
+                              12.0,
+                              8.0,
+                            ),
+                            itemCount: _messages.length,
+                            itemBuilder: (context, index) {
+                              final message = _messages[index];
+                              return AiChefMessageBubble(
+                                message: message,
+                                maxWidth: dialogWidth * 0.84,
+                                onOpenRecipe: () {
+                                  final payload = message.recipePayload;
+                                  if (payload == null) {
+                                    return;
+                                  }
+                                  final updatedPayload =
+                                      Map<String, dynamic>.from(payload);
+                                  updatedPayload['recipeBy'] = 'AI Chef';
+                                  widget.onOpenRecipeCreated(updatedPayload);
+                                },
+                                onRecipeTap: _openRecipeDetailsFromSearch,
+                                onNavigateToShoppingList:
+                                    _navigateToShoppingList,
+                                onCopy: () => _copyMessageToClipboard(message),
+                              );
+                            },
+                          ),
+                  ),
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    child: _showToast
+                        ? Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0,
+                              vertical: 8.0,
+                            ),
+                            child: AnimatedOpacity(
+                              opacity: _showToast ? 1.0 : 0.0,
+                              duration: const Duration(milliseconds: 200),
+                              child: AppToast(
+                                message: AppLocalizations.of(
+                                  context,
+                                )!.copiedToClipboard,
+                                leading: Image.asset(
+                                  'assets/app_logo.png',
+                                  width: 18,
+                                  height: 18,
+                                ),
                               ),
                             ),
-                          ),
-                        )
-                      : const SizedBox.shrink(),
-                ),
-                AiChefChatPopupComposer(
-                  controller: _questionController,
-                  isAwaitingResponse: _isAwaitingResponse,
-                  isCheckingInitialConnection: _isCheckingInitialConnection,
-                  onSend: _sendMessage,
-                ),
-              ],
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                  AiChefChatPopupComposer(
+                    controller: _questionController,
+                    isAwaitingResponse: _isAwaitingResponse,
+                    isCheckingInitialConnection: _isCheckingInitialConnection,
+                    onSend: _sendMessage,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
