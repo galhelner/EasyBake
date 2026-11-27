@@ -9,7 +9,7 @@ jobs:
         working-directory: apps/easy_bake_mobile
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       
       - name: Set Xcode Version
         run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
@@ -42,7 +42,7 @@ jobs:
           tar -czf Runner.app.tar.gz -C build/ios/iphoneos Runner.app
 
       - name: Upload Build Product Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ios-build-product
           path: apps/easy_bake_mobile/Runner.app.tar.gz
@@ -52,10 +52,10 @@ jobs:
     needs: build
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Download Build Product Artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: ios-build-product
           path: build-product
@@ -71,7 +71,7 @@ jobs:
           zip -r EasyBake.ipa Payload
 
       - name: Upload IPA Build Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ios-ipa-build
           path: EasyBake.ipa
@@ -81,16 +81,16 @@ jobs:
     needs: create-ipa
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Download IPA Build Artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: ios-ipa-build
           path: .
 
       - name: Upload IPA Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ios-ipa
           path: EasyBake.ipa

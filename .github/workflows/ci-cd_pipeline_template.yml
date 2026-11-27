@@ -38,13 +38,13 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - if: inputs.language == 'node'
         name: Set up Node.js version
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
-          node-version: '22.x'
+          node-version: '26.x'
           cache: 'npm'
           cache-dependency-path: ${{ inputs.workdir }}/package-lock.json
 
@@ -70,13 +70,13 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - if: inputs.language == 'node'
         name: Set up Node.js version
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
-          node-version: '22.x'
+          node-version: '26.x'
           cache: 'npm'
           cache-dependency-path: ${{ inputs.workdir }}/package-lock.json
 
@@ -104,14 +104,14 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       # Python workflow
       - if: inputs.language == 'python'
         name: Set up Python version
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
-          python-version: '3.12'
+          python-version: '3.14'
           cache: 'pip'
           cache-dependency-path: ${{ inputs.workdir }}/requirements.txt
 
@@ -135,9 +135,9 @@ jobs:
       # Node.js workflow
       - if: inputs.language == 'node'
         name: Set up Node.js version
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
-          node-version: '22.x'
+          node-version: '26.x'
           cache: 'npm'
           cache-dependency-path: ${{ inputs.workdir }}/package-lock.json
 
