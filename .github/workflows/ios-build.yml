@@ -42,7 +42,7 @@ jobs:
           tar -czf Runner.app.tar.gz -C build/ios/iphoneos Runner.app
 
       - name: Upload Build Product Artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ios-build-product
           path: apps/easy_bake_mobile/Runner.app.tar.gz
@@ -55,7 +55,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Download Build Product Artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: ios-build-product
           path: build-product
@@ -71,7 +71,7 @@ jobs:
           zip -r EasyBake.ipa Payload
 
       - name: Upload IPA Build Artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ios-ipa-build
           path: EasyBake.ipa
@@ -84,13 +84,13 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Download IPA Build Artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: ios-ipa-build
           path: .
 
       - name: Upload IPA Artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ios-ipa
           path: EasyBake.ipa
