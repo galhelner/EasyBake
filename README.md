@@ -60,13 +60,13 @@ EasyBake removes the stress from daily cooking by combining:
 - 🧩 Clean microservice architecture for scale and maintainability.
 - ⚡ Fast feedback loops for local development with Docker.
 
-## 👨‍🍳 AI Chef Assistant
+## 👨‍🍳 Chef Pierre
 
 <p align="center">
-	<img src="apps/easy_bake_mobile/assets/ai_chef_logo.png" alt="EasyBake AI Chef Assistant" width="180" />
+	<img src="apps/easy_bake_mobile/assets/pierre_portrait.png" alt="Chef Pierre" width="180" />
 </p>
 
-Meet **AI Chef Assistant**: your smart kitchen partner designed to make cooking easier, faster, and more creative.
+Meet **Chef Pierre**: your smart kitchen partner designed to make cooking easier, faster, and more creative.
 
 - 🍳 Suggests recipes from the ingredients you already have.
 - 🥗 Helps generate healthier alternatives based on your goals.
