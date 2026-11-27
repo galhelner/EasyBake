@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A generic, reusable toast widget designed to display messages with matching
 /// app colors, support a leading logo or icon, and maintain a premium Material 3 silhouette.

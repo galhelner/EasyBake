@@ -34,9 +34,7 @@ class ChatSocketService {
 
   bool get isConnected => _socket.connected;
 
-  ChatSocketService({required String serverUrl, required String token})
-    : _serverUrl = serverUrl,
-      _token = token;
+  ChatSocketService({required this._serverUrl, required this._token});
 
   Future<void> connect() async {
     try {

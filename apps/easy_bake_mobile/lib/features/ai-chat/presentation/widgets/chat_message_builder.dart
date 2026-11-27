@@ -1,5 +1,5 @@
 import 'package:easy_bake_mobile/l10n/app_localizations.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'ai_chef_chat_typing_dots.dart';
 import 'ai_chef_connection_checking.dart';

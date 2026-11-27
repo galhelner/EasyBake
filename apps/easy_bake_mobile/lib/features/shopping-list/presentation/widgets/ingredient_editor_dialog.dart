@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:easy_bake_mobile/l10n/app_localizations.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:easy_bake_mobile/features/recipes/data/services/recipe_service.dart';
 import 'package:easy_bake_mobile/features/recipes/domain/models/ingredient_suggestion_model.dart';
 

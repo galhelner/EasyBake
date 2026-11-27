@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Renders a single ingredient swap suggestion (original -> replacement)
 class IngredientSwapLine extends StatelessWidget {

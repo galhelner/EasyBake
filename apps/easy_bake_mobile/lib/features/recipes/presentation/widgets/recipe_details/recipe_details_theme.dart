@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 const kRecipeDetailsPageBackground = Color(0xFFF2F7F7);
 const kRecipeDetailsPrimaryBlue = Color(0xFF2B3D5A);

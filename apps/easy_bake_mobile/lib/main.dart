@@ -1,4 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:cupertino_ui/cupertino_ui.dart' show GlobalCupertinoLocalizations;
+import 'package:flutter_localizations/flutter_localizations.dart'
+    show GlobalWidgetsLocalizations;
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_bake_mobile/l10n/app_localizations.dart';
@@ -35,7 +38,12 @@ class MyApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           locale: locale,
           supportedLocales: AppLocalizations.supportedLocales,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+          ],
           theme: ThemeData(
             useMaterial3: true,
             colorSchemeSeed: const Color(0xFF8BB3D6),

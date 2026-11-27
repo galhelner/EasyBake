@@ -1,5 +1,5 @@
 import 'package:easy_bake_mobile/l10n/app_localizations.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class AiChefLoadingCard extends StatelessWidget {
   const AiChefLoadingCard({super.key});

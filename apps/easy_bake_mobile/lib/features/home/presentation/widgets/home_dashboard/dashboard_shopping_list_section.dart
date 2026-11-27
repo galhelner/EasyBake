@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 import 'package:easy_bake_mobile/features/shopping-list/domain/models/shopping_list_item_model.dart';

@@ -734,12 +734,16 @@ class ChatServiceNotifier extends Notifier<ChatSocketService?> {
   }
 
   Future<void> dispose() async {
-    if (state != null) {
-      await state!.disconnect();
+    final socketService = state;
+    if (socketService != null) {
+      await socketService.disconnect();
     }
-    ref
-        .read(chatConnectionStateProvider.notifier)
-        .setState(ChatConnectionState.disconnected);
-    state = null;
+    Future<void>(() {
+      if (!ref.mounted) return;
+      ref
+          .read(chatConnectionStateProvider.notifier)
+          .setState(ChatConnectionState.disconnected);
+      state = null;
+    });
   }
 }

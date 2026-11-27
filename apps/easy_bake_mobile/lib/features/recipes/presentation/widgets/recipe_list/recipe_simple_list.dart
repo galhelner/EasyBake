@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../domain/models/recipe_model.dart';
 import '../../pages/recipe_details_page.dart';

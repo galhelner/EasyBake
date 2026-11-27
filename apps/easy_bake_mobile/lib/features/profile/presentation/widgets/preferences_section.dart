@@ -1,6 +1,6 @@
 import 'package:easy_bake_mobile/core/localization/app_locale_controller.dart';
 import 'package:easy_bake_mobile/l10n/app_localizations.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../auth/presentation/providers/auth_notifier.dart';

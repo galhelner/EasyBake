@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:easy_bake_mobile/l10n/app_localizations.dart';
 
 const Color kRecipeDetailsPrimaryBlue = Color(0xFF1F6FC9);
