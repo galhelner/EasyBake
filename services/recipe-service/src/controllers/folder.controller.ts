@@ -104,7 +104,7 @@ export const updateFolder = async (req: AuthenticatedRequest, res: Response): Pr
       return;
     }
 
-    const { id } = req.params;
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const user = await ensureUser(req.user.id);
 
     const folder = await prisma.folder.findFirst({
@@ -184,7 +184,7 @@ export const deleteFolder = async (req: AuthenticatedRequest, res: Response): Pr
       return;
     }
 
-    const { id } = req.params;
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const purge = req.query.purge === 'true';
 
     const user = await ensureUser(req.user.id);

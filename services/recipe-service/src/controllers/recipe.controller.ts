@@ -682,7 +682,7 @@ export const getRecipeById = async (
       return;
     }
 
-    const { id } = req.params;
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
 
     // Any authenticated user may read a recipe by id (e.g. community chat shared
     // recipes). Mutations remain restricted to the author in update/delete.
@@ -722,7 +722,7 @@ export const updateRecipe = async (
       return;
     }
 
-    const { id } = req.params;
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
 
     const parsed = createRecipeSchema.safeParse(req.body);
 
@@ -861,7 +861,7 @@ export const deleteRecipe = async (
       return;
     }
 
-    const { id } = req.params;
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
 
     const existingRecipe = await prisma.recipe.findFirst({
       where: {
@@ -924,7 +924,7 @@ export const moveRecipe = async (
       return;
     }
 
-    const { id } = req.params;
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const parsed = moveRecipeSchema.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: 'Validation error', details: parsed.error.flatten() });
